@@ -1,0 +1,79 @@
+# Example ESPHome configuration for a GDoor adapter v3.1 on a Wemos D1 mini ESP32.
+#
+# Instead of the MQTT firmware, the adapter then shows up in Home Assistant
+# via the ESPHome integration, with a doorbell event, door opener buttons and
+# a sensor of the last bus message. To find the bus data of your own door
+# station, open the ESPHome log and press the buttons: every message is logged
+# with its busdata ("learning mode").
+#
+# Using it from GitHub instead of a local checkout:
+#   external_components:
+#     - source: github://gdoor-org/gdoor@main
+#       components: [gdoor]
+
+esphome:
+  name: gdoor
+  friendly_name: GDoor
+
+esp32:
+  board: wemos_d1_mini32
+  framework:
+    type: arduino  # required, the bus timing uses the Arduino timer API
+
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [gdoor]
+
+logger:
+
+api:
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+gdoor:
+  id: gdoor_bus
+  # Defaults match the v3.1 adapter, only needed for other wiring:
+  # rx_pin: 22
+  # tx_pin: 25
+  # tx_enable_pin: 27
+  # v3.1 "adjustable" input: DAC driven comparator threshold
+  rx_threshold_pin: 26
+  rx_sensitivity: 1.45
+  on_message:
+    - logger.log:
+        format: "Bus: %s from %s"
+        args: ["message.action.c_str()", "message.source.c_str()"]
+
+event:
+  # Doorbell: fires for ring button presses only. Use the parameters of your
+  # button (see log) to tell several doorbell buttons apart.
+  - platform: gdoor
+    name: Doorbell
+    device_class: doorbell
+    actions: [BUTTON_RING]
+    # parameters: "0360"
+  # Everything on the bus, the event type is the bus action
+  - platform: gdoor
+    name: Bus Message
+
+button:
+  # Replace busdata with the DOOR_OPEN message of your indoor station (see log)
+  - platform: gdoor
+    name: Open Door
+    busdata: "020031ECF3EB0060A103C27A3D"
+
+text_sensor:
+  - platform: gdoor
+    name: Last Bus Action
+    type: action
+  - platform: gdoor
+    name: Last Bus Data
+    type: busdata
+    entity_category: diagnostic

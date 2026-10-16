@@ -13,6 +13,7 @@ The GDoor hardware adapter allows listening and controlling the bus and e.g. int
 - (In development): Audio support via VOIP
 - listening to the bus, e.g. to trigger notifications on mobile devices when a door bell button is pressed
 - sending to the bus, e.g. to open the door
+- (In development): [ESPHome component](esphome/README.md) as an alternative to the MQTT firmware
 
 Receiving and sending video is currently neither supported nor plannend.
 

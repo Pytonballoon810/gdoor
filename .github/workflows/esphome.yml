@@ -1,0 +1,42 @@
+name: ESPHome component
+
+on:
+  push:
+    paths: # the component compiles the firmware's bus core, so build on changes to either
+      - 'esphome/**'
+      - 'firmware/esp32/gdoor/src/**'
+      - 'tools/sync_esphome_core.py'
+      - '.github/workflows/esphome.yml'
+  pull_request:
+    paths:
+      - 'esphome/**'
+      - 'firmware/esp32/gdoor/src/**'
+      - 'tools/sync_esphome_core.py'
+      - '.github/workflows/esphome.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio
+          key: ${{ runner.os }}-esphome
+
+      - name: Check the component's copy of the bus core is up to date
+        run: python tools/sync_esphome_core.py --check
+
+      - name: Install ESPHome
+        run: pip install esphome
+
+      - name: Compile example configuration
+        working-directory: ./esphome
+        run: |
+          printf 'wifi_ssid: "ci"\nwifi_password: "ci-password"\n' > secrets.yaml
+          esphome compile gdoor-example.yaml

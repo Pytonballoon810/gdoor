@@ -1,0 +1,4 @@
+# ESPHome build output and local credentials
+.esphome/
+secrets.yaml
+__pycache__/
