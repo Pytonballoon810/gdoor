@@ -95,8 +95,8 @@
 
 (rule "PTH to Track clearance)"
 	(constraint hole_clearance (min 0.33mm))
-	(condition "A.isPlated() && B.Type == 'track'"))
+	(condition "A.Type == 'pad' && A.isPlated() && B.Type == 'track'"))
 
 (rule "Pad to Track clearance)"
 	(constraint clearance (min 0.2mm))
-	(condition "A.isPlated() && B.Type == 'track'"))
+	(condition "A.Type == 'pad' && A.isPlated() && B.Type == 'track'"))
