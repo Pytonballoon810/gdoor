@@ -15057,7 +15057,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 77.1652 261.62 0)
 			(hide yes)
 			(show_name no)
@@ -15089,7 +15089,7 @@
 				)
 			)
 		)
-		(property "MPN" "C14663"
+		(property "MPN" "C1525"
 			(at 76.2 257.81 0)
 			(hide yes)
 			(show_name no)
@@ -15148,7 +15148,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 395.9098 125.095 0)
 			(hide yes)
 			(show_name no)
@@ -15180,7 +15180,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 396.875 128.905 0)
 			(hide yes)
 			(show_name no)
@@ -15239,7 +15239,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 138.43 134.3152 0)
 			(hide yes)
 			(show_name no)
@@ -15271,7 +15271,7 @@
 				)
 			)
 		)
-		(property "MPN" "C14858"
+		(property "MPN" "C1546"
 			(at 134.62 133.35 0)
 			(hide yes)
 			(show_name no)
@@ -15419,7 +15419,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 383.2098 125.095 0)
 			(hide yes)
 			(show_name no)
@@ -15451,7 +15451,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 384.175 128.905 0)
 			(hide yes)
 			(show_name no)
@@ -15510,7 +15510,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 221.2848 130.81 0)
 			(hide yes)
 			(show_name no)
@@ -15542,7 +15542,7 @@
 				)
 			)
 		)
-		(property "MPN" "C1653"
+		(property "MPN" "C1555"
 			(at 222.25 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -15916,7 +15916,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 160.9852 140.97 0)
 			(hide yes)
 			(show_name no)
@@ -15948,7 +15948,7 @@
 				)
 			)
 		)
-		(property "MPN" "C1588"
+		(property "MPN" "C1523"
 			(at 160.02 144.78 0)
 			(hide yes)
 			(show_name no)
@@ -16234,7 +16234,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 328.168 104.775 90)
 			(hide yes)
 			(show_name no)
@@ -16266,7 +16266,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23140"
+		(property "MPN" "C25105"
 			(at 326.39 104.775 0)
 			(hide yes)
 			(show_name no)
@@ -16323,7 +16323,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 130.81 102.362 90)
 			(hide yes)
 			(show_name no)
@@ -16355,7 +16355,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25810"
+		(property "MPN" "C2909327"
 			(at 130.81 104.14 0)
 			(hide yes)
 			(show_name no)
@@ -17092,7 +17092,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 201.422 58.42 90)
 			(hide yes)
 			(show_name no)
@@ -17124,7 +17124,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25804"
+		(property "MPN" "C25744"
 			(at 203.2 58.42 0)
 			(hide yes)
 			(show_name no)
@@ -17261,7 +17261,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 56.8198 58.42 0)
 			(hide yes)
 			(show_name no)
@@ -17293,7 +17293,7 @@
 				)
 			)
 		)
-		(property "MPN" "C14858"
+		(property "MPN" "C1546"
 			(at 57.785 62.23 0)
 			(hide yes)
 			(show_name no)
@@ -17607,7 +17607,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 107.95 154.178 90)
 			(hide yes)
 			(show_name no)
@@ -17639,7 +17639,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21190"
+		(property "MPN" "C11702"
 			(at 107.95 152.4 0)
 			(hide yes)
 			(show_name no)
@@ -18247,7 +18247,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 212.3948 130.81 0)
 			(hide yes)
 			(show_name no)
@@ -18279,7 +18279,7 @@
 				)
 			)
 		)
-		(property "MPN" "C1653"
+		(property "MPN" "C1555"
 			(at 213.36 134.62 0)
 			(hide yes)
 			(show_name no)
@@ -18428,7 +18428,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 131.572 61.595 90)
 			(hide yes)
 			(show_name no)
@@ -18460,7 +18460,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23162"
+		(property "MPN" "C25900"
 			(at 133.35 61.595 0)
 			(hide yes)
 			(show_name no)
@@ -18523,7 +18523,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 214.122 23.495 90)
 			(hide yes)
 			(show_name no)
@@ -18555,7 +18555,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 215.9 23.495 0)
 			(hide yes)
 			(show_name no)
@@ -18789,7 +18789,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 125.222 137.16 90)
 			(hide yes)
 			(show_name no)
@@ -18821,7 +18821,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23254"
+		(property "MPN" "C2909388"
 			(at 127 137.16 0)
 			(hide yes)
 			(show_name no)
@@ -18884,7 +18884,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 82.423 77.47 90)
 			(hide yes)
 			(show_name no)
@@ -18916,7 +18916,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23186"
+		(property "MPN" "C25905"
 			(at 80.645 77.47 0)
 			(hide yes)
 			(show_name no)
@@ -19456,7 +19456,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 168.91 103.378 90)
 			(hide yes)
 			(show_name no)
@@ -19488,7 +19488,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 168.91 101.6 0)
 			(hide yes)
 			(show_name no)
@@ -19546,7 +19546,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 73.152 158.75 90)
 			(hide yes)
 			(show_name no)
@@ -19578,7 +19578,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25810"
+		(property "MPN" "C2909327"
 			(at 74.93 158.75 0)
 			(hide yes)
 			(show_name no)
@@ -20143,7 +20143,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 116.332 157.48 90)
 			(hide yes)
 			(show_name no)
@@ -20175,7 +20175,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23186"
+		(property "MPN" "C25905"
 			(at 118.11 157.48 0)
 			(hide yes)
 			(show_name no)
@@ -20238,7 +20238,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 297.815 40.513 90)
 			(hide yes)
 			(show_name no)
@@ -20270,7 +20270,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21190"
+		(property "MPN" "C11702"
 			(at 297.815 38.735 0)
 			(hide yes)
 			(show_name no)
@@ -20328,7 +20328,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 109.22 118.237 90)
 			(hide yes)
 			(show_name no)
@@ -20360,7 +20360,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25810"
+		(property "MPN" "C2909327"
 			(at 109.22 120.015 0)
 			(hide yes)
 			(show_name no)
@@ -20521,7 +20521,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 310.388 46.99 90)
 			(hide yes)
 			(show_name no)
@@ -20553,7 +20553,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21190"
+		(property "MPN" "C11702"
 			(at 308.61 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -20692,7 +20692,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 204.47 89.408 90)
 			(hide yes)
 			(show_name no)
@@ -20724,7 +20724,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23140"
+		(property "MPN" "C25105"
 			(at 204.47 87.63 0)
 			(hide yes)
 			(show_name no)
@@ -21204,7 +21204,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 204.47 91.948 90)
 			(hide yes)
 			(show_name no)
@@ -21236,7 +21236,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23140"
+		(property "MPN" "C25105"
 			(at 204.47 90.17 0)
 			(hide yes)
 			(show_name no)
@@ -21646,7 +21646,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 167.005 140.208 90)
 			(hide yes)
 			(show_name no)
@@ -21678,7 +21678,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 167.005 138.43 0)
 			(hide yes)
 			(show_name no)
@@ -22184,7 +22184,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 372.4148 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -22216,7 +22216,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 373.38 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -22376,7 +22376,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 315.9252 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -22408,7 +22408,7 @@
 				)
 			)
 		)
-		(property "MPN" "C14663"
+		(property "MPN" "C1525"
 			(at 314.96 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -22465,7 +22465,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 270.383 65.405 90)
 			(hide yes)
 			(show_name no)
@@ -22497,7 +22497,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 268.605 65.405 0)
 			(hide yes)
 			(show_name no)
@@ -22554,7 +22554,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 92.075 68.072 90)
 			(hide yes)
 			(show_name no)
@@ -22586,7 +22586,7 @@
 				)
 			)
 		)
-		(property "MPN" "C22940"
+		(property "MPN" "C144772"
 			(at 92.075 69.85 0)
 			(hide yes)
 			(show_name no)
@@ -22726,7 +22726,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 123.952 157.48 90)
 			(hide yes)
 			(show_name no)
@@ -22758,7 +22758,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23186"
+		(property "MPN" "C25905"
 			(at 125.73 157.48 0)
 			(hide yes)
 			(show_name no)
@@ -22821,7 +22821,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 335.788 104.775 90)
 			(hide yes)
 			(show_name no)
@@ -22853,7 +22853,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23140"
+		(property "MPN" "C25105"
 			(at 334.01 104.775 0)
 			(hide yes)
 			(show_name no)
@@ -22912,7 +22912,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 383.2352 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -22944,7 +22944,7 @@
 				)
 			)
 		)
-		(property "MPN" "C14663"
+		(property "MPN" "C1525"
 			(at 382.27 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -23842,7 +23842,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 151.892 143.51 90)
 			(hide yes)
 			(show_name no)
@@ -23874,7 +23874,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23162"
+		(property "MPN" "C25900"
 			(at 153.67 143.51 0)
 			(hide yes)
 			(show_name no)
@@ -24175,7 +24175,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 314.6298 123.19 0)
 			(hide yes)
 			(show_name no)
@@ -24207,7 +24207,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 315.595 127 0)
 			(hide yes)
 			(show_name no)
@@ -24346,7 +24346,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 279.273 65.405 90)
 			(hide yes)
 			(show_name no)
@@ -24378,7 +24378,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 277.495 65.405 0)
 			(hide yes)
 			(show_name no)
@@ -24436,7 +24436,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 60.325 51.7652 0)
 			(hide yes)
 			(show_name no)
@@ -24468,7 +24468,7 @@
 				)
 			)
 		)
-		(property "MPN" "C14858"
+		(property "MPN" "C1546"
 			(at 64.135 50.8 0)
 			(hide yes)
 			(show_name no)
@@ -24628,7 +24628,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 125.222 129.54 90)
 			(hide yes)
 			(show_name no)
@@ -24660,7 +24660,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23254"
+		(property "MPN" "C2909388"
 			(at 127 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -25247,7 +25247,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 201.422 113.03 90)
 			(hide yes)
 			(show_name no)
@@ -25279,7 +25279,7 @@
 				)
 			)
 		)
-		(property "MPN" "C22940"
+		(property "MPN" "C144772"
 			(at 203.2 113.03 0)
 			(hide yes)
 			(show_name no)
@@ -25336,7 +25336,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 333.248 104.775 90)
 			(hide yes)
 			(show_name no)
@@ -25368,7 +25368,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23140"
+		(property "MPN" "C25105"
 			(at 331.47 104.775 0)
 			(hide yes)
 			(show_name no)
@@ -25592,7 +25592,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 330.708 104.775 90)
 			(hide yes)
 			(show_name no)
@@ -25624,7 +25624,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23140"
+		(property "MPN" "C25105"
 			(at 328.93 104.775 0)
 			(hide yes)
 			(show_name no)
@@ -25764,7 +25764,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 195.707 113.03 90)
 			(hide yes)
 			(show_name no)
@@ -25796,7 +25796,7 @@
 				)
 			)
 		)
-		(property "MPN" "C22940"
+		(property "MPN" "C144772"
 			(at 197.485 113.03 0)
 			(hide yes)
 			(show_name no)
@@ -25856,7 +25856,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 80.3402 135.89 0)
 			(hide yes)
 			(show_name no)
@@ -25888,7 +25888,7 @@
 				)
 			)
 		)
-		(property "MPN" "C14858"
+		(property "MPN" "C1546"
 			(at 79.375 139.7 0)
 			(hide yes)
 			(show_name no)
@@ -25951,7 +25951,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 204.978 48.26 90)
 			(hide yes)
 			(show_name no)
@@ -25983,7 +25983,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23254"
+		(property "MPN" "C2909388"
 			(at 203.2 48.26 0)
 			(hide yes)
 			(show_name no)
@@ -26042,7 +26042,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 164.7698 192.405 0)
 			(hide yes)
 			(show_name no)
@@ -26074,7 +26074,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 165.735 196.215 0)
 			(hide yes)
 			(show_name no)
@@ -26290,7 +26290,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 88.9 137.668 90)
 			(hide yes)
 			(show_name no)
@@ -26322,7 +26322,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25804"
+		(property "MPN" "C25744"
 			(at 88.9 135.89 0)
 			(hide yes)
 			(show_name no)
@@ -26653,7 +26653,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 301.2948 123.19 0)
 			(hide yes)
 			(show_name no)
@@ -26685,7 +26685,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 302.26 127 0)
 			(hide yes)
 			(show_name no)
@@ -26744,7 +26744,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 288.5948 123.19 0)
 			(hide yes)
 			(show_name no)
@@ -26776,7 +26776,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 289.56 127 0)
 			(hide yes)
 			(show_name no)
@@ -27014,7 +27014,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 34.163 248.285 90)
 			(hide yes)
 			(show_name no)
@@ -27046,7 +27046,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 32.385 248.285 0)
 			(hide yes)
 			(show_name no)
@@ -27292,7 +27292,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 352.7552 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -27324,7 +27324,7 @@
 				)
 			)
 		)
-		(property "MPN" "C14663"
+		(property "MPN" "C1525"
 			(at 351.79 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -27692,7 +27692,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 212.3948 92.71 0)
 			(hide yes)
 			(show_name no)
@@ -27724,7 +27724,7 @@
 				)
 			)
 		)
-		(property "MPN" "C1653"
+		(property "MPN" "C1555"
 			(at 213.36 96.52 0)
 			(hide yes)
 			(show_name no)
@@ -27782,7 +27782,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 82.042 195.58 90)
 			(hide yes)
 			(show_name no)
@@ -27814,7 +27814,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25819"
+		(property "MPN" "C25792"
 			(at 83.82 195.58 0)
 			(hide yes)
 			(show_name no)
@@ -27954,7 +27954,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 118.872 80.01 90)
 			(hide yes)
 			(show_name no)
@@ -27986,7 +27986,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25804"
+		(property "MPN" "C25744"
 			(at 120.65 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -28132,7 +28132,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 261.493 65.405 90)
 			(hide yes)
 			(show_name no)
@@ -28164,7 +28164,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 259.715 65.405 0)
 			(hide yes)
 			(show_name no)
@@ -28221,7 +28221,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 281.813 65.405 90)
 			(hide yes)
 			(show_name no)
@@ -28253,7 +28253,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 280.035 65.405 0)
 			(hide yes)
 			(show_name no)
@@ -28312,7 +28312,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 369.8748 125.095 0)
 			(hide yes)
 			(show_name no)
@@ -28344,7 +28344,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 370.84 128.905 0)
 			(hide yes)
 			(show_name no)
@@ -28481,7 +28481,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 39.7002 260.985 0)
 			(hide yes)
 			(show_name no)
@@ -28513,7 +28513,7 @@
 				)
 			)
 		)
-		(property "MPN" "C14663"
+		(property "MPN" "C1525"
 			(at 38.735 257.175 0)
 			(hide yes)
 			(show_name no)
@@ -28653,7 +28653,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 297.815 35.433 90)
 			(hide yes)
 			(show_name no)
@@ -28685,7 +28685,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21190"
+		(property "MPN" "C11702"
 			(at 297.815 33.655 0)
 			(hide yes)
 			(show_name no)
@@ -29075,7 +29075,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 359.41 34.417 90)
 			(hide yes)
 			(show_name no)
@@ -29107,7 +29107,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 359.41 36.195 0)
 			(hide yes)
 			(show_name no)
@@ -29240,7 +29240,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 297.815 43.053 90)
 			(hide yes)
 			(show_name no)
@@ -29272,7 +29272,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21190"
+		(property "MPN" "C11702"
 			(at 297.815 41.275 0)
 			(hide yes)
 			(show_name no)
@@ -29916,7 +29916,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 312.928 46.99 90)
 			(hide yes)
 			(show_name no)
@@ -29948,7 +29948,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21190"
+		(property "MPN" "C11702"
 			(at 311.15 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -30007,7 +30007,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 86.6648 254 0)
 			(hide yes)
 			(show_name no)
@@ -30039,7 +30039,7 @@
 				)
 			)
 		)
-		(property "MPN" "C1653"
+		(property "MPN" "C1555"
 			(at 87.63 257.81 0)
 			(hide yes)
 			(show_name no)
@@ -30355,7 +30355,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 335.788 84.455 90)
 			(hide yes)
 			(show_name no)
@@ -30387,7 +30387,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 334.01 84.455 0)
 			(hide yes)
 			(show_name no)
@@ -30444,7 +30444,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 130.81 97.282 90)
 			(hide yes)
 			(show_name no)
@@ -30476,7 +30476,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25810"
+		(property "MPN" "C2909327"
 			(at 130.81 99.06 0)
 			(hide yes)
 			(show_name no)
@@ -30539,7 +30539,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 307.848 46.99 90)
 			(hide yes)
 			(show_name no)
@@ -30571,7 +30571,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21190"
+		(property "MPN" "C11702"
 			(at 306.07 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -30746,7 +30746,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 264.668 65.405 90)
 			(hide yes)
 			(show_name no)
@@ -30778,7 +30778,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 262.89 65.405 0)
 			(hide yes)
 			(show_name no)
@@ -31064,7 +31064,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 204.47 81.788 90)
 			(hide yes)
 			(show_name no)
@@ -31096,7 +31096,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23140"
+		(property "MPN" "C25105"
 			(at 204.47 80.01 0)
 			(hide yes)
 			(show_name no)
@@ -31155,7 +31155,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 356.5398 125.095 0)
 			(hide yes)
 			(show_name no)
@@ -31187,7 +31187,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 357.505 128.905 0)
 			(hide yes)
 			(show_name no)
@@ -31320,7 +31320,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 359.41 43.053 90)
 			(hide yes)
 			(show_name no)
@@ -31352,7 +31352,7 @@
 				)
 			)
 		)
-		(property "MPN" "C22962"
+		(property "MPN" "C25092"
 			(at 359.41 41.275 0)
 			(hide yes)
 			(show_name no)
@@ -31589,7 +31589,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 253.238 65.405 90)
 			(hide yes)
 			(show_name no)
@@ -31621,7 +31621,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 251.46 65.405 0)
 			(hide yes)
 			(show_name no)
@@ -31830,7 +31830,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 305.308 46.99 90)
 			(hide yes)
 			(show_name no)
@@ -31862,7 +31862,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21190"
+		(property "MPN" "C11702"
 			(at 303.53 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -32079,7 +32079,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 297.815 37.973 90)
 			(hide yes)
 			(show_name no)
@@ -32111,7 +32111,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21190"
+		(property "MPN" "C11702"
 			(at 297.815 36.195 0)
 			(hide yes)
 			(show_name no)
@@ -32335,7 +32335,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 208.28 122.428 90)
 			(hide yes)
 			(show_name no)
@@ -32367,7 +32367,7 @@
 				)
 			)
 		)
-		(property "MPN" "C22775"
+		(property "MPN" "C25076"
 			(at 208.28 120.65 0)
 			(hide yes)
 			(show_name no)
@@ -32500,7 +32500,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 73.533 54.61 90)
 			(hide yes)
 			(show_name no)
@@ -32532,7 +32532,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23254"
+		(property "MPN" "C2909388"
 			(at 71.755 54.61 0)
 			(hide yes)
 			(show_name no)
@@ -33059,7 +33059,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 328.168 84.455 90)
 			(hide yes)
 			(show_name no)
@@ -33091,7 +33091,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 326.39 84.455 0)
 			(hide yes)
 			(show_name no)
@@ -33148,7 +33148,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 204.47 86.868 90)
 			(hide yes)
 			(show_name no)
@@ -33180,7 +33180,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23140"
+		(property "MPN" "C25105"
 			(at 204.47 85.09 0)
 			(hide yes)
 			(show_name no)
@@ -33329,7 +33329,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 146.685 70.358 90)
 			(hide yes)
 			(show_name no)
@@ -33361,7 +33361,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25819"
+		(property "MPN" "C25792"
 			(at 146.685 68.58 0)
 			(hide yes)
 			(show_name no)
@@ -33424,7 +33424,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 204.47 84.328 90)
 			(hide yes)
 			(show_name no)
@@ -33456,7 +33456,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23140"
+		(property "MPN" "C25105"
 			(at 204.47 82.55 0)
 			(hide yes)
 			(show_name no)
@@ -34001,7 +34001,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 221.2848 92.71 0)
 			(hide yes)
 			(show_name no)
@@ -34033,7 +34033,7 @@
 				)
 			)
 		)
-		(property "MPN" "C1653"
+		(property "MPN" "C1555"
 			(at 222.25 96.52 0)
 			(hide yes)
 			(show_name no)
@@ -34091,7 +34091,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 118.872 71.12 90)
 			(hide yes)
 			(show_name no)
@@ -34123,7 +34123,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25804"
+		(property "MPN" "C25744"
 			(at 120.65 71.12 0)
 			(hide yes)
 			(show_name no)
@@ -34270,7 +34270,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 357.1748 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -34302,7 +34302,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 358.14 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -34359,7 +34359,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 250.063 65.405 90)
 			(hide yes)
 			(show_name no)
@@ -34391,7 +34391,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 248.285 65.405 0)
 			(hide yes)
 			(show_name no)
@@ -34448,7 +34448,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 73.533 46.99 90)
 			(hide yes)
 			(show_name no)
@@ -34480,7 +34480,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23254"
+		(property "MPN" "C2909388"
 			(at 71.755 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -34543,7 +34543,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 51.435 57.658 90)
 			(hide yes)
 			(show_name no)
@@ -34575,7 +34575,7 @@
 				)
 			)
 		)
-		(property "MPN" "C22795"
+		(property "MPN" "C2909318"
 			(at 51.435 55.88 0)
 			(hide yes)
 			(show_name no)
@@ -34897,7 +34897,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 208.28 124.968 90)
 			(hide yes)
 			(show_name no)
@@ -34929,7 +34929,7 @@
 				)
 			)
 		)
-		(property "MPN" "C22775"
+		(property "MPN" "C25076"
 			(at 208.28 123.19 0)
 			(hide yes)
 			(show_name no)
@@ -35077,7 +35077,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 76.073 77.47 90)
 			(hide yes)
 			(show_name no)
@@ -35109,7 +35109,7 @@
 				)
 			)
 		)
-		(property "MPN" "C23186"
+		(property "MPN" "C25905"
 			(at 74.295 77.47 0)
 			(hide yes)
 			(show_name no)
@@ -35174,7 +35174,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 231.4448 92.71 0)
 			(hide yes)
 			(show_name no)
@@ -35206,7 +35206,7 @@
 				)
 			)
 		)
-		(property "MPN" "C1653"
+		(property "MPN" "C1555"
 			(at 232.41 96.52 0)
 			(hide yes)
 			(show_name no)
@@ -35264,7 +35264,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 146.05 140.208 90)
 			(hide yes)
 			(show_name no)
@@ -35296,7 +35296,7 @@
 				)
 			)
 		)
-		(property "MPN" "C22795"
+		(property "MPN" "C2909318"
 			(at 146.05 138.43 0)
 			(hide yes)
 			(show_name no)
@@ -35723,7 +35723,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 141.9352 140.97 0)
 			(hide yes)
 			(show_name no)
@@ -35755,7 +35755,7 @@
 				)
 			)
 		)
-		(property "MPN" "C14858"
+		(property "MPN" "C1546"
 			(at 140.97 144.78 0)
 			(hide yes)
 			(show_name no)
@@ -36269,7 +36269,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 78.232 158.75 90)
 			(hide yes)
 			(show_name no)
@@ -36301,7 +36301,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25810"
+		(property "MPN" "C2909327"
 			(at 80.01 158.75 0)
 			(hide yes)
 			(show_name no)
@@ -36709,7 +36709,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 387.6548 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -36741,7 +36741,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 388.62 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -36953,7 +36953,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 146.685 93.853 90)
 			(hide yes)
 			(show_name no)
@@ -36985,7 +36985,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25819"
+		(property "MPN" "C25792"
 			(at 146.685 92.075 0)
 			(hide yes)
 			(show_name no)
@@ -37048,7 +37048,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 272.923 65.405 90)
 			(hide yes)
 			(show_name no)
@@ -37080,7 +37080,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 271.145 65.405 0)
 			(hide yes)
 			(show_name no)
@@ -37139,7 +37139,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 320.3448 57.15 0)
 			(hide yes)
 			(show_name no)
@@ -37171,7 +37171,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 321.31 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -37472,7 +37472,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 118.872 62.23 90)
 			(hide yes)
 			(show_name no)
@@ -37504,7 +37504,7 @@
 				)
 			)
 		)
-		(property "MPN" "C22940"
+		(property "MPN" "C144772"
 			(at 120.65 62.23 0)
 			(hide yes)
 			(show_name no)
@@ -37664,7 +37664,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 359.41 31.877 90)
 			(hide yes)
 			(show_name no)
@@ -37696,7 +37696,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 359.41 33.655 0)
 			(hide yes)
 			(show_name no)
@@ -37753,7 +37753,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 90.805 33.782 90)
 			(hide yes)
 			(show_name no)
@@ -37785,7 +37785,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25810"
+		(property "MPN" "C2909327"
 			(at 90.805 35.56 0)
 			(hide yes)
 			(show_name no)
@@ -37850,7 +37850,7 @@
 				(justify right)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 275.8948 123.19 0)
 			(hide yes)
 			(show_name no)
@@ -37882,7 +37882,7 @@
 				)
 			)
 		)
-		(property "MPN" "C96446"
+		(property "MPN" "C15525"
 			(at 276.86 127 0)
 			(hide yes)
 			(show_name no)
@@ -37941,7 +37941,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Library:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
+		(property "Footprint" "Library:C_0402_1005Metric_Pad0.74x0.62mm_HandSolder"
 			(at 367.9952 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -37973,7 +37973,7 @@
 				)
 			)
 		)
-		(property "MPN" "C14663"
+		(property "MPN" "C1525"
 			(at 367.03 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -38341,7 +38341,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 224.155 17.272 90)
 			(hide yes)
 			(show_name no)
@@ -38373,7 +38373,7 @@
 				)
 			)
 		)
-		(property "MPN" "C21189"
+		(property "MPN" "C17168"
 			(at 224.155 19.05 0)
 			(hide yes)
 			(show_name no)
@@ -38542,7 +38542,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0603_1608Metric_Pad0.98x0.95mm_HandSolder"
+		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
 			(at 66.04 155.448 90)
 			(hide yes)
 			(show_name no)
@@ -38574,7 +38574,7 @@
 				)
 			)
 		)
-		(property "MPN" "C31850"
+		(property "MPN" "C25768"
 			(at 66.04 153.67 0)
 			(hide yes)
 			(show_name no)
