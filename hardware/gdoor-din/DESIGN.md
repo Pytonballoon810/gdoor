@@ -2,7 +2,11 @@
 
 A GDoor adapter for a 2-module DIN-rail enclosure (35 mm wide) with Ethernet,
 audio and the bus interface on one board, the ESP32-S3 module soldered on.
-Status: **spec only, nothing laid out yet.**
+Status: **schematic in progress, no layout yet.** `esp32.kicad_sch` is the v4.1
+bus and audio sheet (devkit removed); `mcu_eth.kicad_sch` holds the new
+MCU, USB-C, power and Ethernet circuitry (W5500 per WIZnet's WIZ850io
+reference). The file stem stays `esp32` because the copied sheet stores its
+references under that project name.
 
 Decisions (2026-10-16):
 
@@ -21,12 +25,12 @@ Decisions (2026-10-16):
 | Bus interface (rectifier, RX comparators, TX filter and driver, +5Vonoff switch) | v4.0 schematic, unchanged | Proven on v3.x/v4.0. TX_EN switches the TX filter supply, which keeps the TX pin low at boot. |
 | Bus voltage measurement | v4.0 (`BUS_DCVOLT`) | Closes issue #28 (bus connected/disconnected). |
 | Audio codec ES8374 + bus coupling | v4.0 audio section | Own 3.3 V LDO (`+3.3V_ANA`) as on v4.0. |
-| RX threshold | new: PWM + RC filter | The S3 has no DAC. A filtered PWM output replaces v3.1's DAC threshold (adjustable sensitivity). Fitted via 0 Ω, so v4.0 behaviour (fixed threshold) stays possible. |
+| RX threshold | v4.0, fixed | The S3 has no DAC; the fixed-threshold input of v4.0 (`RX`) is used. The adjustable path (`RX_DAC`, via unfitted R56) is not connected to the MCU. |
 | Ethernet | new: W5500 + HR911105A (magnetics and LEDs integrated) | 25 MHz crystal, standard Wiznet reference circuit. |
 | MCU | new: ESP32-S3-WROOM-1-N8R2 | Native USB (flashing, console), BOOT and RESET buttons. |
 | USB-C | new: TYPE-C-31-M-12, 5.1 kΩ CC pull-downs, USBLC6-2SC6 ESD | Power and programming. |
 | Power | AMS1117-3.3 for 3.3 V digital (S3 + W5500), second AMS1117 for the codec | 5 V inputs OR-ed with SS14 Schottkys. |
-| Status LED | new: WS2812B-2020 | Issue #46. |
+| Status LEDs | new: green (GPIO2) + red (GPIO17), 0603 | Issue #46. Plain LEDs instead of a WS2812, which needs more than 3.3 V logic when run from 5 V. |
 
 ## ESP32-S3 pin map
 
@@ -41,14 +45,14 @@ module variants), GPIO43/44 (UART0, test pads for a serial console).
 | Bus RX (comparator, digital) | 6 | |
 | Bus RX analog | 7 | ADC1, usable with WiFi on |
 | Bus DC voltage | 8 | ADC1 |
-| RX threshold PWM | 1 | RC filtered |
+| Status LED red | 17 | |
 | W5500 CS / MOSI / SCK / MISO | 10 / 11 / 12 / 13 | SPI2 IO_MUX pins, full speed |
 | W5500 INT / RST | 14 / 21 | |
 | I2S MCLK / BCLK / LRCK | 38 / 39 / 40 | S3 routes MCLK to any pin (the v4.0 GPIO0 problem is gone) |
 | I2S DOUT (to codec DSDIN) / DIN (from codec ASDOUT) | 41 / 42 | |
 | I2C SDA / SCL (codec control) | 47 / 48 | |
-| Status LED (WS2812B) | 2 | |
-| Spare, on a header | 15, 16, 17, 18 | sensors or expansion |
+| Status LED green | 2 | |
+| Expansion header (with 3V3, GND, TXD0, RXD0) | 15, 16 | sensors, serial console |
 
 ## Board and enclosure
 
