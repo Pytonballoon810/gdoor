@@ -29,6 +29,8 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
     const char* mqtt_topic_bus_rx();
     const char* mqtt_topic_bus_tx();
     bool debug();
+    bool tx_echo();
+    uint32_t wifi_disconnects();
     uint8_t rx_pin();
     float rx_sensitivity();
 };

@@ -44,21 +44,48 @@ namespace GDOOR {
         return GDOOR_RX::read();
     }
 
+    GDOOR_DATA sent_data; // Copy of the last transmitted message, handed out by sent()
+    bool sent_pending = false; // A transmission was started and not yet reported via sent()
+
     /*
     * Send out data.
     * @param data buffer with bus data
     * @param len length of buffer, can be max MAX_WORDLEN
+    * @return true if the data was accepted and transmission started
     */
-    void send(uint8_t *data, uint16_t len) {
-        GDOOR_TX::send(data, len);
+    bool send(uint8_t *data, uint16_t len) {
+        bool accepted = GDOOR_TX::send(data, len);
+        sent_pending = sent_pending || accepted;
+        return accepted;
     }
 
     /*
     * Send out data.
     * @param hex string data without 0x prefix
+    * @return true if the string was valid hex data and transmission started
     */
-    void send(String str) {
-        GDOOR_TX::send(str);
+    bool send(String str) {
+        bool accepted = GDOOR_TX::send(str);
+        sent_pending = sent_pending || accepted;
+        return accepted;
+    }
+
+    /**
+    * User function, called to see if a transmission finished since the last call.
+    * Returns the message as it was put on the bus (including CRC),
+    * so that it can be reported back, e.g. via MQTT.
+    * @return Data pointer as GDOOR_DATA class or NULL if nothing was sent
+    */
+    GDOOR_DATA* sent() {
+        if (!sent_pending || (GDOOR_TX::tx_state & STATE_SENDING)) {
+            return NULL;
+        }
+        sent_pending = false;
+        memcpy(sent_data.data, GDOOR_TX::last_data, GDOOR_TX::last_len);
+        memset(sent_data.raw, 0, sizeof(sent_data.raw));
+        sent_data.len = GDOOR_TX::last_len;
+        sent_data.valid = 1;
+        return &sent_data;
     }
 
     /*

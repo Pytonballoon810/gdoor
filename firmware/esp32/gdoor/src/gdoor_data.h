@@ -58,6 +58,7 @@ class GDOOR_DATA_PROTOCOL : public Printable { // Class/Struct to collect bus hi
         uint8_t parameters[2];
         uint8_t source[3];
         uint8_t destination[3];
+        const char *origin; // NULL for messages received from the bus, otherwise e.g. "GDOOR_TX"
 
         GDOOR_DATA_PROTOCOL(GDOOR_DATA* data, bool idle = false);
 
@@ -89,6 +90,11 @@ class GDOOR_DATA_PROTOCOL : public Printable { // Class/Struct to collect bus hi
                     r+= GDOOR_UTILS::print_json_hexarray<uint16_t>(p, "raw", this->raw->raw, this->raw->len*9);
                     r+= p.print(", ");
                 }
+            }
+
+            if (this->origin != NULL) {
+                r+= GDOOR_UTILS::print_json_string(p, "origin", origin);
+                r+= p.print(", ");
             }
 
             r+= GDOOR_UTILS::print_json_value<uint32_t>(p, "event_id", cnt++);

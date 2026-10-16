@@ -42,6 +42,8 @@ namespace MQTT_HELPER { //Namespace as we can only use it once
     String& receive();
     void loop();
     bool isNewConnection();
+    bool statusDue();
+    void publish_status(uint32_t bus_rx_count, uint32_t bus_tx_count, uint32_t wifi_disconnects);
 };
 
 #endif

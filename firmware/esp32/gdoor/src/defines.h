@@ -46,6 +46,12 @@
 // WIFI
 #define DEFAULT_WIFI_SSID     "GDoor"
 #define DEFAULT_WIFI_PASSWORD "12345678"
+#define WIFI_WATCHDOG_RETRY_MS   30000UL  // Retry WiFi connection every 30 s while disconnected
+#define WIFI_WATCHDOG_RESTART_MS 600000UL // Restart if WiFi stays down for 10 min
+
+// Status
+#define STATUS_INTERVAL_MS 60000UL // How often availability and status are published via MQTT
+#define MQTT_RECONNECT_INTERVAL_MS 5000UL // Wait between MQTT connection attempts, as connect() blocks
 
 // MQTT
 #define DEFAULT_MQTT_SERVER   "0.0.0.0" 

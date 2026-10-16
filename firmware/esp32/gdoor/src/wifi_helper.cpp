@@ -90,6 +90,7 @@ public:
             selectvalues.push_back((values[i]));
         }
         _value  = new char[maxlen + 1];
+        memset(_value, 0, maxlen + 1); // Otherwise getValue() returns uninitialized memory until a value is loaded
         _length = maxlen;
     }
 
@@ -123,10 +124,11 @@ public:
 class EnableDisableParameter : public CheckSelectParameter {
 public:
     
-    EnableDisableParameter(const char *id, const char *placeholder)
+    EnableDisableParameter(const char *id, const char *placeholder, const char *defaultValue = "disabled")
         :  CheckSelectParameter() {
         const char* endis[] = {"disabled", "enabled"};
         selectInit(id, placeholder, endis, 2, 10);
+        setValue(defaultValue, strlen(defaultValue));
     }
 };
 
@@ -154,6 +156,7 @@ public:
 
 namespace WIFI_HELPER { //Namespace as we can only use it once
     bool shouldSaveConfig = false;
+    void on_wifi_disconnected(WiFiEvent_t event, WiFiEventInfo_t info);
     const char* rx_pin_select_values[] = RX_PIN_CHOICES;    
     const char* rx_sensitivity_select_values[] = RX_SENS_CHOICES;    
 
@@ -166,7 +169,8 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
     WiFiManagerParameter custom_mqtt_topic_bus_tx("mqtt_topic_bus_tx", "MQTT Topic - to bus", DEFAULT_MQTT_TOPIC_BUS_TX, 40);
     EnableDisableParameter custom_debug("param_6", "Debug Mode"); //param_4 is a very ugly workaround for stupid WifiManager custom fields implementation. Works only with param_<fixedno>
     CheckSelectParameter custom_rx_pin("param_7", "RX Input", rx_pin_select_values, RX_PIN_CHOICES_LEN, 40); 
-    CheckSelectParameter custom_rx_sens("param_8", "IO22 Sensitivity", rx_sensitivity_select_values, RX_SENS_CHOICES_LEN, 40); 
+    CheckSelectParameter custom_rx_sens("param_8", "IO22 Sensitivity", rx_sensitivity_select_values, RX_SENS_CHOICES_LEN, 40);
+    EnableDisableParameter custom_tx_echo("param_9", "Publish sent bus messages to MQTT", "enabled");
 
     /**
      * Internal function which creates and writes a file to LittleFS.
@@ -239,6 +243,11 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
         return strcmp(custom_debug.getValue(), "enabled") == 0;
     }
 
+    /** Returns true if messages sent to the bus should be published back via MQTT */
+    bool tx_echo(){
+        return strcmp(custom_tx_echo.getValue(), "disabled") != 0;
+    }
+
     /** Returns io number of select RX method*/
     uint8_t rx_pin() {
         const char* value = custom_rx_pin.getValue();
@@ -309,10 +318,16 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
                 custom_rx_sens.setValue(filevalue.c_str(), 40);
             }
 
+            if (read_config_file("/custom_tx_echo", &filevalue) && filevalue.length() > 0 ) {
+                custom_tx_echo.setValue(filevalue.c_str(), filevalue.length() + 1);
+            }
+
             LittleFS.end();
         } else {
             JSONPRINT("Could not mount filesystem on load");
         }
+
+        WiFi.onEvent(on_wifi_disconnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
 
         wifiManager.setTitle("GDoor");
         
@@ -330,6 +345,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
 
         wifiManager.addParameter(&custom_rx_pin);
         wifiManager.addParameter(&custom_rx_sens);
+        wifiManager.addParameter(&custom_tx_echo);
 
         wifiManager.setSaveConfigCallback(on_save);
         wifiManager.setSaveParamsCallback(on_save);
@@ -347,8 +363,54 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
         wifiManager.startWebPortal();
     }
 
+    uint32_t disconnect_count = 0; // Number of WiFi disconnects since boot, reported in the status message
+
+    /** Returns number of WiFi disconnects since boot */
+    uint32_t wifi_disconnects() {
+        return disconnect_count;
+    }
+
+    /**
+     * Internal WiFi Event callback, counts disconnects.
+    */
+    void on_wifi_disconnected(WiFiEvent_t event, WiFiEventInfo_t info) {
+        disconnect_count++;
+    }
+
+    /**
+     * Some access points (e.g. FRITZ!Box) drop the client in a way the ESP32
+     * auto-reconnect does not recover from, leaving GDoor offline until a power cycle.
+     * Retry the connection explicitly and restart as last resort.
+    */
+    void wifi_watchdog() {
+        static uint32_t disconnected_since = 0;
+        static uint32_t last_attempt = 0;
+        uint32_t now = millis();
+
+        if (WiFi.status() == WL_CONNECTED || !wifiManager.getWiFiIsSaved()) {
+            disconnected_since = 0;
+            return;
+        }
+
+        if (disconnected_since == 0) {
+            disconnected_since = now;
+            last_attempt = now;
+            return;
+        }
+
+        if (now - disconnected_since > WIFI_WATCHDOG_RESTART_MS) {
+            JSONPRINT("WiFi down for too long, restarting");
+            ESP.restart();
+        } else if (now - last_attempt > WIFI_WATCHDOG_RETRY_MS) {
+            JSONDEBUG("WiFi down, reconnecting");
+            last_attempt = now;
+            WiFi.reconnect();
+        }
+    }
+
     void loop() {
         wifiManager.process();
+        wifi_watchdog();
 
         if (shouldSaveConfig) {
             shouldSaveConfig = false;
@@ -363,6 +425,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
                 save_config_file("/custom_debug", custom_debug.getValue());
                 save_config_file("/custom_rx_pin", custom_rx_pin.getValue());
                 save_config_file("/custom_rx_sens", custom_rx_sens.getValue());
+                save_config_file("/custom_tx_echo", custom_tx_echo.getValue());
                 LittleFS.end();
                 ESP.restart();
             } else {

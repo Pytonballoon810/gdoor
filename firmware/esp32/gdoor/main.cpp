@@ -19,12 +19,14 @@
 #include "src/mqtt_helper.h"
 #include "src/wifi_helper.h"
 #include "src/printer_helper.h"
-#include "src/udp_transmitter.h"
 
 GDOOR_DATA_PROTOCOL gdoor_data_idle(NULL, true);
 
 boolean debug = false; // Global variable to indicate if we are in debug mode (true)
+boolean tx_echo = true; // Publish messages sent to the bus back on the bus_rx topic
 const char* mqtt_topic_bus_rx = NULL;
+uint32_t bus_rx_count = 0; // Valid messages received from the bus since boot
+uint32_t bus_tx_count = 0; // Messages sent to the bus since boot
 
 /**
  * Function which parses user provided serial input
@@ -78,8 +80,7 @@ void setup() {
 
     mqtt_topic_bus_rx = WIFI_HELPER::mqtt_topic_bus_rx();
     debug = WIFI_HELPER::debug();
-
-    UDP_TRANSMITTER::setup();
+    tx_echo = WIFI_HELPER::tx_echo();
 
     JSONDEBUG("GDoor Setup done");
     JSONDEBUG("RX Pin: ");
@@ -98,9 +99,29 @@ void loop() {
     if(MQTT_HELPER::isNewConnection()) {
         output(gdoor_data_idle, mqtt_topic_bus_rx, true);
     }
+    if(MQTT_HELPER::statusDue()) {
+        MQTT_HELPER::publish_status(bus_rx_count, bus_tx_count, WIFI_HELPER::wifi_disconnects());
+    }
+
+    // Report messages we put on the bus, once transmission finished, so that
+    // the sender can confirm it went out (origin field distinguishes it from received data)
+    GDOOR_DATA* tx_data = GDOOR::sent();
+    if(tx_data != NULL) {
+        bus_tx_count++;
+        if(tx_echo) {
+            GDOOR_DATA_PROTOCOL sentmessage = GDOOR_DATA_PROTOCOL(tx_data);
+            sentmessage.origin = "GDOOR_TX";
+            output(sentmessage, mqtt_topic_bus_rx);
+            output(gdoor_data_idle, mqtt_topic_bus_rx, true);
+        }
+    }
+
     if(rx_data != NULL) {
         JSONDEBUG("Received data from bus");
         GDOOR_DATA_PROTOCOL busmessage = GDOOR_DATA_PROTOCOL(rx_data);
+        if(rx_data->valid) {
+            bus_rx_count++;
+        }
         output(busmessage, mqtt_topic_bus_rx);
         JSONDEBUG("Output bus data via Serial and MQTT, done");
         // Output idle message after bus message, to reset values so that

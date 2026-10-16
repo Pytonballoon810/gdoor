@@ -83,6 +83,11 @@ namespace MQTT_HELPER { //Namespace as we can only use it once
     String received_mqtt_payload; // Global variable which stores received MQTT payload
     String empty(""); //Empty string, useful as global and fixed allocated value.
     String availability_topic; //Topic where availabiliy is shown
+    String status_topic; //Topic where the periodic status JSON is published
+    String client_id; //MQTT client id, unique per adapter so that two adapters do not kick each other off the broker
+    uint32_t mqtt_connects = 0; //Number of successful MQTT connections since boot
+    uint32_t last_status = 0; //millis() of last availability/status publish
+    bool status_requested = false; //Publish status as soon as possible (e.g. after connect)
 
     bool new_string_available = false; // Global variable to indicate that a new MQTT String was received
 
@@ -113,6 +118,43 @@ namespace MQTT_HELPER { //Namespace as we can only use it once
      *  }
      * }
     */
+    /**
+     * Sends a home assistant discovery message for one diagnostic sensor,
+     * read from the periodic status JSON (see publish_status()).
+     * Optional fields are left out when NULL.
+    */
+    void send_ha_diagnostic(const char* key, const char* name, const char* value_template,
+                            const char* unit, const char* device_class, const char* state_class, const char* icon) {
+        String mac = WiFi.macAddress();
+        String mac_clean = mac;
+        mac_clean.replace(":", "_");
+
+        String message = "{";
+        message += "\"name\": \"" + String(name) + "\",";
+        message += "\"uniq_id\": \"gdoor_" + String(key) + "_" + mac_clean + "\",";
+        message += "\"state_topic\": \"" + status_topic + "\",";
+        message += "\"value_template\": \"" + String(value_template) + "\",";
+        message += "\"availability_topic\": \"" + availability_topic + "\",";
+        message += "\"entity_category\": \"diagnostic\",";
+        if (unit != NULL) {
+            message += "\"unit_of_measurement\": \"" + String(unit) + "\",";
+        }
+        if (device_class != NULL) {
+            message += "\"device_class\": \"" + String(device_class) + "\",";
+        }
+        if (state_class != NULL) {
+            message += "\"state_class\": \"" + String(state_class) + "\",";
+        }
+        if (icon != NULL) {
+            message += "\"icon\": \"" + String(icon) + "\",";
+        }
+        message += "\"device\": {\"ids\": \"gdoor_" + mac_clean + "\"}";
+        message += "}";
+
+        String topic = "homeassistant/sensor/gdoor_" + mac_clean + "/" + String(key) + "/config";
+        mqttClient.publish(topic, message, true, 1);
+    }
+
     void send_ha_discovery(){
         String mac = WiFi.macAddress();
         String mac_clean = mac;
@@ -147,7 +189,14 @@ R"""(
         message += "\"json_attributes_topic\": \"" + String(tx_topic_name) + "\",";
         message += "\"command_topic\": \"" + String(rx_topic_name) + "\"";
         message += "}";
-        mqttClient.publish("homeassistant/sensor/gdoor/data/config", message, true, 1); 
+        mqttClient.publish("homeassistant/sensor/gdoor/data/config", message, true, 1);
+
+        send_ha_diagnostic("rssi", "WiFi Signal", "{{ value_json.rssi }}", "dBm", "signal_strength", "measurement", NULL);
+        send_ha_diagnostic("uptime", "Uptime", "{{ value_json.uptime }}", "s", "duration", "total_increasing", NULL);
+        send_ha_diagnostic("ip", "IP Address", "{{ value_json.ip }}", NULL, NULL, NULL, "mdi:ip-network");
+        send_ha_diagnostic("wifi_disconnects", "WiFi Disconnects", "{{ value_json.wifi_disconnects }}", NULL, NULL, "total_increasing", "mdi:wifi-off");
+        send_ha_diagnostic("bus_rx_count", "Bus Messages Received", "{{ value_json.bus_rx_count }}", NULL, NULL, "total_increasing", "mdi:download");
+        send_ha_diagnostic("bus_tx_count", "Bus Messages Sent", "{{ value_json.bus_tx_count }}", NULL, NULL, "total_increasing", "mdi:upload");
     }
 
     void setWill() {
@@ -165,8 +214,11 @@ R"""(
      * executes when a new String is received via the subscribed topic
     */
     void on_message_received(String &topic, String &payload) {
-        if(topic == "homeassistant/status" && payload == "online") {
-            ha_online = true;
+        if(topic == "homeassistant/status") {
+            if(payload == "online") {
+                ha_online = true;
+            }
+            return; // HA status is not meant for the bus
         }
         new_string_available = true;
         received_mqtt_payload = payload;
@@ -199,6 +251,51 @@ R"""(
         tx_topic_name = tx_topic;
         user = username;
         password = pw;
+
+        String mac_clean = WiFi.macAddress();
+        mac_clean.replace(":", "");
+        client_id = "GDoor-" + mac_clean;
+        status_topic = String(tx_topic) + "/status";
+    }
+
+    /** Returns true when the periodic status should be published (see publish_status()) */
+    bool statusDue() {
+        if (!mqttClient.connected()) {
+            return false;
+        }
+        return status_requested || (millis() - last_status >= STATUS_INTERVAL_MS);
+    }
+
+    /**
+     * Publishes availability and a status JSON, e.g.
+     * {"version": "v3.2", "ip": "192.168.1.20", "ssid": "MyWifi", "bssid": "..", "rssi": -61,
+     *  "uptime": 3600, "free_heap": 210000, "reset_reason": 1, "wifi_disconnects": 0,
+     *  "mqtt_connects": 1, "bus_rx_count": 12, "bus_tx_count": 2}
+     * @param bus_rx_count Number of valid messages received from the bus since boot
+     * @param bus_tx_count Number of messages sent to the bus since boot
+     * @param wifi_disconnects Number of WiFi disconnects since boot
+    */
+    void publish_status(uint32_t bus_rx_count, uint32_t bus_tx_count, uint32_t wifi_disconnects) {
+        last_status = millis();
+        status_requested = false;
+
+        mqttClient.publish(availability_topic, "online");
+
+        String message = "{";
+        message += "\"version\": \"" + String(GDOOR_VERSION) + "\", ";
+        message += "\"ip\": \"" + WiFi.localIP().toString() + "\", ";
+        message += "\"ssid\": \"" + WiFi.SSID() + "\", ";
+        message += "\"bssid\": \"" + WiFi.BSSIDstr() + "\", ";
+        message += "\"rssi\": " + String(WiFi.RSSI()) + ", ";
+        message += "\"uptime\": " + String((uint32_t)(millis() / 1000)) + ", ";
+        message += "\"free_heap\": " + String(ESP.getFreeHeap()) + ", ";
+        message += "\"reset_reason\": " + String((int)esp_reset_reason()) + ", ";
+        message += "\"wifi_disconnects\": " + String(wifi_disconnects) + ", ";
+        message += "\"mqtt_connects\": " + String(mqtt_connects) + ", ";
+        message += "\"bus_rx_count\": " + String(bus_rx_count) + ", ";
+        message += "\"bus_tx_count\": " + String(bus_tx_count);
+        message += "}";
+        mqttClient.publish(status_topic, message);
     }
 
     /**
@@ -206,43 +303,47 @@ R"""(
      * needs to be executed in main loop().
     */
     void loop() {
-        static uint16_t counter = 0;
-        if(WiFi.getMode() == WIFI_MODE_STA && WiFi.status() == WL_CONNECTED) {
-            if (newly_connected) {
+        static uint32_t last_attempt = 0;
+        static bool attempted = false;
+        // WIFI_MODE_APSTA is used while the config portal is open, MQTT should work there as well
+        if((WiFi.getMode() & WIFI_MODE_STA) && WiFi.status() == WL_CONNECTED) {
+            // connect() blocks for up to the socket timeout, so do not retry on every loop,
+            // otherwise an unreachable broker stalls the main loop (and bus decoding)
+            if (newly_connected && (!attempted || millis() - last_attempt >= MQTT_RECONNECT_INTERVAL_MS)) {
                 JSONDEBUG("Newly connected WIFI detected in MQTT loop");
+                attempted = true;
+                last_attempt = millis();
                 setWill();
-                if (mqttClient.connect("GDoor", user, password)) {
+                if (mqttClient.connect(client_id.c_str(), user, password)) {
                     JSONDEBUG("Successfully connected MQTT");
                     mqttClient.subscribe(rx_topic_name);
                     mqttClient.subscribe("homeassistant/status");
 
                     send_ha_discovery();
 
+                    mqtt_connects++;
                     newly_connected = false;
                     new_connection_established = true;
-                    counter = 0;
+                    status_requested = true;
                 }
             }
 
             mqttClient.loop();
             if (!mqttClient.connected()) {
-                JSONDEBUG("MQTT lost connection");
+                if (!newly_connected) {
+                    JSONDEBUG("MQTT lost connection");
+                }
                 newly_connected = true;
             } else {
-                // Send every 2^16 a availability message
-                if (! counter && !newly_connected ) {
-                    mqttClient.publish(availability_topic, "online");
-                }
-
                 // Indicate a new connection if HA gets online,
                 // so that state is resend
                 if(ha_online) {
                     ha_online = false;
                     send_ha_discovery();
                     new_connection_established = true;
+                    status_requested = true;
                 }
             }
-            counter = counter + 1;
         }
     }
 

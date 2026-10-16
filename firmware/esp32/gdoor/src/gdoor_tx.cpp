@@ -23,6 +23,8 @@ namespace GDOOR_TX {
     uint16_t tx_state = 0;
     uint16_t tx_words[MAX_WORDLEN];
     uint8_t tx_strbuffer[MAX_WORDLEN*2];
+    uint8_t last_data[MAX_WORDLEN]; // Last accepted message incl. CRC, so it can be reported back to the user
+    uint16_t last_len = 0;
     uint16_t bits_len = 0;
     uint16_t bits_ptr = 0;
     uint16_t pulse_cnt = 0;
@@ -171,9 +173,10 @@ namespace GDOOR_TX {
     * Function called by user to send out data.
     * @param data buffer with bus data
     * @param len length of buffer, can be max MAX_WORDLEN
+    * @return true if the data was accepted and transmission started
     */
-    void send(uint8_t *data, uint16_t len) {
-        if (! (tx_state & STATE_SENDING) && len < MAX_WORDLEN) {
+    bool send(uint8_t *data, uint16_t len) {
+        if (! (tx_state & STATE_SENDING) && len > 0 && len < MAX_WORDLEN) {
             bits_ptr = 0;
             pulse_cnt = 0;
             bits_len = (uint16_t) (len*9 + 9); // Data bits + CRC (8bit CRC data + parity bit) (Startbit is added by timer int. routine)
@@ -186,15 +189,23 @@ namespace GDOOR_TX {
 
             uint8_t crc = GDOOR_UTILS::crc(data, len);
             tx_words[len] = byte2word(crc);
+
+            memcpy(last_data, data, len);
+            last_data[len] = crc;
+            last_len = len + 1;
+
             start_timer();
+            return true;
         }
+        return false;
     }
 
     /*
     * Function called by user to send out data.
     * @param hex string data without 0x prefix
+    * @return true if the string was valid hex data and transmission started
     */
-    void send(String str) {
+    bool send(String str) {
         uint16_t index = 0;
         // String cleanup
         str.toUpperCase();
@@ -218,8 +229,9 @@ namespace GDOOR_TX {
 
             // If something was converted, transmit it
             if (index > 0) {
-                send(tx_strbuffer, index);
+                return send(tx_strbuffer, index);
             }
         }
+        return false;
     }
 }

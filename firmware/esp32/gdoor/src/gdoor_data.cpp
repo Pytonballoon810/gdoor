@@ -148,6 +148,7 @@ GDOOR_DATA_PROTOCOL::GDOOR_DATA_PROTOCOL(GDOOR_DATA* data, bool idle) {
         this->action = "ACTION_UNKOWN";
     }
     this->raw = data;
+    this->origin = NULL;
 
     this->source[0] = 0x00;
     this->source[1] = 0x00;
