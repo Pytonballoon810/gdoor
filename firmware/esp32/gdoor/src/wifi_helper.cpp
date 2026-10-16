@@ -20,6 +20,7 @@
 #include <ETH.h>
 #include <LittleFS.h>
 #include "printer_helper.h"
+#include "web_console.h"
 
 /**
  * Overriden WiFiManager class,
@@ -173,6 +174,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
     CheckSelectParameter custom_rx_sens("param_8", "IO22 Sensitivity", rx_sensitivity_select_values, RX_SENS_CHOICES_LEN, 40);
     EnableDisableParameter custom_tx_echo("param_9", "Publish sent bus messages to MQTT", "enabled");
     EnableDisableParameter custom_ethernet("param_10", "Ethernet (W5500 module on SPI)", "disabled");
+    EnableDisableParameter custom_console_send("param_11", "Web console can send to the bus", "disabled");
 
     bool eth_started = false; // W5500 was found and initialized
 
@@ -325,6 +327,32 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
         }
     }
 
+    /** Returns true if the web console may send to the bus */
+    bool console_send(){
+        return strcmp(custom_console_send.getValue(), "enabled") == 0;
+    }
+
+    /**
+     * Logs WiFi/Ethernet connects and disconnects to the web console.
+     * Polled from loop(), as the network events run in another task.
+    */
+    void log_network_changes() {
+        static bool wifi_was_up = false;
+        static bool eth_was_up = false;
+        bool wifi_up = WiFi.status() == WL_CONNECTED;
+        bool eth_up = ethernet_connected();
+        if (wifi_up != wifi_was_up) {
+            WEB_CONSOLE::log(wifi_up ? "WiFi connected to " + WiFi.SSID() + ", IP " + WiFi.localIP().toString()
+                                     : String("WiFi disconnected"));
+            wifi_was_up = wifi_up;
+        }
+        if (eth_up != eth_was_up) {
+            WEB_CONSOLE::log(eth_up ? "Ethernet connected, IP " + ETH.localIP().toString()
+                                    : String("Ethernet disconnected"));
+            eth_was_up = eth_up;
+        }
+    }
+
     /** Returns io number of select RX method*/
     uint8_t rx_pin() {
         const char* value = custom_rx_pin.getValue();
@@ -403,6 +431,10 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
                 custom_ethernet.setValue(filevalue.c_str(), filevalue.length() + 1);
             }
 
+            if (read_config_file("/custom_console_send", &filevalue) && filevalue.length() > 0 ) {
+                custom_console_send.setValue(filevalue.c_str(), filevalue.length() + 1);
+            }
+
             LittleFS.end();
         } else {
             JSONPRINT("Could not mount filesystem on load");
@@ -429,6 +461,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
         wifiManager.addParameter(&custom_rx_sens);
         wifiManager.addParameter(&custom_tx_echo);
         wifiManager.addParameter(&custom_ethernet);
+        wifiManager.addParameter(&custom_console_send);
 
         wifiManager.setSaveConfigCallback(on_save);
         wifiManager.setSaveParamsCallback(on_save);
@@ -439,7 +472,12 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
         wifiManager.setBreakAfterConfig(true);
         wifiManager.setConfigPortalBlocking(false);
         wifiManager.setTimeout(300);
-        std::vector<const char *> menu = {"wifi","param","sep","update"};
+        // Console pages live on WiFiManager's web server, which is recreated whenever the portal starts
+        wifiManager.setWebServerCallback([]() {
+            WEB_CONSOLE::register_routes(wifiManager.server.get());
+        });
+        wifiManager.setCustomMenuHTML("<form action='/console' method='get'><button>Console</button></form><br/>");
+        std::vector<const char *> menu = {"wifi","param","custom","sep","update"};
         wifiManager.setMenu(menu);
         wifiManager.setDebugOutput(debug());
         wifiManager.autoConnect(DEFAULT_WIFI_SSID, DEFAULT_WIFI_PASSWORD);
@@ -484,9 +522,11 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
 
         if (now - disconnected_since > WIFI_WATCHDOG_RESTART_MS) {
             JSONPRINT("WiFi down for too long, restarting");
+            WEB_CONSOLE::log("WiFi down for too long, restarting");
             ESP.restart();
         } else if (now - last_attempt > WIFI_WATCHDOG_RETRY_MS) {
             JSONDEBUG("WiFi down, reconnecting");
+            WEB_CONSOLE::log("WiFi down, reconnecting");
             last_attempt = now;
             WiFi.reconnect();
         }
@@ -495,6 +535,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
     void loop() {
         wifiManager.process();
         wifi_watchdog();
+        log_network_changes();
 
         if (shouldSaveConfig) {
             shouldSaveConfig = false;
@@ -511,6 +552,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
                 save_config_file("/custom_rx_sens", custom_rx_sens.getValue());
                 save_config_file("/custom_tx_echo", custom_tx_echo.getValue());
                 save_config_file("/custom_ethernet", custom_ethernet.getValue());
+                save_config_file("/custom_console_send", custom_console_send.getValue());
                 LittleFS.end();
                 ESP.restart();
             } else {

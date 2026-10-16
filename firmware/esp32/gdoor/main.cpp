@@ -19,6 +19,7 @@
 #include "src/mqtt_helper.h"
 #include "src/wifi_helper.h"
 #include "src/printer_helper.h"
+#include "src/web_console.h"
 
 GDOOR_DATA_PROTOCOL gdoor_data_idle(NULL, true);
 
@@ -59,6 +60,13 @@ void output(GDOOR_DATA_PROTOCOL &busmessage, const char* topic, bool force=false
         MQTT_HELPER::printer.print(busmessage);
         MQTT_HELPER::printer.println("}");
         MQTT_HELPER::printer.publish((const char*)topic);
+
+        // Bus messages also go to the web console, the idle keepalive would only be noise there
+        if(busmessage.raw != NULL) {
+            String line(MQTT_HELPER::printer.buffer);
+            line.trim();
+            WEB_CONSOLE::log(line);
+        }
     }
 }
 
@@ -81,6 +89,18 @@ void setup() {
     mqtt_topic_bus_rx = WIFI_HELPER::mqtt_topic_bus_rx();
     debug = WIFI_HELPER::debug();
     tx_echo = WIFI_HELPER::tx_echo();
+
+    WEB_CONSOLE::set_send_enabled(WIFI_HELPER::console_send());
+    WEB_CONSOLE::set_status_provider([]() {
+        return MQTT_HELPER::status_json(bus_rx_count, bus_tx_count, WIFI_HELPER::wifi_disconnects());
+    });
+    WEB_CONSOLE::log("GDoor " GDOOR_VERSION " started");
+
+    // Firmware updated over the air keeps the old partition table, a USB flash is needed once
+    if(MQTT_HELPER::legacy_partition_layout()) {
+        JSONPRINT("Old partition layout, please flash once via USB (see firmware README)");
+        WEB_CONSOLE::log("WARNING: old partition layout, please flash once via USB (see firmware README)");
+    }
 
     JSONDEBUG("GDoor Setup done");
     JSONDEBUG("RX Pin: ");
@@ -134,6 +154,9 @@ void loop() {
             str_received = Serial.readString();
         } else {
             str_received = MQTT_HELPER::receive();
+            if (str_received.length() == 0) {
+                str_received = WEB_CONSOLE::receive();
+            }
         }
         str_received.trim();    
 

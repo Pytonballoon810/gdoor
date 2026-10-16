@@ -19,7 +19,9 @@
 #include "printer_helper.h"
 #include "gdoor_data.h"
 #include "wifi_helper.h"
+#include "web_console.h"
 #include <MQTT.h>
+#include <esp_ota_ops.h>
 
 #include <WiFi.h>
 /** 
@@ -268,37 +270,52 @@ R"""(
         return status_requested || (millis() - last_status >= STATUS_INTERVAL_MS);
     }
 
+    /** Returns true if the firmware runs from the old, smaller app partition (needs a USB flash to migrate) */
+    bool legacy_partition_layout() {
+        const esp_partition_t *running = esp_ota_get_running_partition();
+        return running != NULL && running->size < APP_PARTITION_MIN_SIZE;
+    }
+
     /**
-     * Publishes availability and a status JSON, e.g.
-     * {"version": "v3.2", "ip": "192.168.1.20", "ssid": "MyWifi", "bssid": "..", "rssi": -61,
-     *  "uptime": 3600, "free_heap": 210000, "reset_reason": 1, "wifi_disconnects": 0,
-     *  "mqtt_connects": 1, "bus_rx_count": 12, "bus_tx_count": 2}
+     * Builds the status JSON, e.g.
+     * {"version": "v3.2", "ip": "192.168.1.20", "network": "wifi", "ssid": "MyWifi", "bssid": "..",
+     *  "rssi": -61, "uptime": 3600, "free_heap": 210000, "reset_reason": 1, "wifi_disconnects": 0,
+     *  "mqtt_connected": true, "mqtt_connects": 1, "legacy_partitions": false,
+     *  "bus_rx_count": 12, "bus_tx_count": 2}
      * @param bus_rx_count Number of valid messages received from the bus since boot
      * @param bus_tx_count Number of messages sent to the bus since boot
      * @param wifi_disconnects Number of WiFi disconnects since boot
     */
-    void publish_status(uint32_t bus_rx_count, uint32_t bus_tx_count, uint32_t wifi_disconnects) {
-        last_status = millis();
-        status_requested = false;
-
-        mqttClient.publish(availability_topic, "online");
-
+    String status_json(uint32_t bus_rx_count, uint32_t bus_tx_count, uint32_t wifi_disconnects) {
         String message = "{";
         message += "\"version\": \"" + String(GDOOR_VERSION) + "\", ";
         message += "\"ip\": \"" + WIFI_HELPER::local_ip().toString() + "\", ";
         message += "\"network\": \"" + String(WIFI_HELPER::network_type()) + "\", ";
-        message += "\"ssid\": \"" + WiFi.SSID() + "\", ";
+        message += "\"ssid\": \"" + WEB_CONSOLE::json_escape(WiFi.SSID()) + "\", ";
         message += "\"bssid\": \"" + WiFi.BSSIDstr() + "\", ";
         message += "\"rssi\": " + String(WiFi.RSSI()) + ", ";
         message += "\"uptime\": " + String((uint32_t)(millis() / 1000)) + ", ";
         message += "\"free_heap\": " + String(ESP.getFreeHeap()) + ", ";
         message += "\"reset_reason\": " + String((int)esp_reset_reason()) + ", ";
         message += "\"wifi_disconnects\": " + String(wifi_disconnects) + ", ";
+        message += "\"mqtt_connected\": " + String(mqttClient.connected() ? "true" : "false") + ", ";
         message += "\"mqtt_connects\": " + String(mqtt_connects) + ", ";
+        message += "\"legacy_partitions\": " + String(legacy_partition_layout() ? "true" : "false") + ", ";
         message += "\"bus_rx_count\": " + String(bus_rx_count) + ", ";
         message += "\"bus_tx_count\": " + String(bus_tx_count);
         message += "}";
-        mqttClient.publish(status_topic, message);
+        return message;
+    }
+
+    /**
+     * Publishes availability and the status JSON (see status_json()).
+    */
+    void publish_status(uint32_t bus_rx_count, uint32_t bus_tx_count, uint32_t wifi_disconnects) {
+        last_status = millis();
+        status_requested = false;
+
+        mqttClient.publish(availability_topic, "online");
+        mqttClient.publish(status_topic, status_json(bus_rx_count, bus_tx_count, wifi_disconnects));
     }
 
     /**
@@ -320,6 +337,7 @@ R"""(
                 setWill();
                 if (mqttClient.connect(client_id.c_str(), user, password)) {
                     JSONDEBUG("Successfully connected MQTT");
+                    WEB_CONSOLE::log("MQTT connected as " + client_id);
                     mqttClient.subscribe(rx_topic_name);
                     mqttClient.subscribe("homeassistant/status");
 
@@ -336,6 +354,7 @@ R"""(
             if (!mqttClient.connected()) {
                 if (!newly_connected) {
                     JSONDEBUG("MQTT lost connection");
+                    WEB_CONSOLE::log("MQTT lost connection (error " + String((int)mqttClient.lastError()) + ")");
                 }
                 newly_connected = true;
             } else {
