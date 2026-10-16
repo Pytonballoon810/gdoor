@@ -103,6 +103,22 @@ on_...:
 
 Messages are queued and sent as soon as the bus is idle.
 
+## Adapter hardware v4.0
+
+The v4.0 audio prototype moved the transmit pin and has no threshold DAC:
+
+```yaml
+gdoor:
+  tx_pin: 12
+  rx_pin: 21
+  # no rx_threshold_pin: IO26 is an audio line on v4.0
+```
+
+ESPHome warns that GPIO12 is a strapping pin. On v4.0 that is fine: the pin
+reads low at boot as required (R21 not fitted, transmit filter unpowered until
+TX enable). Do not use the W5500 Ethernet pins below on v4.0, they are taken
+by the codec.
+
 ## Ethernet
 
 For Ethernet, use ESPHome's own [`ethernet:`](https://esphome.io/components/ethernet.html)

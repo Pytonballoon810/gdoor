@@ -76,6 +76,18 @@
 #define PIN_TX_EN 27
 #define PIN_RX_THRESH 26
 
+// Adapter hardware selection: v4.0 (audio prototype) moved TX to IO12, because IO25/IO26
+// carry I2S to the audio codec there. It has no RX threshold DAC, and IO22 is not
+// connected (R56 not fitted), so the fixed threshold input IO21 is used.
+// IO12 is a strapping pin (flash voltage), it reads low at boot on v4.0: R21 is not
+// fitted and the TX filter is unpowered until TX_EN switches +5Vonoff on.
+#define HW_V3_NAME "v3.x"
+#define HW_V4_NAME "v4.0 (audio prototype)"
+#define HW_CHOICES {HW_V3_NAME, HW_V4_NAME}
+#define HW_CHOICES_LEN 2
+#define PIN_TX_V4 12
+#define PIN_RX_V4 21
+
 // RX Pin Settings
 #define RX_PIN_22_NAME "v3.1 adjustable (IO22)"
 #define RX_PIN_22_NUM 22

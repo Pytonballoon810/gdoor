@@ -32,6 +32,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
     bool tx_echo();
     bool ethernet();
     bool console_send();
+    bool hardware_v4();
     bool ethernet_connected();
     bool network_connected();
     IPAddress local_ip();

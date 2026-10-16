@@ -2,6 +2,32 @@
 More information about the firmware are located on the
 [GDoor Homepage](https://gdoor-org.github.io/documentation/firmware.html).
 
+## Adapter hardware v4.0
+
+The v4.0 audio prototype wires the ESP32 differently, because IO25 and IO26
+go to the audio codec there. Select "v4.0 (audio prototype)" under
+"Adapter hardware" in the setup, then the firmware uses:
+
+| | v3.x | v4.0 |
+|---|---|---|
+| Bus transmit (TX) | IO25 | IO12 |
+| Transmit enable | IO27 | IO27 |
+| Bus receive | "RX Input" setting (IO22 adjustable) | IO21, fixed threshold |
+| RX threshold (DAC) | IO26 | none, "IO22 Sensitivity" does not apply |
+
+Only the bus functions are supported on v4.0; the firmware does not use the
+audio codec or the bus voltage measurement. Ethernet (W5500) can not be used
+on v4.0: its pins are taken by the codec (IO5 I2S, IO18/IO23 I2C), the firmware
+refuses to start it there.
+
+IO12 is a strapping pin of the ESP32 (it selects the flash voltage at boot).
+On v4.0 it reads low as required: R21 is not fitted and the transmit filter is
+only powered once TX_EN switches it on.
+
+A board flashed with the default setting (v3.x) drives IO25 low and puts a
+voltage on IO26, both inputs of the codec on v4.0; this does no harm, but
+sending does not work until v4.0 is selected.
+
 ## Migrating to the larger partition layout
 
 Firmware from this version on uses a different flash layout: two app slots of

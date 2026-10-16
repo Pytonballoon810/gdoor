@@ -83,8 +83,14 @@ void setup() {
                        WIFI_HELPER::mqtt_topic_bus_tx(),
                        WIFI_HELPER::mqtt_topic_bus_rx());
 
-    GDOOR::setRxThreshold(PIN_RX_THRESH, WIFI_HELPER::rx_sensitivity());
-    GDOOR::setup(PIN_TX, PIN_TX_EN, WIFI_HELPER::rx_pin());
+    if(WIFI_HELPER::hardware_v4()) {
+        // v4.0: IO25/IO26 are I2S lines to the codec there and must not be driven,
+        // fixed RX threshold only (RX input and sensitivity settings do not apply)
+        GDOOR::setup(PIN_TX_V4, PIN_TX_EN, PIN_RX_V4);
+    } else {
+        GDOOR::setRxThreshold(PIN_RX_THRESH, WIFI_HELPER::rx_sensitivity());
+        GDOOR::setup(PIN_TX, PIN_TX_EN, WIFI_HELPER::rx_pin());
+    }
 
     mqtt_topic_bus_rx = WIFI_HELPER::mqtt_topic_bus_rx();
     debug = WIFI_HELPER::debug();
@@ -95,6 +101,11 @@ void setup() {
         return MQTT_HELPER::status_json(bus_rx_count, bus_tx_count, WIFI_HELPER::wifi_disconnects());
     });
     WEB_CONSOLE::log("GDoor " GDOOR_VERSION " started");
+    if(WIFI_HELPER::hardware_v4()) {
+        WEB_CONSOLE::log("Adapter hardware " HW_V4_NAME ": TX IO" + String(PIN_TX_V4) + ", RX IO" + String(PIN_RX_V4));
+    } else {
+        WEB_CONSOLE::log("Adapter hardware " HW_V3_NAME ": TX IO" + String(PIN_TX) + ", RX IO" + String(WIFI_HELPER::rx_pin()));
+    }
 
     // Firmware updated over the air keeps the old partition table, a USB flash is needed once
     if(MQTT_HELPER::legacy_partition_layout()) {

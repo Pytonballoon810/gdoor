@@ -159,8 +159,10 @@ public:
 namespace WIFI_HELPER { //Namespace as we can only use it once
     bool shouldSaveConfig = false;
     void on_wifi_disconnected(WiFiEvent_t event, WiFiEventInfo_t info);
+    bool hardware_v4();
     const char* rx_pin_select_values[] = RX_PIN_CHOICES;    
-    const char* rx_sensitivity_select_values[] = RX_SENS_CHOICES;    
+    const char* rx_sensitivity_select_values[] = RX_SENS_CHOICES;
+    const char* hw_select_values[] = HW_CHOICES;
 
     MyCustomWifiManager wifiManager;
     WiFiManagerParameter custom_mqtt_server("mqtt_server", "MQTT Server", DEFAULT_MQTT_SERVER, 40);
@@ -175,6 +177,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
     EnableDisableParameter custom_tx_echo("param_9", "Publish sent bus messages to MQTT", "enabled");
     EnableDisableParameter custom_ethernet("param_10", "Ethernet (W5500 module on SPI)", "disabled");
     EnableDisableParameter custom_console_send("param_11", "Web console can send to the bus", "disabled");
+    CheckSelectParameter custom_hw("param_12", "Adapter hardware", hw_select_values, HW_CHOICES_LEN, 40);
 
     bool eth_started = false; // W5500 was found and initialized
 
@@ -317,6 +320,12 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
         if (!ethernet()) {
             return;
         }
+        // On v4.0 the W5500 pins are taken by the audio codec (IO5 I2S, IO18/IO23 I2C)
+        if (hardware_v4()) {
+            JSONPRINT("Ethernet (W5500) is not supported on adapter hardware v4.0, pins are used by the audio codec");
+            WEB_CONSOLE::log("Ethernet not started: W5500 pins are used by the audio codec on v4.0");
+            return;
+        }
         WiFi.onEvent(on_eth_event);
         ETH.setHostname("GDoor");
         eth_started = ETH.begin(ETH_PHY_W5500, 1, ETH_W5500_CS, ETH_W5500_INT, ETH_W5500_RST,
@@ -325,6 +334,11 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
         if (!eth_started) {
             JSONPRINT("Ethernet enabled, but no W5500 module found");
         }
+    }
+
+    /** Returns true if the adapter is a v4.0 board (TX on IO12, no RX threshold DAC) */
+    bool hardware_v4(){
+        return strcmp(custom_hw.getValue(), HW_V4_NAME) == 0;
     }
 
     /** Returns true if the web console may send to the bus */
@@ -435,6 +449,10 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
                 custom_console_send.setValue(filevalue.c_str(), filevalue.length() + 1);
             }
 
+            if (read_config_file("/custom_hw", &filevalue) && filevalue.length() > 0 ) {
+                custom_hw.setValue(filevalue.c_str(), filevalue.length() + 1);
+            }
+
             LittleFS.end();
         } else {
             JSONPRINT("Could not mount filesystem on load");
@@ -462,6 +480,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
         wifiManager.addParameter(&custom_tx_echo);
         wifiManager.addParameter(&custom_ethernet);
         wifiManager.addParameter(&custom_console_send);
+        wifiManager.addParameter(&custom_hw);
 
         wifiManager.setSaveConfigCallback(on_save);
         wifiManager.setSaveParamsCallback(on_save);
@@ -553,6 +572,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
                 save_config_file("/custom_tx_echo", custom_tx_echo.getValue());
                 save_config_file("/custom_ethernet", custom_ethernet.getValue());
                 save_config_file("/custom_console_send", custom_console_send.getValue());
+                save_config_file("/custom_hw", custom_hw.getValue());
                 LittleFS.end();
                 ESP.restart();
             } else {
