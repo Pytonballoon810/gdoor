@@ -17,6 +17,7 @@
 #include "defines.h"
 #include "wifi_helper.h"
 #include <WiFiManager.h>
+#include <ETH.h>
 #include <LittleFS.h>
 #include "printer_helper.h"
 
@@ -171,6 +172,9 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
     CheckSelectParameter custom_rx_pin("param_7", "RX Input", rx_pin_select_values, RX_PIN_CHOICES_LEN, 40); 
     CheckSelectParameter custom_rx_sens("param_8", "IO22 Sensitivity", rx_sensitivity_select_values, RX_SENS_CHOICES_LEN, 40);
     EnableDisableParameter custom_tx_echo("param_9", "Publish sent bus messages to MQTT", "enabled");
+    EnableDisableParameter custom_ethernet("param_10", "Ethernet (W5500 module on SPI)", "disabled");
+
+    bool eth_started = false; // W5500 was found and initialized
 
     /**
      * Internal function which creates and writes a file to LittleFS.
@@ -248,6 +252,79 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
         return strcmp(custom_tx_echo.getValue(), "disabled") != 0;
     }
 
+    /** Returns true if the optional W5500 Ethernet module is enabled */
+    bool ethernet(){
+        return strcmp(custom_ethernet.getValue(), "enabled") == 0;
+    }
+
+    /** Returns true if Ethernet is up and has an IP address */
+    bool ethernet_connected(){
+        return eth_started && ETH.linkUp() && ETH.hasIP();
+    }
+
+    /** Returns true if WiFi or Ethernet has an IP address, i.e. MQTT can connect */
+    bool network_connected(){
+        return ethernet_connected() || ((WiFi.getMode() & WIFI_MODE_STA) && WiFi.status() == WL_CONNECTED);
+    }
+
+    /** Returns the IP address of the interface in use (Ethernet preferred) */
+    IPAddress local_ip(){
+        if (ethernet_connected()) {
+            return ETH.localIP();
+        }
+        return WiFi.localIP();
+    }
+
+    /** Returns "ethernet", "wifi" or "none" */
+    const char* network_type(){
+        if (ethernet_connected()) {
+            return "ethernet";
+        } else if (WiFi.status() == WL_CONNECTED) {
+            return "wifi";
+        }
+        return "none";
+    }
+
+    /**
+     * Network event callback for Ethernet,
+     * makes Ethernet the default route once it has an IP, so that MQTT
+     * uses the cable even if WiFi is connected as well.
+    */
+    void on_eth_event(WiFiEvent_t event, WiFiEventInfo_t info) {
+        switch (event) {
+            case ARDUINO_EVENT_ETH_GOT_IP:
+                JSONPRINT("Ethernet connected");
+                ETH.setDefault();
+                break;
+            case ARDUINO_EVENT_ETH_DISCONNECTED:
+                JSONPRINT("Ethernet disconnected");
+                if (WiFi.status() == WL_CONNECTED) {
+                    WiFi.STA.setDefault();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Starts the optional W5500 Ethernet module, if enabled in the config.
+     * A missing module only results in a message, GDoor continues with WiFi.
+    */
+    void setup_ethernet() {
+        if (!ethernet()) {
+            return;
+        }
+        WiFi.onEvent(on_eth_event);
+        ETH.setHostname("GDoor");
+        eth_started = ETH.begin(ETH_PHY_W5500, 1, ETH_W5500_CS, ETH_W5500_INT, ETH_W5500_RST,
+                                ETH_W5500_SPI_HOST, ETH_W5500_SCK, ETH_W5500_MISO, ETH_W5500_MOSI,
+                                ETH_W5500_SPI_MHZ);
+        if (!eth_started) {
+            JSONPRINT("Ethernet enabled, but no W5500 module found");
+        }
+    }
+
     /** Returns io number of select RX method*/
     uint8_t rx_pin() {
         const char* value = custom_rx_pin.getValue();
@@ -322,12 +399,17 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
                 custom_tx_echo.setValue(filevalue.c_str(), filevalue.length() + 1);
             }
 
+            if (read_config_file("/custom_ethernet", &filevalue) && filevalue.length() > 0 ) {
+                custom_ethernet.setValue(filevalue.c_str(), filevalue.length() + 1);
+            }
+
             LittleFS.end();
         } else {
             JSONPRINT("Could not mount filesystem on load");
         }
 
         WiFi.onEvent(on_wifi_disconnected, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_DISCONNECTED);
+        setup_ethernet();
 
         wifiManager.setTitle("GDoor");
         
@@ -346,6 +428,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
         wifiManager.addParameter(&custom_rx_pin);
         wifiManager.addParameter(&custom_rx_sens);
         wifiManager.addParameter(&custom_tx_echo);
+        wifiManager.addParameter(&custom_ethernet);
 
         wifiManager.setSaveConfigCallback(on_save);
         wifiManager.setSaveParamsCallback(on_save);
@@ -387,7 +470,8 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
         static uint32_t last_attempt = 0;
         uint32_t now = millis();
 
-        if (WiFi.status() == WL_CONNECTED || !wifiManager.getWiFiIsSaved()) {
+        // With Ethernet up, WiFi is only a fallback and must not restart the adapter
+        if (WiFi.status() == WL_CONNECTED || !wifiManager.getWiFiIsSaved() || ethernet_connected()) {
             disconnected_since = 0;
             return;
         }
@@ -426,6 +510,7 @@ namespace WIFI_HELPER { //Namespace as we can only use it once
                 save_config_file("/custom_rx_pin", custom_rx_pin.getValue());
                 save_config_file("/custom_rx_sens", custom_rx_sens.getValue());
                 save_config_file("/custom_tx_echo", custom_tx_echo.getValue());
+                save_config_file("/custom_ethernet", custom_ethernet.getValue());
                 LittleFS.end();
                 ESP.restart();
             } else {

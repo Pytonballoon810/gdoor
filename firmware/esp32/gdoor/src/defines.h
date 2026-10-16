@@ -49,6 +49,17 @@
 #define WIFI_WATCHDOG_RETRY_MS   30000UL  // Retry WiFi connection every 30 s while disconnected
 #define WIFI_WATCHDOG_RESTART_MS 600000UL // Restart if WiFi stays down for 10 min
 
+// Ethernet (optional W5500 SPI module, enabled in the web config)
+// Uses the ESP32 VSPI pins, which the GDoor adapter v3.x leaves free
+#define ETH_W5500_SPI_HOST SPI3_HOST
+#define ETH_W5500_SCK  18
+#define ETH_W5500_MISO 19
+#define ETH_W5500_MOSI 23
+#define ETH_W5500_CS   5
+#define ETH_W5500_INT  4   // Module INT pin, W5500 is polled if not connected (set to -1)
+#define ETH_W5500_RST  16  // Module RST pin (set to -1 if not connected)
+#define ETH_W5500_SPI_MHZ 20
+
 // Status
 #define STATUS_INTERVAL_MS 60000UL // How often availability and status are published via MQTT
 #define MQTT_RECONNECT_INTERVAL_MS 5000UL // Wait between MQTT connection attempts, as connect() blocks

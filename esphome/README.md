@@ -103,6 +103,23 @@ on_...:
 
 Messages are queued and sent as soon as the bus is idle.
 
+## Ethernet
+
+For Ethernet, use ESPHome's own [`ethernet:`](https://esphome.io/components/ethernet.html)
+component instead of `wifi:`. A W5500 module on the free VSPI pins of the
+adapter (wiring in [the firmware README](../firmware/esp32/gdoor/README.md#ethernet-w5500-module)):
+
+```yaml
+ethernet:
+  type: W5500
+  clk_pin: 18
+  miso_pin: 19
+  mosi_pin: 23
+  cs_pin: 5
+  interrupt_pin: 4
+  reset_pin: 16
+```
+
 ## Limitations
 
 - ESP32 with the Arduino framework only: the bus timing uses the Arduino core

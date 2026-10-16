@@ -18,6 +18,7 @@
 #include "mqtt_helper.h"
 #include "printer_helper.h"
 #include "gdoor_data.h"
+#include "wifi_helper.h"
 #include <MQTT.h>
 
 #include <WiFi.h>
@@ -163,7 +164,7 @@ namespace MQTT_HELPER { //Namespace as we can only use it once
         availability_topic = "homeassistant/sensor/gdoor/data/config/"+mac_clean;
 
         String ip;
-        ip = WiFi.localIP().toString();
+        ip = WIFI_HELPER::local_ip().toString();
 
         String message = 
 R"""(
@@ -244,6 +245,7 @@ R"""(
     */
     void setup(const char* server, int port, const char* username, const char* pw, const char* rx_topic, const char* tx_topic) {
         WiFi.onEvent(on_wifi_active, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
+        WiFi.onEvent(on_wifi_active, WiFiEvent_t::ARDUINO_EVENT_ETH_GOT_IP);
         
         mqttClient.begin(server, port, net);
         mqttClient.onMessage(on_message_received);
@@ -283,7 +285,8 @@ R"""(
 
         String message = "{";
         message += "\"version\": \"" + String(GDOOR_VERSION) + "\", ";
-        message += "\"ip\": \"" + WiFi.localIP().toString() + "\", ";
+        message += "\"ip\": \"" + WIFI_HELPER::local_ip().toString() + "\", ";
+        message += "\"network\": \"" + String(WIFI_HELPER::network_type()) + "\", ";
         message += "\"ssid\": \"" + WiFi.SSID() + "\", ";
         message += "\"bssid\": \"" + WiFi.BSSIDstr() + "\", ";
         message += "\"rssi\": " + String(WiFi.RSSI()) + ", ";
@@ -305,8 +308,9 @@ R"""(
     void loop() {
         static uint32_t last_attempt = 0;
         static bool attempted = false;
-        // WIFI_MODE_APSTA is used while the config portal is open, MQTT should work there as well
-        if((WiFi.getMode() & WIFI_MODE_STA) && WiFi.status() == WL_CONNECTED) {
+        // WiFi (also while the config portal is open) or Ethernet. A newly connected interface
+        // reconnects MQTT, so the connection moves to Ethernet once it becomes the default route.
+        if(WIFI_HELPER::network_connected()) {
             // connect() blocks for up to the socket timeout, so do not retry on every loop,
             // otherwise an unreachable broker stalls the main loop (and bus decoding)
             if (newly_connected && (!attempted || millis() - last_attempt >= MQTT_RECONNECT_INTERVAL_MS)) {
