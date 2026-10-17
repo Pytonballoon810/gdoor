@@ -41,9 +41,9 @@ already flipped.
   the lid. Five posts on the lid hold it down at free spots.
 - Front window: the board's front tab reaches into it, its edge in a
   0.3 mm groove in the window wall. The RJ45 jack goes through a body-sized
-  opening (16.6 x 13.9 mm), and the USB-C receptacle sits in a slot for the
-  cable overmold (12.6 x 7.2 mm). Both faces end 0.2 mm inside the window
-  face. There are also two 1.3 mm holes for the LEDs. The LEDs are top-emitting
+  opening (16.6 x 13.9 mm), and the USB-C receptacle in a stadium opening
+  around its shell (9.4 x 3.7 mm, 0.2 mm clearance). Both faces end 0.2 mm
+  inside the window face, so the cable overmold stops on the face. There are also two 1.3 mm holes for the LEDs. The LEDs are top-emitting
   on the board, so the holes show their glow, not the LED itself; a short
   piece of clear filament works as a light pipe.
 - BOOT and RESET are pressed with a pin through the lid (labelled). The lid

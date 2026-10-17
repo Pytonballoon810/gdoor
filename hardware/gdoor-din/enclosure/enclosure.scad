@@ -65,7 +65,7 @@ clip_anchor = 4;        // spring beam is anchored on z = 0 .. this
 
 // ---- front openings (from the board layout) --------------------------------
 rj45_y  = 57.2;  rj45_w = 16.6;  rj45_h = 13.9;    // J102 body passes through the wall
-usb_y   = 39.5;  usb_w  = 12.6;  usb_h  = 7.2;     // J101, room for overmolds
+usb_y   = 39.5;  usb_w  = 9.4;   usb_h  = 3.7;     // J101 shell 8.94 x 3.26, flush
 usb_zc  = pcb_z1 + 1.63;                           // receptacle centre
 led_y   = [30.9, 32.9];                            // D104 red, D103 green
 led_z   = pcb_z1 + 7.6;
@@ -93,8 +93,9 @@ plug_y0       = plug_y_step - (plug_len - plug_mate_len);   // wire end
 plug_y1       = plug_y0 + plug_len;                         // mating end
 
 // ---- lid features ------------------------------------------------------------
-// BOOT (SW101) and RESET (SW102), top-actuated, poked through the lid.
-buttons   = [[44.0, 23.0, "BOOT"], [44.0, 14.0, "RST"]];
+// RESET (SW101, ESP_EN) and BOOT (SW102, IO0), top-actuated, poked through
+// the lid.
+buttons   = [[44.0, 23.0, "RST"], [44.0, 14.0, "BOOT"]];
 btn_top_z = pcb_z1 + 1.6;
 // Hold-down posts on free board spots (checked against the courtyards).
 posts     = [[3.8, 86.0], [4.0, 45.0], [4.0, 4.0], [50.5, 6.0], [35.5, 86.0]];
@@ -175,7 +176,7 @@ module front_openings() {
     gx = front_x - wall - eps;
     translate([gx, pcb_tab_y0 - 0.3, pcb_z0 - 0.2])
         cube([pcb_front_x + pcb_tab_d + tab_groove - gx, pcb_tab_y1 - pcb_tab_y0 + 0.6, pcb_t + 0.4]);
-    // USB-C, rounded slot for the cable overmold
+    // USB-C: stadium around the receptacle shell, which ends flush
     translate([fx, usb_y, usb_zc]) rotate([0, 90, 0])
         linear_extrude(len) hull() for (s = [-1, 1])
             translate([0, s * (usb_w - usb_h) / 2]) circle(d = usb_h);
@@ -297,8 +298,16 @@ module board_ghost(s = 0) {
         cube([pcb_tab_d, pcb_tab_y1 - pcb_tab_y0 - 2 * s, pcb_t - 2 * s]);
     for (p = board_parts) if (!p[7]) {
         z = p[1] > 0 ? pcb_z1 : pcb_z0 - p[6];
-        translate([p[2] + s, p[4] + s, z + s])
-            cube([p[3] - p[2] - 2 * s, p[5] - p[4] - 2 * s, p[6] - 2 * s]);
+        if (p[0] == "J101") {
+            // USB-C shell: a stadium (8.94 x 3.26), not a box, or its
+            // corners collide with the flush opening around it
+            h = 3.26 - 2 * s; w = (p[5] - p[4]) - 2 * s;
+            translate([p[2] + s, (p[4] + p[5]) / 2, z + 3.26 / 2]) rotate([0, 90, 0])
+                linear_extrude(p[3] - p[2] - 2 * s) hull() for (k = [-1, 1])
+                    translate([0, k * (w - h) / 2]) circle(d = h);
+        } else
+            translate([p[2] + s, p[4] + s, z + s])
+                cube([p[3] - p[2] - 2 * s, p[5] - p[4] - 2 * s, p[6] - 2 * s]);
     }
     for (p = board_pins) translate([p[0], p[1], pcb_z0 - board_pin_stub])
         cylinder(d = 1, h = board_pin_stub, $fn = 8);
