@@ -100,20 +100,50 @@ Passives on the copied sheet are 0402 (C1, C12, C29, C31 stay 0603).
 ## Manufacturing
 
 JLCPCB files live outside the repo in `Documents/Claude/gdoor-fab/din`
-(gerbers, drill, BOM, CPL, IPC netlist), generated from commit `765459f`
-with bennymeg's Fabrication Toolkit CLI (`-nI -nB -e -t`) on a copy of
-the board:
+(gerbers, drill, BOM, CPL, IPC netlist), generated from commit `4afa935`
+by `jlcfab.py`:
 
-- The copy first gets an `FT Rotation Offset` field per part. Parts that
-  carry the board's own `JlcRotOffset` / `JLCPCB Rotation Offset` (J1, J4,
-  U1, U5, U6, U7) keep exactly that offset. Every other part gets the
-  toolkit's footprint-database correction.
-- LCSC numbers come from the `LCSC` field, or from `MPN` on the copied sheet.
-- Assembly is single-sided: every B.Cu part is DNP. DNP parts are left out
-  of the BOM and CPL.
-- Check rotations in JLCPCB's placement preview. U101 (module), J101
-  (USB-C), J102 (RJ45), SW101/SW102, Y101 and the LEDs have no correction
-  in the database.
+```
+"C:/Program Files/KiCad/10.0/bin/python.exe" jlcfab.py <output_dir>
+```
+
+It runs bennymeg's Fabrication Toolkit CLI (`-nI -nB -e -t`) on a copy of
+the board in a temp directory and never writes the project files. On the
+copy, before the toolkit runs:
+
+- **Rotation:** every part gets an `FT Rotation Offset`. Parts with the
+  board's own `JlcRotOffset` / `JLCPCB Rotation Offset` (J1, J4, U1, U5,
+  U6, U7) keep exactly that offset. Every other part gets the toolkit's
+  footprint-database correction.
+- **J101 position:** J101 gets `FT Position Offset` `0,1.39`. KiCad's
+  footprint origin sits 2.60 mm from the USB-C peg holes, JLC's model
+  origin 1.206 mm. Aligned on the holes, JLC's point is 1.39 mm further
+  +X on this board, where J101 sits at -90°. The CPL point is therefore
+  105.54 / -108.0, not 104.15.
+- **J103 left out:** J103 (expansion header, hand-soldered, no LCSC part)
+  is marked DNP, so it drops out of BOM and CPL like the DNP parts.
+
+After the toolkit:
+
+- **BOM columns:** they are rewritten to JLC's template: `Comment,
+  Designator, Footprint, LCSC Part #`. The toolkit's `Value`/`Quantity`
+  columns made the PCBA quote fail ("fee item calculate failed").
+- **Self-check:** the script checks that BOM and CPL list the same
+  designators, that every BOM line has an LCSC number, and J101's CPL
+  point. It exits non-zero on a problem.
+
+Other notes:
+
+- **No popups:** KiCad's python pops a modal wx dialog for every assert and
+  log message. The script disables both, and stubs
+  `pcbnew.ActionPlugin.register`, before importing anything. Otherwise
+  the toolkit asserts ("PgmOrNull()" failed in register_action).
+- **LCSC numbers** come from the `LCSC` field, or from `MPN` on the copied
+  sheet.
+- **Single-sided assembly:** every B.Cu part is DNP.
+- **Check rotations** in JLCPCB's placement preview. U101 (module), J102
+  (RJ45), SW101/SW102, Y101 and the LEDs have no correction in the
+  database.
 
 ## Firmware impact
 
@@ -131,6 +161,7 @@ the board:
   the board edge away from the RJ45 and with no copper below it.
 - J4 (5 V screw terminal) is DNP and excluded from the BOM, so JLCPCB will
   not fit it; the 5 V input from a terminal needs it soldered by hand.
-- J103 (expansion header) has no LCSC number; it is hand-soldered.
+- J103 (expansion header) has no LCSC number; it is hand-soldered and
+  left out of the JLC files.
 - Several decoupling caps sit further from their pins than ideal (C116,
   C57, C59, C61, C29 are 5–12 mm away), and some codec/W5500 routes meander.
