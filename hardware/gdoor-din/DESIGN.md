@@ -100,7 +100,7 @@ Passives on the copied sheet are 0402 (C1, C12, C29, C31 stay 0603).
 ## Manufacturing
 
 JLCPCB files live outside the repo in `Documents/Claude/gdoor-fab/din`
-(gerbers, drill, BOM, CPL, IPC netlist), generated from commit `aee9e18`
+(gerbers, drill, BOM, CPL, IPC netlist), generated from commit `765459f`
 with bennymeg's Fabrication Toolkit CLI (`-nI -nB -e -t`) on a copy of
 the board:
 
