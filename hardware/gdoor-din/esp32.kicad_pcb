@@ -6820,7 +6820,7 @@
 				)
 			)
 		)
-		(property "Value" "RESET"
+		(property "Value" "TL3342"
 			(at 0 3.75 90)
 			(layer "F.Fab")
 			(uuid "d590ae26-fe7c-4d60-90a6-4c61ed38ced7")
@@ -34456,7 +34456,7 @@
 				)
 			)
 		)
-		(property "Value" "BOOT"
+		(property "Value" "TL3342"
 			(at 0 3.75 90)
 			(layer "F.Fab")
 			(uuid "78ee310b-f4a5-4079-a04f-197b6f3e797e")

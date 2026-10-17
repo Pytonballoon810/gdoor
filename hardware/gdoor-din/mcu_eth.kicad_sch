@@ -14514,7 +14514,7 @@
 				)
 			)
 		)
-		(property "Value" "RESET"
+		(property "Value" "TL3342"
 			(at 99.06 80.01 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -14990,7 +14990,7 @@
 				)
 			)
 		)
-		(property "Value" "BOOT"
+		(property "Value" "TL3342"
 			(at 99.06 92.71 0)
 			(show_name no)
 			(do_not_autoplace no)
