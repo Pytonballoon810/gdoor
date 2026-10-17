@@ -99,12 +99,11 @@ Passives on the copied sheet are 0402 (C1, C12, C29, C31 stay 0603).
 
 ## Manufacturing
 
-JLCPCB files live outside the repo in `Documents/Claude/gdoor-fab/din`
-(gerbers, drill, BOM, CPL, IPC netlist), generated from commit `4afa935`
-by `jlcfab.py`:
+JLCPCB files live in `production/gdoor_din/` (gerbers, drill, BOM, CPL,
+IPC netlist), generated from commit `0a8af0d` by `jlcfab.py`:
 
 ```
-"C:/Program Files/KiCad/10.0/bin/python.exe" jlcfab.py <output_dir>
+"C:/Program Files/KiCad/10.0/bin/python.exe" jlcfab.py production/gdoor_din
 ```
 
 It runs bennymeg's Fabrication Toolkit CLI (`-nI -nB -e -t`) on a copy of
