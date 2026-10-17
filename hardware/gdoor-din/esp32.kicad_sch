@@ -18206,7 +18206,7 @@
 				)
 			)
 		)
-		(property "Value" "4k7"
+		(property "Value" "4.7k"
 			(at 133.35 61.595 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18586,7 +18586,7 @@
 				)
 			)
 		)
-		(property "Value" "5k1"
+		(property "Value" "5.1k"
 			(at 80.645 77.47 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19769,7 +19769,7 @@
 				)
 			)
 		)
-		(property "Value" "5k1"
+		(property "Value" "5.1k"
 			(at 118.11 157.48 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22263,7 +22263,7 @@
 				)
 			)
 		)
-		(property "Value" "5k1"
+		(property "Value" "5.1k"
 			(at 125.73 157.48 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22665,7 +22665,7 @@
 				)
 			)
 		)
-		(property "MPN" "C15008"
+		(property "MPN" "C23742"
 			(at 133.985 195.58 0)
 			(hide yes)
 			(show_name no)
@@ -24826,7 +24826,7 @@
 				)
 			)
 		)
-		(property "MPN" "C15008"
+		(property "MPN" "C23742"
 			(at 69.85 257.81 0)
 			(hide yes)
 			(show_name no)
@@ -33746,7 +33746,7 @@
 				)
 			)
 		)
-		(property "Value" "5k1"
+		(property "Value" "5.1k"
 			(at 74.295 77.47 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -36018,7 +36018,7 @@
 				)
 			)
 		)
-		(property "MPN" "C15008"
+		(property "MPN" "C23742"
 			(at 146.05 215.9 0)
 			(hide yes)
 			(show_name no)

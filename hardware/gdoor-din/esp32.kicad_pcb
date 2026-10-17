@@ -1511,7 +1511,7 @@
 				)
 			)
 		)
-		(property "Value" "5k1"
+		(property "Value" "5.1k"
 			(at 0 1.17 0)
 			(layer "F.Fab")
 			(uuid "9f739875-c546-4621-b97b-aaa3a6fbe161")
@@ -2696,7 +2696,7 @@
 				)
 			)
 		)
-		(property "Value" "5k1"
+		(property "Value" "5.1k"
 			(at 0 1.17 0)
 			(layer "F.Fab")
 			(uuid "7f7bd64a-98bd-489f-a3ce-7a316ee055fe")
@@ -13718,7 +13718,7 @@
 				)
 			)
 		)
-		(property "MPN" "C15008"
+		(property "MPN" "C23742"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -16253,7 +16253,7 @@
 				)
 			)
 		)
-		(property "Value" "5k1"
+		(property "Value" "5.1k"
 			(at 0 1.17 90)
 			(layer "F.Fab")
 			(uuid "8407f3e8-01dc-415a-9632-4f4c1f5606ff")
@@ -29101,7 +29101,7 @@
 				)
 			)
 		)
-		(property "Value" "4k7"
+		(property "Value" "4.7k"
 			(at 0 1.17 90)
 			(layer "F.Fab")
 			(uuid "dded5716-dbef-432a-b746-671b6902a3c1")
@@ -35926,7 +35926,7 @@
 				)
 			)
 		)
-		(property "Value" "5k1"
+		(property "Value" "5.1k"
 			(at 0 1.17 0)
 			(layer "F.Fab")
 			(uuid "e1ea4f89-0c49-4b4d-be15-5dcc8da40bd2")
@@ -37971,7 +37971,7 @@
 				)
 			)
 		)
-		(property "MPN" "C15008"
+		(property "MPN" "C23742"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -39594,7 +39594,7 @@
 				)
 			)
 		)
-		(property "MPN" "C15008"
+		(property "MPN" "C23742"
 			(at 0 0 0)
 			(unlocked yes)
 			(layer "F.Fab")
