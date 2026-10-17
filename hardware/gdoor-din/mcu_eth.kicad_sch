@@ -13941,7 +13941,7 @@
 				)
 			)
 		)
-		(property "Value" "AMS1117-3.3"
+		(property "Value" "AP2114H-3.3TRG1"
 			(at 50.8 130.81 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13962,7 +13962,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.diodes.com/assets/Datasheets/AP2114.pdf"
 			(at 50.8 127 0)
 			(hide yes)
 			(show_name no)
@@ -13973,7 +13973,7 @@
 				)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "1A CMOS LDO, 3.3V fixed, 450 mV typ dropout at 1A, SOT-223 (pin 1 GND, 2/tab VOUT, 3 VIN; AMS1117 pinout)"
 			(at 50.8 127 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -13983,7 +13983,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C6186"
+		(property "LCSC" "C150716"
 			(at 0 0 0)
 			(hide yes)
 			(show_name no)

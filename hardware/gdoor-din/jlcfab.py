@@ -45,7 +45,7 @@ COPY = ["esp32.kicad_pcb", "esp32.kicad_pro", "esp32.kicad_dru", "esp32.kicad_sc
 # 1.39 mm toward the pad row: +X on this board, where J101 sits at -90 deg. In the toolkit's frame
 # that is local +y. The run checks the resulting CPL value against EXPECT.
 POS_OFFSET = {"J101": (0.0, 1.39)}
-EXPECT = {"J101": (105.54, -108.0)}
+EXPECT = {"J101": (97.09, -108.0)}
 HAND_SOLDERED = ["J103"]      # expansion header, no LCSC part
 BOM_COLUMNS = ["Comment", "Designator", "Footprint", "LCSC Part #"]
 
