@@ -128,8 +128,8 @@ Passives on the copied sheet are 0402 (C1, C12, C29, C31 stay 0603).
 
 ## Logic check (2026-10-18)
 
-ERC has no errors except the leftover `RX_DAC` bus entry (see *Open
-points*); the 332 off-grid warnings come from the copied sheet. Checked block
+ERC has no errors; the 319 off-grid warnings come from the copied sheet.
+Checked block
 by block against the netlist:
 
 - **Power:** both 5 V inputs are OR-ed by SS14 diodes (40 V). U103 and U7
@@ -198,8 +198,8 @@ Other notes:
   the toolkit asserts ("PgmOrNull()" failed in register_action).
 - **LCSC numbers** come from the `LCSC` field, or from `MPN` on the copied
   sheet.
-- **Single-sided assembly:** every B.Cu part is DNP. Left on B.Cu: C10,
-  C18, R21 (see *Open points*) and the ESD logo S1.
+- **Single-sided assembly:** every B.Cu part is DNP. Left on B.Cu: C18
+  (hand-soldered, see *Open points*) and the ESD logo S1.
 - **Check rotations** in JLCPCB's placement preview. U101 (module), U103,
   J102 (RJ45), SW101/SW102, Y101 and the LEDs have no correction in the
   database.
@@ -216,17 +216,24 @@ Other notes:
 
 Decisions:
 
-- **C10, R21, C18:** fitted on the upstream `hardware/esp32` board, DNP on
-  B.Cu here, so JLC does not fit them:
+- **C10, R21, C18** (done 2026-10-18): fitted on the upstream
+  `hardware/esp32` board, so they are fitted here too.
   - C18 (100 pF) filters the TX driver input (U1 +, with R11 10k).
   - C10 (1 nF) and R21 (4k7) load the TX node behind R34; R21 also pulls TX
     low while the pin floats.
-
-  Fit them (move to F.Cu), hand-solder them, or leave them off.
-- **C29, C31:** 10 µF 25 V X5R 0603 (C96446), on the bus DC through R74. On
-  a bus near 30 V they are at or past their rating and lose most of their
-  capacitance. C21 on the same node is 50 V (C13585, 1206). Upstream uses
-  the same parts.
+  - C10 and R21 are on F.Cu and fitted by JLC, at (131.25, 64.3) and
+    (128.9, 64.3). A via at (129.0, 65.0) joins them to the old B.Cu TX-node
+    track, and GND vias at (128.3, 63.55) and (132.65, 64.3) ground them.
+  - C18 stays on B.Cu, routed but DNP: **hand-solder it** (100 pF 0402,
+    C1546). There is no free F.Cu spot near U1 or R11, because the strip
+    above U1 is crossed by the C1-Pad1 and +5V_onoff diagonals and Q2 and
+    R14/R15/R16/R24 close in on the other sides.
+- **C29, C31** (done 2026-10-18): they sit on the bus DC through R74, so
+  they now have a 50 V rating (the bus runs up to about 30 V).
+  - C29: 10 µF 50 V 1206 (C13585, like C21), at (120.6, 106.3).
+  - C31: 10 µF 50 V 0805 (C440198, Murata GRM21BR61H106KE43L), at (129.357,
+    100.5); a 1206 did not fit there. Its pad-1 route to R40 now runs down
+    the right side of the part at x 130.385.
 - **0 Ω links:** R34, R36, R57, R58, R59, R60 and R74 are fitted 0 Ω links
   left over from upstream options. They could become plain copper (7 fewer
   placements), but each one would need a schematic and routing change.
@@ -241,12 +248,6 @@ Decisions:
 
 To do in KiCad:
 
-- **Update PCB from Schematic (F8):** after the 2026-10-18 removals, the
-  schematic renamed two auto-named nets (on R37/R60 and R39/R59). The board
-  still uses the old names. That is four `net_conflict` parity warnings;
-  connectivity is unaffected.
-- **Bus entry:** delete the `RX_DAC` bus entry on the `{GPIO}` bus in the
-  schematic (one ERC error).
 - **Tidy:** the front-tab connectors are long straight runs across the
   strip the move emptied (x 113–122, y 98–113). That strip also has room for
   new stitching vias.

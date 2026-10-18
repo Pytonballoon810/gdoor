@@ -1,5 +1,6 @@
 ﻿Comment,Designator,Footprint,LCSC Part #,Qty,JLC Type,"JLC Cost (5 boards, USD)",Extended Fee,Hand Solder,Storage Location,Stock,Part-DB Part,Part-DB ID,Match,Note,Suggestion,Suggestion Location
 47n,C1,0603,C1622,1,base,0.12,0.00,easy,,,,,none,,"100n CL10B104KB8NNNC (0603): same package, 100n instead of 47n (x2.1) -- changes the circuit",Cryo2 > Cryo2.4
+1n,C10,0402,C1523,1,base,0.08,0.00,fiddly,Cryo2 > Cryo2.2,200,CC0402KRX7R9BB102,34,value+footprint,,,
 10u,"C101, C104, C105, C112, C116",0603,C19702,5,base,0.95,0.00,easy,,,,,none,value matches CL21A106KAYNNNE (0805) but the footprint does not,"10u CL05A106MQ5NUNC (0402): same value, 0402 instead of 0603",Cryo2 > Cryo2.22
 100n,"C102, C107, C114, C115, C117, C118, C119, C22, C24, C26, C32, C33, C34",0402,C1525,13,base,0.38,0.00,fiddly,Cryo2 > Cryo2.17,unknown,CC0402KRX7R7BB104,169,value+footprint,,,
 1u,"C103, C113",0402,C52923,2,base,0.14,0.00,fiddly,Cryo2 > Cryo2.23,unknown,CL05A105KP5NNNC,175,value+footprint,,,
@@ -8,14 +9,15 @@
 100n,"C11, C13, C15, C16, C17, C3, C36, C38, C40, C42, C46, C5, C51, C53, C55, C6, C7",0402,C307331,17,base,0.94,0.00,fiddly,Cryo2 > Cryo2.17,unknown,CC0402KRX7R7BB104,169,value+footprint,,,
 4.7u,C110,0603,C19666,1,base,0.44,0.00,easy,,,,,none,value matches CL21A475KAQNNNE (0805) but the footprint does not,"4.7u CL05A475KP5NRNC (0402): same value, 0402 instead of 0603",Cryo2 > Cryo2.19
 10n,"C111, C123",0402,C15195,2,base,0.08,0.00,fiddly,Cryo2 > Cryo2.1,200,CC0402KRX7R9BB103,33,value+footprint,,,
-10u,"C12, C29, C31",0603,C96446,3,base,1.12,0.00,easy,,,,,none,value matches CL21A106KAYNNNE (0805) but the footprint does not,"10u CL05A106MQ5NUNC (0402): same value, 0402 instead of 0603",Cryo2 > Cryo2.22
+10u,C12,0603,C96446,1,base,0.97,0.00,easy,,,,,none,value matches CL21A106KAYNNNE (0805) but the footprint does not,"10u CL05A106MQ5NUNC (0402): same value, 0402 instead of 0603",Cryo2 > Cryo2.22
 22n,C120,0402,C1532,1,base,0.18,0.00,fiddly,,,,,none,value matches CC0805KRX7R9BB223 (0805) but the footprint does not,"10n CC0402KRX7R9BB103 (0402): same package, 10n instead of 22n (x2.2) -- changes the circuit",Cryo2 > Cryo2.1
 6.8n,"C121, C122",0402,C93654,2,expand,0.04,3.00,fiddly,,,,,none,,"10n CC0402KRX7R9BB103 (0402): same package, 10n instead of 6.8n (x1.5) -- changes the circuit",Cryo2 > Cryo2.1
 1n 2kV,C124,1206,C9196,1,base,0.34,0.00,easy,,,,,none,,,
 10u,"C14, C23, C25, C27, C35, C37, C39, C41, C43, C47, C52, C54, C56",0402,C15525,13,base,1.93,0.00,fiddly,Cryo2 > Cryo2.22,unknown,CL05A106MQ5NUNC,174,lcsc,,,
-100u,"C19, C20, C59",1210,C23742,3,expand,4.12,3.00,easy,,,,,none,value matches CL31A107MQHNNNE (1206) but the footprint does not,"100u CL31A107MQHNNNE (1206): same value, 1206 instead of 1210",Cryo2 > Cryo2.5
+100u,"C19, C20, C59",1210,C23742,3,expand,4.22,3.00,easy,,,,,none,value matches CL31A107MQHNNNE (1206) but the footprint does not,"100u CL31A107MQHNNNE (1206): same value, 1206 instead of 1210",Cryo2 > Cryo2.5
 100p,"C2, C4, C8, C9",0402,C1546,4,base,0.10,0.00,fiddly,,,,,none,,,
-10u,"C21, C57",1206,C13585,2,base,3.58,0.00,easy,,,,,none,value matches CL21A106KAYNNNE (0805) but the footprint does not,"10u CL21A106KAYNNNE (0805): same value, 0805 instead of 1206",Cryo2 > Cryo2.8
+10u,"C21, C29, C57",1206,C13585,3,base,4.85,0.00,easy,,,,,none,value matches CL21A106KAYNNNE (0805) but the footprint does not,"10u CL21A106KAYNNNE (0805): same value, 0805 instead of 1206",Cryo2 > Cryo2.8
+10u,C31,0805,C440198,1,base,1.45,0.00,easy,Cryo2 > Cryo2.9,25,GRM21BR61H106KE43L,118,lcsc,,,
 22p,"C44, C45, C48, C49, C50, C61",0402,C1555,6,base,0.10,0.00,fiddly,,,,,none,,"30p CC0402FRNPO9BN300 (0402): same package, 30p instead of 22p (x1.4) -- changes the circuit",Cryo2 > Cryo2.20
 MB10S,D1,SOIC-4_4.55x3.7mm_P2.54mm,C2488,1,base,0.30,0.00,easy,,,,,none,,,
 SS14,"D101, D2",D_SMA,C2480,2,base,0.38,0.00,easy,,,,,none,,,
@@ -32,7 +34,7 @@ MMBT2222A,Q2,SOT-23,C8512,1,base,0.19,0.00,easy,,,,,none,,,
 10k,"R101, R102, R11, R13, R23, R24, R29, R31, R45, R73, R8",0402,C25744,11,base,0.10,0.00,fiddly,Cryo1 > Cryo1.4 [RC0402FR-0710KL]; Cryo1 > Cryo1.12 [WR04X1002FTL],100; unknown,RC0402FR-0710KL; WR04X1002FTL,8; 93,"value+footprint, 2 candidates",,,
 5.1k,"R103, R104, R16, R17, R5, R7",0402,C25905,6,base,0.09,0.00,fiddly,Cryo1 > Cryo1.10,unknown,0402WGF5101TCE,97,lcsc,,,
 100,"R105, R48, R49",0402,C25076,3,base,0.03,0.00,fiddly,,,,,none,value matches AR03BTCX1000 (0603) but the footprint does not,"100 AR03BTCX1000 (0603): same value, 0603 instead of 0402",Cryo4 > Cryo4.6
-1k,"R106, R14, R37, R38, R39, R40",0402,C11702,6,base,0.14,0.00,fiddly,Cryo1 > Cryo1.6,200,0402WGF1001TCE,87,lcsc,,,
+1k,"R106, R14, R37, R38, R39, R40",0402,C11702,6,base,0.05,0.00,fiddly,Cryo1 > Cryo1.6,200,0402WGF1001TCE,87,lcsc,,,
 1M,R107,0402,C26083,1,base,0.05,0.00,fiddly,Cryo1 > Cryo1.15,200,0402WGF1004TCE,4,lcsc,,,
 12.4k 1%,R108,0402,C2929935,1,expand,0.03,3.00,fiddly,,,,,none,,"15k RC0402FR-0715KL (0402): same package, 15k instead of 12.4k (x1.2) -- changes the circuit",Cryo1 > Cryo1.2
 4.7k,"R109, R110, R111, R26",0402,C25900,4,base,0.06,0.00,fiddly,Cryo1 > Cryo1.19,unknown,0402WGF4701TCE,88,lcsc,,,
@@ -43,10 +45,11 @@ MMBT2222A,Q2,SOT-23,C8512,1,base,0.19,0.00,easy,,,,,none,,,
 330,"R121, R122",0402,C25104,2,base,0.02,0.00,fiddly,,,,,none,value matches 25121WJ0331T4E (2512) but the footprint does not,,
 82k,"R18, R19, R3, R35, R4",0402,C2909388,5,expand,0.05,3.00,fiddly,,,,,none,,"100k SCR0402F100K (0402): same package, 100k instead of 82k (x1.2) -- changes the circuit",Cryo1 > Cryo1.7
 22k,R2,0402,C25768,1,base,0.02,0.00,fiddly,Cryo1 > Cryo1.21,unknown,0402WGJ0223TCE,89,value+footprint,,,
-47k,"R28, R30, R9",0402,C25792,3,base,0.07,0.00,fiddly,,,,,none,,"50k RTT025002FTH (0402): same package, 50k instead of 47k (x1.1) -- changes the circuit",Cryo1 > Cryo1.3
+4k7,R21,0402,C25900,1,base,0.04,0.00,fiddly,Cryo1 > Cryo1.19,unknown,0402WGF4701TCE,88,lcsc,,,
+47k,"R28, R30, R9",0402,C25792,3,base,0.05,0.00,fiddly,,,,,none,,"50k RTT025002FTH (0402): same package, 50k instead of 47k (x1.1) -- changes the circuit",Cryo1 > Cryo1.3
 22,R32,0402,C25092,1,base,0.03,0.00,fiddly,,,,,none,,"27 RC0402FR-0727RL (0402): same package, 27 instead of 22 (x1.2) -- changes the circuit",
 0,"R34, R36, R57, R58, R59, R60, R74",0402,C17168,7,base,0.05,0.00,fiddly,Cryo1 > Cryo1.22,unknown,0402WGF0000TCE,91,lcsc,,,
-33,"R41, R42, R43, R44, R50, R51, R52, R53, R54",0402,C25105,9,base,0.07,0.00,fiddly,,,,,none,,"27.4 ARG02FTC27R4 (0402): same package, 27.4 instead of 33 (x1.2) -- changes the circuit",Cryo1 > Cryo1.9
+33,"R41, R42, R43, R44, R50, R51, R52, R53, R54",0402,C25105,9,base,0.06,0.00,fiddly,,,,,none,,"27.4 ARG02FTC27R4 (0402): same package, 27.4 instead of 33 (x1.2) -- changes the circuit",Cryo1 > Cryo1.9
 TL3342,"SW101, SW102",SW_SPST_TL3342,C318884,2,base,0.37,0.00,easy,,,,,none,,,
 TLV9351,U1,SOT-353_SC-70-5,C4367425,1,expand,2.72,3.00,fiddly,,,,,none,,,
 ESP32-S3-WROOM-1-N8R2,U101,ESP32-S3-WROOM-1,C2913204,1,expand,23.26,3.00,easy,,,,,none,,,
