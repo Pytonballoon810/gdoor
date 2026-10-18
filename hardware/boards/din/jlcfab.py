@@ -14,6 +14,8 @@ On the copy, before the toolkit runs:
 - HAND_SOLDERED parts are marked DNP, which leaves them out of BOM and CPL like the DNP parts.
 After it runs, the BOM columns are rewritten to JLC's template (Comment, Designator, Footprint,
 LCSC Part #); with the toolkit's "Value"/"Quantity" columns the PCBA quote fails.
+The toolkit refills all zones (-f) before plotting, so a stale fill in the saved board cannot reach
+the gerbers.
 
 KiCad's python pops a modal wx dialog for every assert and log message. The toolkit's package
 registers an ActionPlugin when imported after pcbnew, which asserts ("PgmOrNull()" failed in
@@ -77,7 +79,7 @@ def prepare(path, sys_path):
 
 
 def run_toolkit(path):
-    sys.argv = ["cli", "-p", path, "-nI", "-nB", "-e", "-t"]
+    sys.argv = ["cli", "-p", path, "-nI", "-nB", "-e", "-t", "-f"]
     try:
         runpy.run_module(TOOLKIT + ".cli", run_name="__main__")
     except SystemExit as e:
