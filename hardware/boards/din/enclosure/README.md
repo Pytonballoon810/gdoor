@@ -14,6 +14,9 @@ top face.
 | `board_ghost.scad` | board and parts as boxes, generated, for the fit check |
 | `board_export.py` | regenerates `board_ghost.scad` from `../esp32.kicad_pcb` |
 | `gdoor-din-base.stl`, `gdoor-din-lid.stl` | ready to print |
+| `gdoor-din-base.step`, `gdoor-din-lid.step` | the same parts as STEP solids, for other CAD tools |
+| `gdoor-din-enclosure.step` | base and lid in their assembled position |
+| `step_export.py` | converts the STLs into the STEP files |
 
 ## Build the STLs
 
@@ -27,6 +30,15 @@ After a layout change run `board_export.py` (KiCad's python, from
 `hardware/boards/din`) and the fit check again. The front openings, posts
 and button holes are parameters in `enclosure.scad`, not derived from the
 board, so they have to be moved by hand if the parts move.
+
+OpenSCAD cannot write STEP, so `step_export.py` converts the STLs: it
+sews the triangles into a closed solid and merges flat faces. Round
+features stay faceted (`$fn = 40`). It needs OpenCascade's python bindings
+(`pip install cadquery-ocp`); run it after the STLs:
+
+```
+python step_export.py
+```
 
 ## Print
 
