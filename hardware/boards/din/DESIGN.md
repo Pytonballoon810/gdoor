@@ -26,14 +26,14 @@ Decisions (2026-10-16):
 | Block | Based on | Notes |
 |---|---|---|
 | Bus interface (rectifier, RX filter and comparator, TX filter and driver, +5V_onoff switch) | v4.0 schematic | TX_EN switches the TX filter and driver supply (Q1/Q2), which keeps the TX stage off at boot. C10, R21 and C18 are DNP here but fitted on v4.0 (see *Open points*). |
-| Bus voltage measurement | v4.0 (`BUS_DCVOLT`, R35/R73 82k/10k) | Reads up to about 30 V on ADC1. Closes issue #28 (bus connected/disconnected). |
+| Bus voltage measurement | v4.0 (`BUS_DCVOLT`, R35/R73 100k/10k) | Divides by 11, so about 34 V reaches the ADC1 limit (v4.0 used 82k, ÷9.2). Closes issue #28 (bus connected/disconnected). |
 | Audio codec ES8374 + bus coupling | v4.0 audio section | Own AMS1117 (U7, `+3.3V_ANA`). MONOOUT drives the bus through R32 and C21; the bus feeds MIC1P/MIC2P through C29/C31. Speaker outputs unused. |
 | RX threshold | v4.0, fixed | The S3 has no DAC, so the fixed-threshold comparator U6A (`RX`, GPIO6) is used. The adjustable path (`RX_DAC`, R56) is removed; U6B is unused and sits latched high through R22/R27/R30/R31. |
 | Ethernet | new: W5500 + HR911105A (magnetics and LEDs integrated) | 25 MHz crystal, WIZ850io reference circuit, PMODE all-capable. |
 | MCU | new: ESP32-S3-WROOM-1-N8R2 | Native USB (flashing, console). SW101 = RESET (EN, 10k/1 µF), SW102 = BOOT (IO0, 10k). |
 | USB-C | new: TYPE-C-31-M-12, 5.1 kΩ CC pull-downs, USBLC6-2SC6 ESD | Power and programming. |
 | Power | AP2114H-3.3TRG1 (U103, LCSC C150716) for 3.3 V digital (S3 + W5500) | 5 V inputs OR-ed with SS14 Schottkys (D101 USB, D2 terminal). AP2114H: 1 A, 450 mV typ / 750 mV max dropout at 1 A, AMS1117 pinout (1 GND, 2/tab VOUT, 3 VIN). The AP2114**HA** has a different pinout and does not fit this footprint. 10 µF in (C104), 22 µF out (C106). |
-| Status LEDs | new: green (GPIO2, 100 Ω) + red (GPIO17, 1 kΩ), 0603 | Issue #46. Plain LEDs instead of a WS2812, which needs more than 3.3 V logic when run from 5 V. |
+| Status LEDs | new: two red 0603 LEDs, D103 (GPIO2, net `LED_GREEN_A`, 1 kΩ) and D104 (GPIO17, 1 kΩ) | D103 was green (C12624, Extended); JLC has no Basic green 0603, so it is the Basic red C2286 like D104, and R105 went from 100 Ω to 1 kΩ for the same ~1.3 mA. Issue #46. Plain LEDs instead of a WS2812, which needs more than 3.3 V logic when run from 5 V. |
 
 ## ESP32-S3 pin map
 
@@ -48,8 +48,8 @@ Avoided: GPIO0/3/45/46 (strapping; GPIO0 only for the BOOT button, GPIO3,
 | Bus RX (comparator, digital) | 6 | |
 | Bus RX analog | 7 | ADC1, usable with WiFi on |
 | Bus DC voltage | 8 | ADC1 |
-| Status LED green | 2 | |
-| Status LED red | 17 | |
+| Status LED D103 (red, net `LED_GREEN_A`) | 2 | |
+| Status LED D104 (red) | 17 | |
 | W5500 CS / MOSI / SCK / MISO | 10 / 11 / 12 / 13 | SPI2 IO_MUX pins, full speed |
 | W5500 INT / RST | 14 / 21 | 4.7k pull-ups (also on CS) |
 | I2S MCLK / BCLK / LRCK | 38 / 39 / 40 | S3 routes MCLK to any pin (the v4.0 GPIO0 problem is gone) |
@@ -174,26 +174,59 @@ refills every zone before plotting.
 
 On the copy, before the toolkit runs:
 
-- **Rotation:** every part gets an `FT Rotation Offset`. Parts with the
-  board's own `JlcRotOffset` / `JLCPCB Rotation Offset` (J1, J4, U1, U5,
+- **Rotation:** every part gets an `FT Rotation Offset`. `ROT_OVERRIDE`
+  parts (Q1, Q2, U2, U3, D1, U102, J1) get a fixed final offset. Parts with
+  the board's own `JlcRotOffset` / `JLCPCB Rotation Offset` (J4, U1, U5,
   U6, U7) keep exactly that offset. Every other part gets the toolkit's
-  footprint-database correction.
+  footprint-database correction. The overrides (2026-10-18) come from
+  fitting JLC's EasyEDA footprint of each LCSC part onto the board's pads:
+  `Library:SOT-23` and `Library:SOT-23-5` are drawn 180° from KiCad's
+  standard footprints, so the database turned Q1/Q2/U2/U3 upside down;
+  C2687116's EasyEDA SOT-23-6 is drawn turned 90°; J1's `JlcRotOffset`
+  (-180) put its pads crosswise and is ignored.
+- **Position:** U101 (ESP32 module, 3.63 mm: JLC's origin is the module
+  centre), U7 (0.18 mm) and U103 (0.05 mm) get `FT Position Offset`s from
+  the same fit.
 - **J101 position:** J101 gets `FT Position Offset` `0,1.39`. KiCad's
   footprint origin sits 2.60 mm from the USB-C peg holes, JLC's model
   origin 1.206 mm. Aligned on the holes, JLC's point is 1.39 mm further
   +X on this board, where J101 sits at -90°. The CPL point is therefore
   97.09 / -108.0, not 95.70.
-- **J103 left out:** J103 (expansion header, hand-soldered, no LCSC part)
-  is marked DNP, so it drops out of BOM and CPL like the DNP parts.
+- **Hand-soldered parts left out:** `HAND_SOLDERED` parts are marked DNP,
+  so they drop out of BOM and CPL like the DNP parts. J103 (expansion
+  header) has no LCSC part. J1 (C695629), J102 (C12074), U103 (C150716),
+  U102 (C2687116), U2/U3 (C7972), C19/C20/C59 (C23742) and Y101 (C164045)
+  are Extended parts that are easy to solder by iron; leaving them off
+  saves JLC's $3 loading fee per part type. Order them from LCSC
+  separately.
 
 After the toolkit:
 
 - **BOM columns:** they are rewritten to JLC's template: `Comment,
   Designator, Footprint, LCSC Part #`. The toolkit's `Value`/`Quantity`
   columns made the PCBA quote fail ("fee item calculate failed").
+- **BOM lines merged:** lines with the same LCSC part are merged, so a
+  value spelled two ways ("4k7"/"4.7k") does not make JLC report two lines
+  matched to one part.
 - **Self-check:** the script checks that BOM and CPL list the same
-  designators, that every BOM line has an LCSC number, and J101's CPL
-  point. It exits non-zero on a problem.
+  designators, that every BOM line has an LCSC number and no LCSC part is
+  on two lines, and the CPL points and rotations of the corrected parts.
+  It exits non-zero on a problem.
+
+Extended-part fees (2026-10-18): none of these values is a JLC Basic 0402
+part, so they were moved to fee-free parts:
+
+- 18k (C25762), 2.4k (C25882) and 6.8 nF (C1542): same values,
+  Preferred Extended parts (no loading fee in Economic PCBA).
+- 82k → 100k Basic (C25741): R3/R4 and R18/R19 are 1:1 reference dividers,
+  so the midpoints stay 1.65 V / 2.5 V; R35 changes the bus-voltage divider
+  (see the table above).
+- R112/R113/R117/R118, 3.3 Ω → 0 Ω (C17168): series resistors between the
+  W5500 TX/RX pins and the 49.9 Ω terminations, which sit on the magnetics
+  side. The footprints stay, so 3.3 Ω can go back if EMI needs it.
+- D103 green → red (C2286), R105 100 Ω → 1 kΩ (C11702).
+- Still Extended at JLC: U1, U5, U101, U104, J101, R1/R20 (130k, RX
+  filter) and R108 (12.4k 1%, W5500 bias; must stay).
 
 The iBOMs: `ibom.html` comes from the InteractiveHtmlBom plugin (with tracks
 and nets), `ibom-partdb.html` from `partdb_ibom.py` (Part-DB storage and JLC
@@ -209,9 +242,10 @@ Other notes:
   sheet.
 - **Single-sided assembly:** every B.Cu part is DNP. Left on B.Cu: C18
   (hand-soldered, see *Open points*) and the ESD logo S1.
-- **Check rotations** in JLCPCB's placement preview. U101 (module), U103,
-  J102 (RJ45), SW101/SW102, Y101 and the LEDs have no correction in the
-  database.
+- **Check rotations** in JLCPCB's placement preview anyway. D104 and J101
+  look wrong to the pad fit and are right: JLC's LED numbers the cathode
+  pad 2 (matched by cathode, 0° is correct), and J101 is aligned on its
+  peg holes, not on its signal pads.
 
 ## Firmware impact
 
@@ -252,8 +286,8 @@ Decisions:
 - **Unused parts:** U6B with its four resistors, and the codec's MICBIAS caps
   C22/C35, are unused on this board. They are kept so the unused inputs stay
   defined.
-- **Status LEDs:** the green resistor (R105, 100 Ω, about 12 mA) and the red
-  one (R106, 1 kΩ, about 1.3 mA) differ by 10×, so green is much brighter.
+- **Status LEDs** (done 2026-10-18): both are red now, each with 1 kΩ
+  (about 1.3 mA), so they are equally bright.
 
 To do in KiCad:
 

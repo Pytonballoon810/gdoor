@@ -15650,7 +15650,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909327"
+		(property "MPN" "C25762"
 			(at 130.81 104.14 0)
 			(hide yes)
 			(show_name no)
@@ -17918,7 +17918,7 @@
 				)
 			)
 		)
-		(property "Value" "82k"
+		(property "Value" "100k"
 			(at 127 137.16 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -17960,7 +17960,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909388"
+		(property "MPN" "C25741"
 			(at 127 137.16 0)
 			(hide yes)
 			(show_name no)
@@ -18552,7 +18552,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909327"
+		(property "MPN" "C25762"
 			(at 74.93 158.75 0)
 			(hide yes)
 			(show_name no)
@@ -19334,7 +19334,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909327"
+		(property "MPN" "C25762"
 			(at 109.22 120.015 0)
 			(hide yes)
 			(show_name no)
@@ -21291,7 +21291,7 @@
 				)
 			)
 		)
-		(property "MPN" "C144772"
+		(property "MPN" "C25882"
 			(at 92.075 69.85 0)
 			(hide yes)
 			(show_name no)
@@ -23082,7 +23082,7 @@
 				)
 			)
 		)
-		(property "Value" "82k"
+		(property "Value" "100k"
 			(at 127 129.54 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23124,7 +23124,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909388"
+		(property "MPN" "C25741"
 			(at 127 129.54 0)
 			(hide yes)
 			(show_name no)
@@ -23652,7 +23652,7 @@
 				)
 			)
 		)
-		(property "MPN" "C144772"
+		(property "MPN" "C25882"
 			(at 203.2 113.03 0)
 			(hide yes)
 			(show_name no)
@@ -24169,7 +24169,7 @@
 				)
 			)
 		)
-		(property "MPN" "C144772"
+		(property "MPN" "C25882"
 			(at 197.485 113.03 0)
 			(hide yes)
 			(show_name no)
@@ -24314,7 +24314,7 @@
 				)
 			)
 		)
-		(property "Value" "82k"
+		(property "Value" "100k"
 			(at 203.2 48.26 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -24356,7 +24356,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909388"
+		(property "MPN" "C25741"
 			(at 203.2 48.26 0)
 			(hide yes)
 			(show_name no)
@@ -28324,7 +28324,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909327"
+		(property "MPN" "C25762"
 			(at 130.81 99.06 0)
 			(hide yes)
 			(show_name no)
@@ -29982,7 +29982,7 @@
 				)
 			)
 		)
-		(property "Value" "82k"
+		(property "Value" "100k"
 			(at 71.755 54.61 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -30024,7 +30024,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909388"
+		(property "MPN" "C25741"
 			(at 71.755 54.61 0)
 			(hide yes)
 			(show_name no)
@@ -31676,7 +31676,7 @@
 				)
 			)
 		)
-		(property "Value" "82k"
+		(property "Value" "100k"
 			(at 71.755 46.99 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -31718,7 +31718,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909388"
+		(property "MPN" "C25741"
 			(at 71.755 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -33539,7 +33539,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909327"
+		(property "MPN" "C25762"
 			(at 80.01 158.75 0)
 			(hide yes)
 			(show_name no)
@@ -34742,7 +34742,7 @@
 				)
 			)
 		)
-		(property "MPN" "C144772"
+		(property "MPN" "C25882"
 			(at 120.65 62.23 0)
 			(hide yes)
 			(show_name no)
@@ -34934,7 +34934,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909327"
+		(property "MPN" "C25762"
 			(at 90.805 35.56 0)
 			(hide yes)
 			(show_name no)
