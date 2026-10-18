@@ -3926,15 +3926,15 @@
 			(uuid "0bdb9117-df70-4616-bee4-8460c63445e8")
 		)
 		(embedded_fonts no)
-		(model "${KICAD10_3DMODEL_DIR}/Connector_USB.3dshapes/USB_C_Receptacle_HRO_TYPE-C-31-M-12.step"
+		(model "${KIPRJMOD}/3dmodels/USB_C_HRO_TYPE-C-31-M-12.step"
 			(offset
-				(xyz 0 0 0)
+				(xyz 0 0.294 0)
 			)
 			(scale
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 0)
+				(xyz 0 0 -180)
 			)
 		)
 	)
@@ -10050,9 +10050,9 @@
 			(uuid "bb5a4e99-4910-4b14-b503-043ce37faa9f")
 		)
 		(embedded_fonts no)
-		(model "${KICAD10_3DMODEL_DIR}/Connector_RJ.3dshapes/RJ45_Hanrun_HR911105A_Horizontal.step"
+		(model "${KIPRJMOD}/3dmodels/RJ45_Hanrun_HR911105A.step"
 			(offset
-				(xyz 0 0 0)
+				(xyz 4.443 -6.633 0)
 			)
 			(scale
 				(xyz 1 1 1)
@@ -15851,7 +15851,7 @@
 			(uuid "0185693c-65e5-4885-8d0c-aeef7b600cd3")
 		)
 		(embedded_fonts no)
-		(model "${KICAD6_3DMODEL_DIR}/Package_SO.3dshapes/SOIC-4_4.55x3.7mm_P2.54mm.wrl"
+		(model "${KIPRJMOD}/3dmodels/MB10S_MBS.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -15859,7 +15859,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 0)
+				(xyz 0 0 -90)
 			)
 		)
 	)
@@ -33348,7 +33348,7 @@
 			(uuid "6e30d36f-f826-4211-92b5-56a3ae2c2139")
 		)
 		(embedded_fonts no)
-		(model "${KICAD6_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/QFN-28-1EP_4x4mm_P0.45mm_EP2.4x2.4mm.wrl"
+		(model "${KIPRJMOD}/3dmodels/ES8374_QFN-28_4x4mm_P0.45mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -33356,7 +33356,7 @@
 				(xyz 1 1 1)
 			)
 			(rotate
-				(xyz 0 0 0)
+				(xyz 0 0 90)
 			)
 		)
 	)

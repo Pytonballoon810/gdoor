@@ -8,7 +8,7 @@ On the copy, before the toolkit runs:
 - every part gets an `FT Rotation Offset`. Parts with the board's own JLC offset field
   (JlcRotOffset / JLCPCB Rotation Offset) keep exactly that offset; the toolkit's -t pass adds its
   footprint-database value on top, so the field holds manual - db. Every other part gets the
-  database correction alone.
+  database correction alone. ROT_OVERRIDE parts get a fixed final offset instead of either.
 - POS_OFFSET parts get an `FT Position Offset` (toolkit frame: footprint-local, y up, rotated by the
   footprint angle), for footprints whose origin differs from JLC's model.
 - HAND_SOLDERED parts are marked DNP, which leaves them out of BOM and CPL like the DNP parts.
@@ -46,8 +46,21 @@ COPY = ["esp32.kicad_pcb", "esp32.kicad_pro", "esp32.kicad_dru", "esp32.kicad_sc
 # peg holes, JLC's (EasyEDA) 2.474 mm and 1.206 mm. Aligned on the peg holes the CPL point moves
 # 1.39 mm toward the pad row: +X on this board, where J101 sits at -90 deg. In the toolkit's frame
 # that is local +y. The run checks the resulting CPL value against EXPECT.
-POS_OFFSET = {"J101": (0.0, 1.39)}
-EXPECT = {"J101": (97.09, -108.0)}
+#
+# U101 (ESP32-S3-WROOM-1): KiCad's origin is not the module centre, JLC's is; 3.63 mm along the
+# module. U7/U103 (SOT-223): JLC's origin sits 0.18/0.05 mm toward the pin row. All three fitted
+# on the pads of JLC's EasyEDA footprints.
+POS_OFFSET = {"J101": (0.0, 1.39), "U101": (0.0, -3.627), "U7": (-0.18, 0.0), "U103": (-0.05, 0.0)}
+EXPECT = {"J101": (97.09, -108.0), "U101": (135.0, -128.623), "U7": (142.82, -85.5)}
+
+# Final JLC rotation minus the KiCad rotation, for parts where the toolkit's footprint database
+# (which assumes KiCad's standard footprints) and the board's JlcRotOffset fields give the wrong
+# answer. Each value comes from fitting JLC's EasyEDA footprint (pad numbers and pin names) onto
+# the board's pads. Library:SOT-23 and Library:SOT-23-5 are drawn 180 deg from KiCad's standard
+# ones; the EasyEDA SOT-23-6 of C2687116 is drawn turned 90 deg; J1's offset field (-180) put its
+# pads crosswise.
+ROT_OVERRIDE = {"Q1": 0, "Q2": 0, "U2": 0, "U3": 0, "D1": 0, "U102": -90, "J1": -90}
+EXPECT_ROT = {"Q1": 90, "Q2": 90, "U2": 0, "U3": 0, "D1": 0, "U102": 270, "J1": 0, "U1": 180}
 HAND_SOLDERED = ["J103"]      # expansion header, no LCSC part
 BOM_COLUMNS = ["Comment", "Designator", "Footprint", "LCSC Part #"]
 
@@ -69,7 +82,9 @@ def prepare(path, sys_path):
         fields = {x.GetName(): x.GetText() for x in f.GetFields()}
         db = pm._get_rotation_from_db(str(f.GetFPID().GetLibItemName()), str(f.GetFPID().GetLibNickname()))
         manual = fields.get("JlcRotOffset") or fields.get("JLCPCB Rotation Offset")
-        if manual not in (None, ""):
+        if ref in ROT_OVERRIDE:
+            set_field(f, "FT Rotation Offset", str(ROT_OVERRIDE[ref] - db))
+        elif manual not in (None, ""):
             set_field(f, "FT Rotation Offset", str(float(manual) - db))
         if ref in POS_OFFSET:
             set_field(f, "FT Position Offset", "%g,%g" % POS_OFFSET[ref])
@@ -92,13 +107,24 @@ def run_toolkit(path):
 
 
 def rewrite_bom(path):
+    # Lines with the same LCSC part are merged: the toolkit groups by value text, so "4k7" and
+    # "4.7k" end up as two lines, which JLC flags as "multiple lines matched to the same part".
     with open(path, encoding="utf-8-sig", newline="") as fh:
         rows = list(csv.DictReader(fh))
+    merged = {}
+    for r in rows:
+        key = r["LCSC Part #"] or ("", r["Value"], r["Footprint"])
+        if key in merged:
+            merged[key]["Designator"] += ", " + r["Designator"]
+        else:
+            merged[key] = dict(r)
     with open(path, "w", encoding="utf-8-sig", newline="") as fh:
         w = csv.writer(fh)
         w.writerow(BOM_COLUMNS)
-        for r in rows:
-            w.writerow([r["Value"], r["Designator"], r["Footprint"], r["LCSC Part #"]])
+        for r in merged.values():
+            refs = sorted((d.strip() for d in r["Designator"].split(",")),
+                          key=lambda d: (d.rstrip("0123456789"), int(d[len(d.rstrip("0123456789")):] or 0)))
+            w.writerow([r["Value"], ", ".join(refs), r["Footprint"], r["LCSC Part #"]])
     return rows
 
 
@@ -119,6 +145,12 @@ def check(prod):
         got = (float(cpl[ref]["Mid X"]), float(cpl[ref]["Mid Y"]))
         if abs(got[0] - x) > 0.005 or abs(got[1] - y) > 0.005:
             problems.append("%s at %s, expected %s" % (ref, got, (x, y)))
+    for ref, rot in EXPECT_ROT.items():
+        if float(cpl[ref]["Rotation"]) % 360 != rot:
+            problems.append("%s rotated %s, expected %s" % (ref, cpl[ref]["Rotation"], rot))
+    lcsc = [r["LCSC Part #"] for r in bom if r["LCSC Part #"]]
+    if len(lcsc) != len(set(lcsc)):
+        problems.append("LCSC part on several BOM lines")
     for ref in HAND_SOLDERED:
         if ref in cpl or ref in bom_refs:
             problems.append(ref + " still in BOM/CPL")
