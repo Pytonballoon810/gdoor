@@ -4,13 +4,13 @@ on:
   push:
     paths: # the component compiles the firmware's bus core, so build on changes to either
       - 'esphome/**'
-      - 'firmware/esp32/gdoor/src/**'
+      - 'firmware/src/**'
       - 'tools/sync_esphome_core.py'
       - '.github/workflows/esphome.yml'
   pull_request:
     paths:
       - 'esphome/**'
-      - 'firmware/esp32/gdoor/src/**'
+      - 'firmware/src/**'
       - 'tools/sync_esphome_core.py'
       - '.github/workflows/esphome.yml'
 

@@ -25,3 +25,13 @@ Moved to the dedicated [page](https://gdoor-org.github.io/buy.html) on our homep
 
 # Documentation / Home Automation
 Moved to the dedicated [page](https://gdoor-org.github.io/documentation/getting-started.html) on our homepage.
+
+# Repository layout
+
+| Folder | Contents |
+|---|---|
+| [`firmware/`](firmware/README.md) | Arduino/PlatformIO firmware (MQTT, web installer) |
+| [`esphome/`](esphome/README.md) | ESPHome external component; carries a copy of the firmware's bus core, kept in sync by `tools/sync_esphome_core.py` |
+| [`hardware/`](hardware/README.md) | KiCad boards (`boards/`), shared library (`lib/`) and production files of each release (`releases/`) |
+| [`software/bus-debugger/`](software/bus-debugger/README.md) | MQTT bus listener for decoding messages |
+| `tools/` | Repository helper scripts |

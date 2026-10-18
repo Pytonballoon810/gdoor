@@ -7,7 +7,7 @@ with native entities instead of an MQTT sensor and shell commands, and the ESP32
 can run other ESPHome components (e.g. a Bluetooth proxy) next to GDoor.
 
 The component compiles the same bus encoder/decoder as the MQTT firmware
-(`firmware/esp32/gdoor/src`). ESPHome only builds files inside the component
+(`firmware/src`). ESPHome only builds files inside the component
 directory, so `esphome/components/gdoor` carries copies of those files; edit
 the firmware sources and run `python tools/sync_esphome_core.py`. CI fails if
 the copies are out of date.
@@ -123,7 +123,7 @@ by the codec.
 
 For Ethernet, use ESPHome's own [`ethernet:`](https://esphome.io/components/ethernet.html)
 component instead of `wifi:`. A W5500 module on the free VSPI pins of the
-adapter (wiring in [the firmware README](../firmware/esp32/gdoor/README.md#ethernet-w5500-module)):
+adapter (wiring in [the firmware README](../firmware/README.md#ethernet-w5500-module)):
 
 ```yaml
 ethernet:

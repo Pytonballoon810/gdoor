@@ -18,7 +18,7 @@ Copies the bus core of the Arduino firmware into the ESPHome component.
 
 ESPHome only compiles source files that live inside the component directory,
 so the component carries copies of the core files. The Arduino firmware in
-firmware/esp32/gdoor/src is the single source of truth; edit it there and run
+firmware/src is the single source of truth; edit it there and run
 
     python tools/sync_esphome_core.py
 
@@ -32,7 +32,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = ROOT / "firmware" / "esp32" / "gdoor" / "src"
+SOURCE = ROOT / "firmware" / "src"
 TARGET = ROOT / "esphome" / "components" / "gdoor"
 
 # Bus encoding/decoding only, the WiFi, MQTT and web config parts are replaced by ESPHome
