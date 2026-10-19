@@ -61,10 +61,11 @@ EXPECT = {"J101": (97.09, -108.0), "U101": (135.0, -128.623), "U7": (142.82, -85
 # pads crosswise.
 ROT_OVERRIDE = {"Q1": 0, "Q2": 0, "U2": 0, "U3": 0, "D1": 0, "U102": -90, "J1": -90}
 EXPECT_ROT = {"Q1": 90, "Q2": 90, "U2": 0, "U3": 0, "D1": 0, "U102": 270, "J1": 0, "U1": 180}
-# Left off the JLC order and soldered by hand: J103 has no LCSC part; the rest are Extended parts
-# that are easy to solder by iron, each saving JLC's $3 loading fee. The rotation and position
-# entries above stay for them, in case they go back to JLC.
-HAND_SOLDERED = ["J103", "J1", "J102", "U103", "U102", "U2", "U3", "C19", "C20", "C59", "Y101"]
+# Left off the JLC order and soldered by hand: J103 has no LCSC part; U101 (ESP32 module) cannot
+# be placed in JLC's Economic PCBA; the rest are Extended parts that are easy to solder by iron,
+# each saving JLC's $3 loading fee. Y101 stays with JLC: its pads are under the part. The rotation
+# and position entries above stay for these parts, in case they go back to JLC.
+HAND_SOLDERED = ["J103", "U101", "J1", "J102", "U103", "U102", "U2", "U3", "C19", "C20", "C59"]
 BOM_COLUMNS = ["Comment", "Designator", "Footprint", "LCSC Part #"]
 
 

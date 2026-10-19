@@ -194,11 +194,15 @@ On the copy, before the toolkit runs:
   97.09 / -108.0, not 95.70.
 - **Hand-soldered parts left out:** `HAND_SOLDERED` parts are marked DNP,
   so they drop out of BOM and CPL like the DNP parts. J103 (expansion
-  header) has no LCSC part. J1 (C695629), J102 (C12074), U103 (C150716),
-  U102 (C2687116), U2/U3 (C7972), C19/C20/C59 (C23742) and Y101 (C164045)
-  are Extended parts that are easy to solder by iron; leaving them off
-  saves JLC's $3 loading fee per part type. Order them from LCSC
-  separately.
+  header) has no LCSC part. U101 (ESP32-S3-WROOM-1-N8R2, C2913204) cannot
+  be placed in JLC's Economic PCBA. Its castellated pins take an iron; the
+  centre GND pad (pad 41, split into sub-pads, one 0.3 mm via) needs hot air
+  or a hot plate. The module is also grounded through pins 1 and 40. J1
+  (C695629), J102 (C12074), U103 (C150716), U102 (C2687116), U2/U3 (C7972)
+  and C19/C20/C59 (C23742) are Extended parts that are easy to solder by
+  iron; leaving them off saves JLC's $3 loading fee per part type. Order
+  all of them from LCSC separately. Y101 stays with JLC: its pads are under
+  the crystal.
 
 After the toolkit:
 
@@ -225,7 +229,7 @@ part, so they were moved to fee-free parts:
   W5500 TX/RX pins and the 49.9 Ω terminations, which sit on the magnetics
   side. The footprints stay, so 3.3 Ω can go back if EMI needs it.
 - D103 green → red (C2286), R105 100 Ω → 1 kΩ (C11702).
-- Still Extended at JLC: U1, U5, U101, U104, J101, R1/R20 (130k, RX
+- Still Extended at JLC: U1, U5, U104, J101, Y101, R1/R20 (130k, RX
   filter) and R108 (12.4k 1%, W5500 bias; must stay).
 
 The iBOMs: `ibom.html` comes from the InteractiveHtmlBom plugin (with tracks
