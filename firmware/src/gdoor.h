@@ -28,7 +28,7 @@ namespace GDOOR { //Namespace as we can only use it once
     void loop();
     GDOOR_DATA* read();
     bool send(uint8_t *data, uint16_t len);
-    bool send(String str);
+    bool send(const char *str);
     GDOOR_DATA* sent();
     bool active();
     void setRxThreshold(uint8_t pin, float sensitivity);

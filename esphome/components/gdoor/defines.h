@@ -17,6 +17,8 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+#include "sdkconfig.h"
+
 // GDoor
 #ifndef GDOOR_VERSION
 #define GDOOR_VERSION "dev"
@@ -42,6 +44,28 @@
 #define PAUSE_PULSENUM 30
 
 #define STATE_SENDING 0x01
+
+// Bus timing on the ESP-IDF drivers (gptimer, LEDC, GPIO interrupt)
+#define RX_TIMER_HZ 120000 // RX timestamps, 2 ticks per 60kHz cycle
+#define RX_BIT_END_TICKS 20 // No edge for 20 ticks (= 10 60kHz cycles): bit is over
+#define RX_BITSTREAM_END_TICKS (6*STARTBIT_MIN_LEN) // No edge for this long (= 3 * STARTBIT_MIN_LEN 60kHz cycles): bitstream is over
+#define TX_TIMER_HZ 60000 // TX state machine tick, one per bus pulse
+#define TX_PWM_HZ 52000 // Carrier, only 52kHz as the bandpass manufacturing tolerances are a bit on the lower side
+#define TX_PWM_RESOLUTION LEDC_TIMER_10_BIT
+#define TX_PWM_DUTY 512 // 50 % at 10 bit
+// LEDC timer and channel used for the carrier; taken from the top, so that
+// other LEDC users (allocating from 0 upwards) do not collide with it
+#define TX_LEDC_TIMER LEDC_TIMER_3
+#define TX_LEDC_CHANNEL LEDC_CHANNEL_7
+
+// The bus ISRs keep running while flash is written (OTA, saving config) only if
+// every driver function they call is in IRAM. ESPHome sets these options; the
+// prebuilt Arduino sdkconfig does not, there the ISRs pause during flash writes.
+#if (defined(CONFIG_GPTIMER_ISR_CACHE_SAFE) || defined(CONFIG_GPTIMER_ISR_IRAM_SAFE)) &&     defined(CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM) && defined(CONFIG_GPIO_CTRL_FUNC_IN_IRAM) &&     defined(CONFIG_LEDC_CTRL_FUNC_IN_IRAM)
+#define GDOOR_ISR_IRAM_SAFE 1
+#else
+#define GDOOR_ISR_IRAM_SAFE 0
+#endif
 
 // WIFI
 #define DEFAULT_WIFI_SSID     "GDoor"

@@ -14,6 +14,12 @@
  * You should have received a copy of the GNU General Public License 
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include <string.h>
+#include "soc/soc_caps.h"
+#if SOC_DAC_SUPPORTED
+#include "driver/dac_oneshot.h"
+#include "soc/dac_channel.h"
+#endif
 #include "gdoor.h"
 
 namespace GDOOR {
@@ -64,7 +70,7 @@ namespace GDOOR {
     * @param hex string data without 0x prefix
     * @return true if the string was valid hex data and transmission started
     */
-    bool send(String str) {
+    bool send(const char *str) {
         bool accepted = GDOOR_TX::send(str);
         sent_pending = sent_pending || accepted;
         return accepted;
@@ -98,9 +104,36 @@ namespace GDOOR {
 
     /** Set RX Threshold (Sensitivity) to a certain level,
      * only working for IO22 rx input on v3.1 hardware
+     * @param pin DAC pin driving the comparator threshold (GPIO25 or GPIO26 on the ESP32)
+     * @param sensitivity Threshold in volts
     */
    void setRxThreshold(uint8_t pin, float sensitivity) {
+#if SOC_DAC_SUPPORTED
+        static dac_oneshot_handle_t dac = NULL;
+        static uint8_t dac_pin = 0;
         uint8_t value =  (uint8_t)((sensitivity/3.3)*255);
-        dacWrite(pin, value);
+
+        if (dac != NULL && dac_pin != pin) {
+            dac_oneshot_del_channel(dac);
+            dac = NULL;
+        }
+        if (dac == NULL) {
+            dac_oneshot_config_t config = {};
+            if (pin == DAC_CHAN0_GPIO_NUM) {
+                config.chan_id = DAC_CHAN_0;
+            } else if (pin == DAC_CHAN1_GPIO_NUM) {
+                config.chan_id = DAC_CHAN_1;
+            } else {
+                return; // No DAC on this pin
+            }
+            if (dac_oneshot_new_channel(&config, &dac) != ESP_OK) {
+                dac = NULL;
+                return;
+            }
+            dac_pin = pin;
+        }
+        dac_oneshot_output_voltage(dac, value);
+#endif
+        // Chips without DAC (e.g. ESP32-S3) have a fixed comparator threshold
    }
 }

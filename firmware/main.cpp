@@ -173,7 +173,7 @@ void loop() {
 
         if(str_received.length() > 0) {
             if(!parse(str_received)) { //Check if received string is a command
-                GDOOR::send(str_received); // Send to bus if it is not a command
+                GDOOR::send(str_received.c_str()); // Send to bus if it is not a command
                 JSONDEBUG("Send: ");
                 JSONDEBUG(str_received);
             }

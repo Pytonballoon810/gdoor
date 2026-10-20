@@ -18,11 +18,11 @@
 #ifndef GDOOR_RX_H
 
 #define GDOOR_RX_H
-#include <Arduino.h>
+#include <stdint.h>
 #include "gdoor_data.h"
 
 namespace GDOOR_RX { //Namespace as we can only use it once
-    extern uint16_t rx_state;
+    extern volatile uint16_t rx_state;
     void setup(uint8_t rxpin);
     void loop();
     void enable();

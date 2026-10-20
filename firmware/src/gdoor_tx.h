@@ -17,14 +17,14 @@
 #ifndef GDOOR_TX_H
 
 #define GDOOR_TX_H
-#include <Arduino.h>
+#include <stdint.h>
 
 namespace GDOOR_TX { //Namespace as we can only use it once
-    extern uint16_t tx_state;
+    extern volatile uint16_t tx_state;
     extern uint8_t last_data[];
     extern uint16_t last_len;
     bool send(uint8_t *words, uint16_t len);
-    bool send(String str);
+    bool send(const char *str);
     void setup(uint8_t txpin, uint8_t txenpin);
 };
 

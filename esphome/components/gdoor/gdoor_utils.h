@@ -16,11 +16,17 @@
  */
 #ifndef GDOOR_UTILS_H
 #define GDOOR_UTILS_H
+#include <stddef.h>
+#include <stdint.h>
+#ifdef ARDUINO
 #include <Arduino.h>
+#endif
 
 namespace GDOOR_UTILS {
     uint8_t crc(uint8_t *words, uint16_t len);
     uint8_t parity_odd(uint8_t word);
+
+#ifdef ARDUINO // JSON output via Arduino's Print, used by the MQTT firmware
 
     /*
     * Template Function (needs to live in header file),
@@ -86,6 +92,7 @@ namespace GDOOR_UTILS {
     }
 
     size_t print_json_string(Print& p, const char *keyname, const char *value);
+#endif
 }
 
 #endif

@@ -18,22 +18,29 @@
 #ifndef GDOOR_DATA_H
 
 #define GDOOR_DATA_H
-#include <map>
+#include <stdint.h>
+#ifdef ARDUINO
 #include <Arduino.h>
+#endif
 #include "defines.h"
 #include "gdoor_utils.h"
 
-extern boolean debug;
+extern bool debug;
 
+#ifdef ARDUINO
 class GDOOR_DATA : public Printable { // Class/Struct to collect bus related infos
+#else
+class GDOOR_DATA { // Class/Struct to collect bus related infos
+#endif
     public:
         uint16_t len;
         uint8_t data[MAX_WORDLEN];
         uint16_t raw[MAX_WORDLEN*9];
         uint8_t valid;
 
-        boolean parse(uint16_t *counts, uint16_t len);
+        bool parse(uint16_t *counts, uint16_t len);
 
+#ifdef ARDUINO
         virtual size_t printTo(Print& p) const {
             size_t r = 0;
 
@@ -48,9 +55,14 @@ class GDOOR_DATA : public Printable { // Class/Struct to collect bus related inf
 
             return r;
        }
+#endif
 };
 
+#ifdef ARDUINO
 class GDOOR_DATA_PROTOCOL : public Printable { // Class/Struct to collect bus high level protocol data
+#else
+class GDOOR_DATA_PROTOCOL { // Class/Struct to collect bus high level protocol data
+#endif
     public:
         GDOOR_DATA *raw;
         const char *type;
@@ -62,6 +74,7 @@ class GDOOR_DATA_PROTOCOL : public Printable { // Class/Struct to collect bus hi
 
         GDOOR_DATA_PROTOCOL(GDOOR_DATA* data, bool idle = false);
 
+#ifdef ARDUINO
         virtual size_t printTo(Print& p) const {
             size_t r = 0;
             static uint32_t cnt = 0;
@@ -101,6 +114,7 @@ class GDOOR_DATA_PROTOCOL : public Printable { // Class/Struct to collect bus hi
 
             return r;
         }
+#endif
 };
 
 #endif

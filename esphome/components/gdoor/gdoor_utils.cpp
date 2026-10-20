@@ -38,6 +38,7 @@ namespace GDOOR_UTILS {
         return ones &0x01;
     }
 
+#ifdef ARDUINO
     size_t print_json_string(Print& p, const char *keyname, const char *value) {
         size_t r = 0;
         r+= p.print("\"");
@@ -47,5 +48,6 @@ namespace GDOOR_UTILS {
         r+= p.print("\"");
         return r;
     }
+#endif
 
 }

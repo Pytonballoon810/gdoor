@@ -25,7 +25,7 @@
 
 // The core's debug macros print JSON to Serial when this is set, which would
 // interleave with the ESPHome logger. ESPHome logs the messages itself instead.
-boolean debug = false;
+bool debug = false;
 
 namespace esphome::gdoor {
 
@@ -143,7 +143,7 @@ void GDoorComponent::loop() {
   if (!this->tx_queue_.empty() && !GDOOR::active()) {
     std::string hex = this->tx_queue_.front();
     this->tx_queue_.pop_front();
-    if (!GDOOR::send(String(hex.c_str()))) {
+    if (!GDOOR::send(hex.c_str())) {
       ESP_LOGW(TAG, "Bus did not accept '%s'", hex.c_str());
     }
   }

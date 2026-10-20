@@ -14,6 +14,10 @@
  * You should have received a copy of the GNU General Public License 
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+#include "driver/gpio.h"
+#include "driver/gptimer.h"
+#include "esp_attr.h"
+#include "esp_log.h"
 #include "defines.h"
 #include "gdoor_rx.h"
 #include "gdoor_data.h"
@@ -22,85 +26,105 @@
 
 namespace GDOOR_RX {
 
+    static const char *TAG = "gdoor_rx";
+
     uint16_t counts[MAX_WORDLEN*9]; // Received counter values of bitstream, buffer
-    uint16_t isr_cnt = 0; // Interrupt Counter (Counting RX edges)  
+    volatile uint16_t isr_cnt = 0; // Interrupt Counter (Counting RX edges)
 
     uint8_t words[MAX_WORDLEN]; //Received words buffer
     uint16_t raw[MAX_WORDLEN*9]; // Received raw counter values of bitstream
 
-    uint16_t rx_state = 0; // State Machine
+    volatile uint16_t rx_state = 0; // State Machine
 
-    uint8_t bitcounter = 0; //Current bit index, in currently active bitstream
+    volatile uint8_t bitcounter = 0; //Current bit index, in currently active bitstream
+
+    volatile bool enabled = false; // RX is switched off while we send, so we do not receive our own message
+    volatile bool bit_pending = false; // Edges were counted since the last bit end
+    volatile uint64_t last_edge = 0; // Timer count at the last RX edge
 
     GDOOR_DATA retval;
 
-    hw_timer_t * timer_bit_received = NULL;
-    hw_timer_t * timer_bitstream_received = NULL;
+    // One free-running timer: the edge ISR moves its alarm to "bit is over",
+    // the alarm then moves itself on to "bitstream is over".
+    // So no timer is stopped or restarted from an ISR.
+    gptimer_handle_t timer = NULL;
 
-    uint8_t pin_rx = 0;
-    
+    gpio_num_t pin_rx = GPIO_NUM_NC;
+
+    static inline void IRAM_ATTR set_alarm(uint64_t count) {
+        gptimer_alarm_config_t alarm = {};
+        alarm.alarm_count = count;
+        gptimer_set_alarm_action(timer, &alarm);
+    }
+
     /*
-    * We received a 60kHz pulse, so start timeout timer (for bit and whole bitstream) and increment bit pulse count,
+    * We received a 60kHz pulse, so (re)arm the timeout for this bit and increment bit pulse count,
     * so that logic knows how much pulses were in this bit pulse-train.
     */
-    void ARDUINO_ISR_ATTR isr_extint_rx() {
+    void IRAM_ATTR isr_extint_rx(void *arg) {
+        if (!enabled) {
+            return;
+        }
+        uint64_t now = 0;
+        gptimer_get_raw_count(timer, &now);
         rx_state |= (uint16_t)FLAG_RX_ACTIVE;
         isr_cnt = isr_cnt + 1;
-        timerWrite(timer_bit_received, 0); //reset timer
-        timerWrite(timer_bitstream_received, 0); //reset timer
-        timerStart(timer_bit_received); //Start timer to detect bit is over
-        timerStart(timer_bitstream_received); //Start timer to detect bistream is over
+        last_edge = now;
+        bit_pending = true;
+        set_alarm(now + RX_BIT_END_TICKS); //Detect bit is over
     }
 
     /*
-    * If this timer fires, the rx 60kHz pulse-train stopped,
-    * so we should read out how many pulses we got for this bit (to decide 1 or 0)
+    * The alarm fires either after a bit or after the whole bitstream.
+    * Bit: the rx 60kHz pulse-train stopped, so we read out how many pulses
+    * we got for this bit (to decide 1 or 0) and wait for the bitstream end.
+    * Bitstream: no further bit followed, rx bit stream is over.
     */
-    void ARDUINO_ISR_ATTR isr_timer_bit_received() {
-        if (bitcounter > MAX_WORDLEN*9) {
-            bitcounter = 0;
+    bool IRAM_ATTR isr_timer_alarm(gptimer_handle_t t, const gptimer_alarm_event_data_t *edata, void *arg) {
+        if (bit_pending) {
+            if (bitcounter >= MAX_WORDLEN*9) {
+                bitcounter = 0;
+            }
+            counts[bitcounter] = isr_cnt;
+
+            isr_cnt = 0;
+            bitcounter = bitcounter + 1;
+            bit_pending = false;
+            set_alarm(last_edge + RX_BITSTREAM_END_TICKS); //Detect bitstream is over
+        } else {
+            rx_state &= (uint16_t)~FLAG_RX_ACTIVE;
+            rx_state |= (uint16_t)FLAG_BITSTREAM_RECEIVED;
+            gptimer_set_alarm_action(t, NULL);
         }
-        counts[bitcounter] = isr_cnt;
-        
-        isr_cnt = 0;
-        bitcounter = bitcounter + 1;
-        timerStop(timer_bit_received);
-    }
-
-    /*
-    * If this timer fires, rx bit stream is over
-    */
-    void ARDUINO_ISR_ATTR isr_timer_bitstream_received() {
-        rx_state &= (uint16_t)~FLAG_RX_ACTIVE;
-        rx_state |= (uint16_t)FLAG_BITSTREAM_RECEIVED;
-        timerStop(timer_bitstream_received);
-        timerStop(timer_bit_received);
+        return false;
     }
 
     /*
     * Internal function set reset all internal values.
     */
-    void reset() {
+    static void IRAM_ATTR reset() {
         bitcounter = 0;
         isr_cnt = 0;
+        bit_pending = false;
     }
 
     /*
-    * Function to enable/disable RX, so that during TX we can disable RX to not get our own message
+    * Function to enable/disable RX, so that during TX we can disable RX to not get our own message.
+    * Called from the TX timer ISR when sending is done.
     */
-    void enable() {
+    void IRAM_ATTR enable() {
         reset();
-        attachInterrupt(pin_rx, isr_extint_rx, FALLING);
+        enabled = true;
     }
 
      /*
     * Function to enable/disable RX, so that during TX we can disable RX to not get our own message
     */
-    void disable() {
+    void IRAM_ATTR disable() {
+        enabled = false;
         reset();
-        detachInterrupt(pin_rx);
     }
-    
+
 
     /*
     * Function called by user to setup everything needed for GDoor.
@@ -108,40 +132,46 @@ namespace GDOOR_RX {
     */
     void setup(uint8_t rxpin) {
         reset();
-        pin_rx = rxpin;
-        pinMode(pin_rx, INPUT);
+        pin_rx = (gpio_num_t) rxpin;
 
         retval.len = 0;
         retval.valid = 0;
 
-        // Set bit_received timer frequency to 120kHz
-        timer_bit_received = timerBegin(120000);
+        // Timer counting at 120kHz, its alarm detects bit and bitstream end
+        gptimer_config_t timer_config = {};
+        timer_config.clk_src = GPTIMER_CLK_SRC_DEFAULT;
+        timer_config.direction = GPTIMER_COUNT_UP;
+        timer_config.resolution_hz = RX_TIMER_HZ;
+        esp_err_t err = gptimer_new_timer(&timer_config, &timer);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "No free timer for RX (%s)", esp_err_to_name(err));
+            return;
+        }
+        gptimer_event_callbacks_t callbacks = {};
+        callbacks.on_alarm = isr_timer_alarm;
+        gptimer_register_event_callbacks(timer, &callbacks, NULL);
+        gptimer_enable(timer);
+        gptimer_start(timer);
 
-        // Attach isr_timer_bit_received function to bit_received timer.
-        timerAttachInterrupt(timer_bit_received, &isr_timer_bit_received);
+        // External RX interrupt on the falling edge of every pulse
+        gpio_config_t io_config = {};
+        io_config.pin_bit_mask = 1ULL << pin_rx;
+        io_config.mode = GPIO_MODE_INPUT;
+        io_config.pull_up_en = GPIO_PULLUP_DISABLE;
+        io_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+        io_config.intr_type = GPIO_INTR_NEGEDGE;
+        gpio_config(&io_config);
 
-        // Set alarm to call isr_timer_bit_received function
-        // after 20 120kHz Cycles (=10 60kHz Cycles)
-        timerAlarm(timer_bit_received, 20, true, 0);
-
-        // Set bit_received timer frequency to 120kHz
-        timer_bitstream_received = timerBegin(120000);
-
-        // Attach isr_timer_bit_received function to bit_received timer.
-        timerAttachInterrupt(timer_bitstream_received, &isr_timer_bitstream_received);
-
-        // Set alarm to call isr_timer_bit_received function
-        // after 6*STARTBIT_MIN_LEN 120kHz Cycles (= 3 * STARTBIT_MIN_LEN 60kHz Cycles)
-        timerAlarm(timer_bitstream_received, 6*STARTBIT_MIN_LEN, true, 0);
+        // Arduino or another component may have installed the ISR service already
+        err = gpio_install_isr_service(GDOOR_ISR_IRAM_SAFE ? ESP_INTR_FLAG_IRAM : 0);
+        if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
+            ESP_LOGE(TAG, "GPIO ISR service failed (%s)", esp_err_to_name(err));
+            return;
+        }
+        gpio_isr_handler_add(pin_rx, isr_extint_rx, NULL);
 
         // Enable External RX Interrupt
         enable();
-
-        // Set Timers to default values, just to be sure
-        timerWrite(timer_bit_received, 0); //reset timer
-        timerWrite(timer_bitstream_received, 0); //reset timer
-        timerStop(timer_bitstream_received);
-        timerStop(timer_bit_received);
     }
 
     /*

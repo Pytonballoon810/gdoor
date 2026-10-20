@@ -17,9 +17,11 @@
  */
 #ifndef PRINTER_HELPER_H
 #define PRINTER_HELPER_H
-#include <Arduino.h>
 
-extern boolean debug;
+extern bool debug;
+
+#ifdef ARDUINO
+#include <Arduino.h>
 
 #define JSONDEBUG(...) { \
             if(debug) { \
@@ -54,5 +56,15 @@ extern boolean debug;
                 Serial.println(__VA_ARGS__); \
             }\
         }
+
+#else
+// Without Arduino there is no Serial console; ESPHome logs the bus messages itself
+#define JSONDEBUG(...) do {} while (0)
+#define JSONPRINT(...) do {} while (0)
+#define PRINT(...) do {} while (0)
+#define PRINTLN(...) do {} while (0)
+#define DEBUG(...) do {} while (0)
+#define DEBUGLN(...) do {} while (0)
+#endif
 
 #endif
