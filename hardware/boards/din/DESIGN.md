@@ -139,8 +139,8 @@ by block against the netlist:
 - **ESP32-S3:** EN has 10k/1 µF and IO0 a 10k pull-up. IO3/45/46 are open,
   so the defaults hold: 3.3 V flash and normal boot.
 - **W5500:** RSVD pins are tied to GND, PMODE pins high, EXRES 12.4k 1 %,
-  TOCAP 4.7 µF, 1V2O 10 nF. The 25 MHz crystal has 18 pF caps and 1 MΩ
-  across it. Analog supply goes through FB101. TX has 49.9 Ω to AVDD, RX is
+  TOCAP 4.7 µF, 1V2O 10 nF. The 25 MHz crystal has 33 pF caps (18 pF until
+  2026-10-21, see *Simulation*) and 1 MΩ across it. Analog supply goes through FB101. TX has 49.9 Ω to AVDD, RX is
   terminated 2 × 49.9 Ω to RX_CM (10 nF), and the shield goes through
   1 nF / 2 kV.
 - **Bus:** RX is the v4.0 band-pass into U6A. TX is the band-pass U3 into
@@ -169,6 +169,17 @@ comparator, `+5V_onoff` switch, codec coupling). It runs on KiCad's bundled
   through MONOOUT into the codec supply, which U7 cannot sink (`+3.3V_ANA`
   rises to about 5 V in the model). The comparator rests only about 15 mV
   above its threshold.
+- Ethernet (`spice/eth_sim.py`): return loss passes the 802.3 limit on both
+  pairs with about 3.5 dB margin. The magjack is modelled from typical
+  figures, so results above 30 MHz depend on that model. About 40 mA of TX
+  current gives the nominal 1.0 V MLT-3 level. FB101 has no resonance
+  problem. C121/C122 put the RX low corner at 220 kHz, as in WIZnet's
+  reference.
+- **Fixed: crystal load.** Y101 (C164045) is rated for CL = 20 pF. With 18 pF,
+  C108/C109 gave only 12–14 pF, and the model put the crystal +35…+55 ppm
+  fast, against 802.3u's ±50 ppm. They are now 33 pF (C1562, Basic), which keeps
+  it within ±7 ppm. Y101's own ±50 ppm over temperature still uses up that
+  budget; a ±20–30 ppm crystal would leave margin.
 
 ## Manufacturing
 

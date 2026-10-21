@@ -9505,7 +9505,7 @@
 				)
 			)
 		)
-		(property "Value" "18p"
+		(property "Value" "33p"
 			(at 228.6 168.91 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -9547,7 +9547,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C1549"
+		(property "LCSC" "C1562"
 			(at 0 0 0)
 			(hide yes)
 			(show_name no)
@@ -15085,7 +15085,7 @@
 				)
 			)
 		)
-		(property "Value" "18p"
+		(property "Value" "33p"
 			(at 243.84 168.91 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -15127,7 +15127,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C1549"
+		(property "LCSC" "C1562"
 			(at 0 0 0)
 			(hide yes)
 			(show_name no)

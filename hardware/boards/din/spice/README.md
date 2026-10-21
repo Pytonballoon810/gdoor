@@ -3,8 +3,9 @@
 Simulated 2026-10-21. The first run used `esp32.kicad_sch` at commit 53a064e,
 where R3/R4 were 100k. That run found the RX oscillation (section 1), and R3/R4
 went back to 82k the same day. The R and C values in `frontend.cir` are checked
-against a fresh netlist export of the schematic, and all 60 match. The MCU,
-Ethernet and USB parts are digital and are not simulated.
+against a fresh netlist export of the schematic, and all 60 match. The Ethernet
+front end (magjack side, terminations, analog supply, crystal) is in
+`eth_sim.py` (sections 6–8). The MCU and USB are not simulated.
 
 ```
 "C:/Program Files/KiCad/10.0/bin/python.exe" sim.py    # ~5 min, writes results.json
@@ -22,6 +23,7 @@ beyond KiCad 10.
 | `models.lib` | Behavioural models written from datasheet figures (see *Models*). |
 | `sim.py` | All testbenches; aborted transients raise. |
 | `plot.py`, `*.svg` | Plots. |
+| `eth_sim.py`, `eth_results.json`, `eth_*.svg` | Ethernet front end: the netlist, magjack model, testbenches and plots in one script. |
 | `results.json` | All numbers and waveforms. |
 
 ## Models and assumptions
@@ -136,8 +138,87 @@ survive, is not known here. Treat this as a risk to check, not a confirmed failu
 - With TX_EN low, a plug-in charges `+5V_onoff` to 1–2 V through U1's output diode.
   That is harmless.
 
+## Ethernet front end (`eth_sim.py`)
+
+```
+"C:/Program Files/KiCad/10.0/bin/python.exe" eth_sim.py   # ~1 min, writes eth_results.json, eth_*.svg
+```
+
+The board parts come from `mcu_eth.kicad_sch`: TX 49.9 Ω pull-ups (R114/R115), TCT
+through R116 10 Ω with C120 22 nF, RX through C121/C122 6.8 nF into 2 × 49.9 Ω
+(R119/R120) to RX_CM (C123 10 nF, and the jack's RCT), FB101 with the
+`+3.3V_ETHA` capacitors, and Y101 with C108/C109.
+
+**Models:**
+- **HR911105A magjack:** 1CT:1CT transformer with 350 µH OCL, then a common-mode
+  choke, then 75 Ω + 1 nF "Bob Smith" centre-tap termination. Leakage and winding
+  capacitance are fitted to typical 10/100 magjack figures, because HanRun's
+  datasheet couldn't be read. Fitted that way, the jack alone has 20.5 dB return
+  loss at 30 MHz, 12 dB at 80 MHz, and −0.4 dB insertion loss at 100 MHz.
+  **Everything above about 30 MHz therefore depends on the jack model**; the
+  board-side results are below 30 MHz.
+- **W5500 pins:** TX as current sinks with 3 pF; RX as 5 kΩ to 1.2 V with 3 pF.
+  Both are assumed.
+
+### 6. Matching and levels
+
+- **Return loss at the RJ45** (802.3 100BASE-TX limit: 16 dB from 2–30 MHz,
+  falling to 10 dB at 60–80 MHz):
+
+  | pair | 1 MHz | 5 MHz | 10 MHz | 30 MHz | 60 MHz | 80 MHz | worst margin, 2–80 MHz |
+  |---|---|---|---|---|---|---|---|
+  | RX (board, 6.8 nF) | 13.7 | 30.6 | 41.8 | 22.6 | 16.0 | 13.4 dB | +3.6 dB at 79 MHz |
+  | RX, caps shorted | 32.3 | 34.6 | 30.6 | 21.7 | 15.8 | 13.3 dB | +3.5 dB |
+  | TX | 31.9 | 34.9 | 30.7 | 21.8 | 15.9 | 13.4 dB | +3.5 dB |
+
+  Both pairs pass. The 10BASE-T limit (15 dB, 5–10 MHz) also passes.
+- **TX level:** 49.9 Ω ∥ the line gives a flat 24–25 Ω transimpedance up to
+  100 MHz. About 40 mA of differential chip current gives 1.0 V peak on the line,
+  which is the 802.3 nominal level and the usual current for this kind of PHY.
+  In a 125 MBd MLT-3 run (1500 symbols, `eth_tx_mlt3.svg`), the ±1 levels sit at
+  0.99–1.02 V and the zero level at ±0.02 V, with 1.03 V overshoot.
+- **RX low end:** the series caps C121/C122 (6.8 nF each, 3.4 nF together)
+  with the 100 Ω termination put the low −3 dB corner at **220 kHz**, against
+  21 kHz with the caps shorted (the 350 µH OCL alone). The gain is −8.3 dB at
+  100 kHz and −0.8 dB at 500 kHz (`eth_rx_gain.svg`). WIZnet asks for these caps
+  when the magjack's centre taps are tied to 3.3 V. On the HR911105A, RCT is a
+  separate pin, and here it goes only to RX_CM, so the caps are not strictly
+  needed. They are WIZnet's reference value (used on the WIZ850io), the W5500's
+  baseline-wander correction is built to work with them, and 10BASE-T is
+  unaffected. No change is proposed.
+
+### 7. `+3.3V_ETHA` (FB101)
+
+FB101 is modelled as 0.25 Ω + (0.6 µH ∥ 150 Ω ∥ 1.5 pF). Noise on +3.3V reaches
+`+3.3V_ETHA` at +0.3 dB peak (32 kHz, so no harmful LC resonance), −48 dB at
+1 MHz, and −88 dB at 25 MHz. `+3.3V_ETHA` impedance peaks at 0.32 Ω at 45 kHz.
+The MLT-3 TX current makes 10 mVpp of ripple on it.
+
+### 8. 25 MHz crystal: load capacitance was too low; fixed with 33 pF
+
+Y101 is C164045 (Yajingxin TAXM25M4RLBCCT2T): 25 MHz, **rated for CL = 20 pF**,
+ESR 80 Ω, ±10 ppm tolerance, ±50 ppm over temperature. C108/C109 were 18 pF until
+2026-10-21. That gave CL = 9 pF plus stray (3–5 pF for pins and traces), i.e.
+12–14 pF, so the crystal ran fast. They are now 33 pF (C1562, JLC Basic). The model assumes typical motional values for a 3225 crystal
+(C1 4 fF, C0 1.5 pF); the pull scales roughly with C1.
+
+| C108 = C109 | stray | CL | offset |
+|---|---|---|---|
+| 18 pF (before 2026-10-21) | 3 pF | 12.0 pF | **+54.5 ppm** |
+| 18 pF (before 2026-10-21) | 5 pF | 14.0 pF | **+35.5 ppm** |
+| 30 pF | 4 pF | 19.0 pF | +4.0 ppm |
+| 33 pF (board) | 3 pF | 19.5 pF | +1.5 ppm |
+| 33 pF (board) | 5 pF | 21.5 pF | −6.5 ppm |
+
+IEEE 802.3u allows ±50 ppm for the 100BASE-TX clock. With 18 pF, the pull alone
+took 35–55 ppm of that, before the crystal's own ±10 ppm tolerance and ±50 ppm
+temperature drift. With 33 pF it stays within ±7 ppm. The crystal's ±50 ppm
+temperature rating alone still fills the 802.3u budget; a ±20–30 ppm part would
+leave margin.
+
 ## Not simulated
 
 The bus impedance and the other stations' real carrier levels; ES8374
 absolute-maximum ratings (not checked); thermal behaviour; layout parasitics; the
-digital side.
+W5500's internal PHY (adaptive equalizer, baseline-wander correction, oscillator
+gain margin with the 80 Ω ESR); USB; the digital side.

@@ -29161,7 +29161,7 @@
 				)
 			)
 		)
-		(property "Value" "18p"
+		(property "Value" "33p"
 			(at 0 1.16 180)
 			(layer "F.Fab")
 			(uuid "e37c4f2f-9d02-425b-9809-5df03095cc9e")
@@ -29194,7 +29194,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C1549"
+		(property "LCSC" "C1562"
 			(at 0 0 180)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -37327,7 +37327,7 @@
 				)
 			)
 		)
-		(property "Value" "18p"
+		(property "Value" "33p"
 			(at 0 1.16 90)
 			(layer "F.Fab")
 			(uuid "c8fafa31-f1fd-4f6e-87a7-3b829eac681d")
@@ -37360,7 +37360,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C1549"
+		(property "LCSC" "C1562"
 			(at 0 0 90)
 			(unlocked yes)
 			(layer "F.Fab")

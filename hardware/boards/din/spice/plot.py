@@ -2,7 +2,6 @@
 import json, math, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-R = json.load(open(os.path.join(HERE, "results.json")))
 COLORS = ["#d62728", "#1f77b4", "#2ca02c", "#9467bd", "#ff7f0e"]
 
 
@@ -67,42 +66,49 @@ def svg_plot(fname, title, series, xlabel, ylabel, logx=False, logy=False, xlim=
     open(os.path.join(HERE, fname), "w").write("\n".join(o))
 
 
-c = R["rx_filter_curve"]
-f = [x / 1e3 for x in c["f"]]
-svg_plot("rx_filter.svg", "RX band-pass, bus to RX_ANA (U2 GBW 1 MHz)",
-         [("R3/R4 100k (7ce317d; unstable, formal response)", f, c["100k"]),
-          ("R3/R4 82k (board)", f, c["82k"])],
-         "frequency [kHz]", "gain [dB]", logx=True, xlim=(20, 150), ylim=(-25, 16),
-         vlines=[(52, "52k TX"), (60, "60k bus")])
 
-c = R["tx_filter_curve"]
-f = [x / 1e3 for x in c["f"]]
-svg_plot("tx_filter.svg", "TX band-pass, GPIO4 to U1 output",
-         [("R18/R19 100k (board)", f, c["100k"]), ("R18/R19 82k (upstream)", f, c["82k"])],
-         "frequency [kHz]", "gain [dB]", logx=True, xlim=(20, 150), ylim=(-15, 5),
-         vlines=[(52, "52k TX"), (60, "60k")])
+def main():
+    R = json.load(open(os.path.join(HERE, "results.json")))
+    c = R["rx_filter_curve"]
+    f = [x / 1e3 for x in c["f"]]
+    svg_plot("rx_filter.svg", "RX band-pass, bus to RX_ANA (U2 GBW 1 MHz)",
+             [("R3/R4 100k (7ce317d; unstable, formal response)", f, c["100k"]),
+              ("R3/R4 82k (board)", f, c["82k"])],
+             "frequency [kHz]", "gain [dB]", logx=True, xlim=(20, 150), ylim=(-25, 16),
+             vlines=[(52, "52k TX"), (60, "60k bus")])
 
-ser = []
-for k in R["kick"]:
-    if k["gbw"] == "1meg" or True:
-        ser.append((f"R3/R4 {k['r_rx']}, GBW {k['gbw']}", k["env_t_ms"], k["env_mV"]))
-svg_plot("rx_kick.svg", "RX_ANA ringing after a 1 mV bus step (p-p per 50 us)",
-         ser, "time [ms]", "RX_ANA p-p [mV]", logy=True, ylim=(1e-4, 5000))
+    c = R["tx_filter_curve"]
+    f = [x / 1e3 for x in c["f"]]
+    svg_plot("tx_filter.svg", "TX band-pass, GPIO4 to U1 output",
+             [("R18/R19 100k (board)", f, c["100k"]), ("R18/R19 82k (upstream)", f, c["82k"])],
+             "frequency [kHz]", "gain [dB]", logx=True, xlim=(20, 150), ylim=(-15, 5),
+             vlines=[(52, "52k TX"), (60, "60k")])
 
-w = R["rx_wave"]
-svg_plot("rx_wave.svg", "RX, 60 kHz burst, 82k dividers, ~0.5 Vpp on the line",
-         [("RX_ANA", w["t_us"], w["rx_ana"]), ("RX (GPIO6)", w["t_us"], w["rx"]),
-          ("line AC (J1)", w["t_us"], w["line_ac"])], "time from burst start [us]", "V")
+    ser = []
+    for k in R["kick"]:
+        if k["gbw"] == "1meg" or True:
+            ser.append((f"R3/R4 {k['r_rx']}, GBW {k['gbw']}", k["env_t_ms"], k["env_mV"]))
+    svg_plot("rx_kick.svg", "RX_ANA ringing after a 1 mV bus step (p-p per 50 us)",
+             ser, "time [ms]", "RX_ANA p-p [mV]", logy=True, ylim=(1e-4, 5000))
 
-w = R["tx_wave"]
-svg_plot("tx_wave.svg", "TX, 52 kHz, bus 100 ohm, codec MONOOUT high-Z",
-         [("U3 out", w["t_us"], w["u3out"]), ("U1 out", w["t_us"], w["u1out"]),
-          ("line AC at J1", w["t_us"], w["line_ac"]), ("BUS node AC (after bridge)", w["t_us"], w["busnode_ac"])],
-         "time from TX start [us]", "V")
+    w = R["rx_wave"]
+    svg_plot("rx_wave.svg", "RX, 60 kHz burst, 82k dividers, ~0.5 Vpp on the line",
+             [("RX_ANA", w["t_us"], w["rx_ana"]), ("RX (GPIO6)", w["t_us"], w["rx"]),
+              ("line AC (J1)", w["t_us"], w["line_ac"])], "time from burst start [us]", "V")
 
-w = R["plugin_wave"]
-svg_plot("plugin.svg", "Plug-in onto a 30 V bus (10 ohm source), board powered",
-         [("+3.3V_ANA", w["t_ms"], w["v33a"]), ("codec AVDD", w["t_ms"], w["avdd"]),
-          ("MONOOUT pin current / 100 [mA]", w["t_ms"], [x / 100 for x in w["imo_mA"]])],
-         "time [ms]", "V", xlim=(0, 30))
-print("plots written")
+    w = R["tx_wave"]
+    svg_plot("tx_wave.svg", "TX, 52 kHz, bus 100 ohm, codec MONOOUT high-Z",
+             [("U3 out", w["t_us"], w["u3out"]), ("U1 out", w["t_us"], w["u1out"]),
+              ("line AC at J1", w["t_us"], w["line_ac"]), ("BUS node AC (after bridge)", w["t_us"], w["busnode_ac"])],
+             "time from TX start [us]", "V")
+
+    w = R["plugin_wave"]
+    svg_plot("plugin.svg", "Plug-in onto a 30 V bus (10 ohm source), board powered",
+             [("+3.3V_ANA", w["t_ms"], w["v33a"]), ("codec AVDD", w["t_ms"], w["avdd"]),
+              ("MONOOUT pin current / 100 [mA]", w["t_ms"], [x / 100 for x in w["imo_mA"]])],
+             "time [ms]", "V", xlim=(0, 30))
+    print("plots written")
+
+
+if __name__ == "__main__":
+    main()
