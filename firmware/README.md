@@ -2,6 +2,16 @@
 More information about the firmware are located on the
 [GDoor Homepage](https://gdoor-org.github.io/documentation/firmware.html).
 
+## Bus core
+
+The bus encoder/decoder in `src/gdoor*.cpp` uses the ESP-IDF drivers
+(gptimer, LEDC timer 3 / channel 7, GPIO interrupt, DAC) directly, not the
+Arduino timer and LEDC API, so the ESPHome component compiles the same code on
+ESP-IDF. This firmware still needs the Arduino core 3.x (pinned in
+`platformio.ini`) for WiFi, MQTT and the web configuration. With Arduino's
+prebuilt settings the bus interrupts pause while flash is written (saving the
+configuration, OTA), as before.
+
 ## Adapter hardware v4.0
 
 The v4.0 audio prototype wires the ESP32 differently, because IO25 and IO26

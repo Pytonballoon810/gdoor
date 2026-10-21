@@ -1,0 +1,102 @@
+# Shared configuration of the GDoor DIN board (ESP32-S3-WROOM-1-N8R2, see
+# hardware/boards/din/DESIGN.md). Not compiled on its own: use
+# gdoor-din-ethernet.yaml or gdoor-din-wifi.yaml, which add the network.
+
+esphome:
+  name: gdoor-din
+  friendly_name: GDoor
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  flash_size: 8MB
+  framework:
+    type: esp-idf
+
+psram:
+  mode: quad
+  speed: 80MHz
+
+external_components:
+  - source:
+      type: local
+      path: components  # relative to the top-level YAML
+    components: [gdoor]
+
+logger:
+  hardware_uart: USB_SERIAL_JTAG  # native USB-C port
+
+api:
+
+ota:
+  - platform: esphome
+
+gdoor:
+  id: gdoor_bus
+  tx_pin: 4
+  tx_enable_pin: 5
+  rx_pin: 6  # fixed-threshold comparator U6A; the S3 has no DAC, so no rx_threshold_pin
+  on_message:
+    - output.turn_on: led_bus
+    - delay: 150ms
+    - output.turn_off: led_bus
+
+output:
+  - platform: gpio
+    id: led_bus
+    pin: GPIO17  # D104
+
+status_led:
+  pin: GPIO2  # D103: blinks on errors and while the network is down
+
+sensor:
+  # Bus DC voltage through R35/R73 (100k/10k, divides by 11)
+  - platform: adc
+    id: bus_voltage
+    name: Bus Voltage
+    pin: GPIO8
+    attenuation: 12db
+    filters:
+      - multiply: 11
+    unit_of_measurement: V
+    accuracy_decimals: 1
+    update_interval: 5s
+    entity_category: diagnostic
+
+binary_sensor:
+  # Closes upstream issue #28: tells whether the adapter is on a powered bus
+  - platform: analog_threshold
+    name: Bus Connected
+    sensor_id: bus_voltage
+    device_class: connectivity
+    entity_category: diagnostic
+    threshold:
+      upper: 15
+      lower: 10
+
+event:
+  # Doorbell: fires for ring button presses only. Use the parameters of your
+  # button (see log) to tell several doorbell buttons apart.
+  - platform: gdoor
+    name: Doorbell
+    device_class: doorbell
+    actions: [BUTTON_RING]
+  # Everything on the bus, the event type is the bus action
+  - platform: gdoor
+    name: Bus Message
+
+button:
+  # Replace busdata with the DOOR_OPEN message of your indoor station (see log)
+  - platform: gdoor
+    id: open_door
+    name: Open Door
+    busdata: "020031ECF3EB0060A103C27A3D"
+
+text_sensor:
+  - platform: gdoor
+    name: Last Bus Action
+    type: action
+  - platform: gdoor
+    name: Last Bus Data
+    type: busdata
+    entity_category: diagnostic

@@ -1,0 +1,169 @@
+# Two-way voice for the GDoor DIN board: ES8374 codec on the bus, calls to
+# Home Assistant through VoIP Stack (github.com/n-IA-hane/esphome-intercom).
+# Included by gdoor-din-voice.yaml on top of din/common.yaml.
+#
+# NOT TESTED ON HARDWARE. Before the first call:
+#  1. Learn AUDIO_REQUEST and AUDIO_VIDEO_END from your indoor station (pick up
+#     and hang up there with this firmware running, copy busdata from the log)
+#     and set the two substitutions below. While they are empty, calls work on
+#     the network side but the door station's speech path is not switched on.
+#  2. Set ring_target to the phone or ring group that should ring in Home
+#     Assistant (VoIP Stack integration, Settings > Devices & services).
+#  3. Tune codec_mic_gain_db and the volume (see "Bring-up" in esphome/README.md).
+
+substitutions:
+  ring_target: "Home Assistant"
+  audio_request_busdata: ""       # learned AUDIO_REQUEST busdata, e.g. "0..."
+  audio_end_busdata: ""           # learned AUDIO_VIDEO_END busdata
+  codec_mic_gain_db: "6"          # PGA gain; the ES8374 driver rejects >= 24 dB
+  call_volume: "0.7"
+
+esphome:
+  # voip_stack needs 2026.9.0+. esphome-audio-stack 2026.10.2 does not build
+  # with ESPHome 2026.10.x yet (ring_buffer API change): use 2026.9.x for now.
+  min_version: 2026.9.0
+  on_boot:
+    priority: -100
+    then:
+      - voip_stack.set_volume:
+          volume: ${call_volume}
+
+esp32:
+  framework:
+    sdkconfig_options:
+      CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"  # TLS buffers in PSRAM, leaves internal RAM for audio
+      # esp_codec_dev builds the ES8374 driver only on request (default off),
+      # and esphome-audio-stack 2026.10.2 does not request it
+      CONFIG_CODEC_ES8374_SUPPORT: "y"
+
+external_components:
+  - source: github://n-IA-hane/esphome-voip-stack@v2026.10.1
+    components: [voip_stack]
+  - source: github://n-IA-hane/esphome-audio-stack@v2026.10.2
+    components: [esp_audio_stack, esp_aec]
+
+api:
+  custom_services: true  # voip_stack registers its Home Assistant actions
+
+i2c:
+  - id: codec_i2c
+    sda: GPIO47
+    scl: GPIO48
+    scan: false
+
+esp_audio_stack:
+  id: audio_stack
+  i2s_mclk_pin: GPIO38
+  i2s_bclk_pin: GPIO39
+  i2s_lrclk_pin: GPIO40
+  i2s_dout_pin: GPIO41  # to codec DSDIN
+  i2s_din_pin: GPIO42   # from codec ASDOUT
+  sample_rate: 16000
+  output_sample_rate: 16000
+  bits_per_sample: 16
+  processor_id: aec_processor
+  # Our own MONOOUT signal comes straight back on the mic input (same bus
+  # line); the codec has no DAC loopback, so the AEC uses the software copy.
+  aec_reference: previous_frame
+  buffers_in_psram: true
+  task_core: 1
+  codec:
+    i2c_id: codec_i2c
+    input:
+      type: es8374
+      address: 0x20  # 8-bit form; CE (R45) to GND
+      gain_db: ${codec_mic_gain_db}
+    output:
+      type: es8374
+      address: 0x20
+  on_speaker_start:
+    - script.execute: codec_board_setup
+
+esp_aec:
+  id: aec_processor
+  sample_rate: 16000
+  filter_length: 4
+  mode: voip_high_perf
+
+microphone:
+  - platform: esp_audio_stack
+    id: bus_mic
+
+speaker:
+  - platform: esp_audio_stack
+    id: bus_speaker
+    sample_rate: 16000
+    bits_per_sample: 16
+    timeout: 1s
+  - platform: resampler
+    id: voip_speaker_input
+    output_speaker: bus_speaker
+    bits_per_sample: 16
+
+script:
+  # Board-specific ES8374 registers the driver does not set (register map
+  # from Everest's reference drivers, see "Codec notes" in README.md). The driver
+  # switches the class-D speaker on at every start; it is not connected on
+  # this board, so switch it off again. 7-bit I2C address 0x10 = 0x20 >> 1.
+  - id: codec_board_setup
+    mode: restart
+    then:
+      - delay: 50ms
+      - lambda: |-
+          static const uint8_t regs[][2] = {
+            {0x1C, 0x10},  // speaker mixer: DAC and LIN not routed to the speaker
+            {0x1D, 0x10},  // speaker mixer gain off
+            {0x1E, 0x40},  // class-D driver off
+          };
+          for (const auto &reg : regs) {
+            if (id(codec_i2c)->write(0x10, reg, 2) != i2c::ERROR_OK)
+              ESP_LOGW("gdoor_voice", "ES8374 write 0x%02X failed", reg[0]);
+          }
+
+  # Switch the door station's speech path on or off over the bus. Empty
+  # busdata (not learned yet) only logs a warning and sends nothing.
+  - id: bus_audio_on
+    then:
+      - gdoor.send: !lambda 'return std::string("${audio_request_busdata}");'
+  - id: bus_audio_off
+    then:
+      - gdoor.send: !lambda 'return std::string("${audio_end_busdata}");'
+
+voip_stack:
+  id: phone
+  microphone: bus_mic
+  speaker: voip_speaker_input
+  buffers_in_psram: true
+  calling_timeout: 45s  # an unanswered ring ends by itself
+  ringing_timeout: 30s
+  on_in_call:
+    - logger.log:
+        format: "Call answered by %s, switching on the door speech path"
+        args: ["peer.c_str()"]
+    - script.execute: bus_audio_on
+  on_hangup:
+    - logger.log:
+        format: "Call ended (%s), releasing the bus"
+        args: ["reason.c_str()"]
+    - script.execute: bus_audio_off
+
+event:
+  # Someone rang at the door: call Home Assistant
+  - platform: gdoor
+    id: ring_for_call
+    internal: true
+    actions: [BUTTON_RING]
+    on_event:
+      - if:
+          condition:
+            voip_stack.is_idle: phone
+          then:
+            - voip_stack.call:
+                target: ${ring_target}
+
+button:
+  - platform: template
+    name: Hang Up
+    icon: mdi:phone-hangup
+    on_press:
+      - voip_stack.stop: phone

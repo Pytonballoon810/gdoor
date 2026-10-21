@@ -18,7 +18,7 @@ esphome:
 esp32:
   board: wemos_d1_mini32
   framework:
-    type: arduino  # required, the bus timing uses the Arduino timer API
+    type: esp-idf  # arduino works too
 
 external_components:
   - source:

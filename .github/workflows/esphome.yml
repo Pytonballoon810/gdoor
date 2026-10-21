@@ -17,6 +17,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - config: gdoor-example.yaml       # adapter v3.1, ESP32
+            esphome: esphome
+          - config: gdoor-din-ethernet.yaml  # DIN board, ESP32-S3
+            esphome: esphome
+          - config: gdoor-din-wifi.yaml
+            esphome: esphome
+          # DIN board with VoIP Stack. esphome-audio-stack 2026.10.2 does not
+          # build with ESPHome 2026.10 (ring_buffer API change), so stay on 2026.9.
+          - config: gdoor-din-voice.yaml
+            esphome: "esphome>=2026.9,<2026.10"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -27,16 +41,16 @@ jobs:
           path: |
             ~/.cache/pip
             ~/.platformio
-          key: ${{ runner.os }}-esphome
+          key: ${{ runner.os }}-esphome-${{ matrix.config }}
 
       - name: Check the component's copy of the bus core is up to date
         run: python tools/sync_esphome_core.py --check
 
       - name: Install ESPHome
-        run: pip install esphome
+        run: pip install "${{ matrix.esphome }}"
 
-      - name: Compile example configuration
+      - name: Compile ${{ matrix.config }}
         working-directory: ./esphome
         run: |
           printf 'wifi_ssid: "ci"\nwifi_password: "ci-password"\n' > secrets.yaml
-          esphome compile gdoor-example.yaml
+          esphome compile ${{ matrix.config }}

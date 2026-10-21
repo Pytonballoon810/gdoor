@@ -105,6 +105,7 @@ void GDoorComponent::dump_config() {
   if (this->rx_threshold_pin_ >= 0) {
     ESP_LOGCONFIG(TAG, "  RX threshold pin: GPIO%d (%.2f V)", this->rx_threshold_pin_, this->rx_sensitivity_);
   }
+  ESP_LOGCONFIG(TAG, "  Bus ISRs run during flash writes: %s", YESNO(GDOOR_ISR_IRAM_SAFE));
 }
 
 void GDoorComponent::send(const std::string &busdata) {

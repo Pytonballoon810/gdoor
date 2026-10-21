@@ -17,6 +17,8 @@ import re
 
 from esphome import automation, pins
 import esphome.codegen as cg
+from esphome.components import esp32
+from esphome.components.esp32.const import VARIANT_ESP32, VARIANT_ESP32S2
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
 
@@ -71,6 +73,23 @@ DEFAULT_TX_ENABLE_PIN = 27
 
 MAX_BYTES = 24  # MAX_WORDLEN - 1, see defines.h
 
+# DAC pins that can drive the comparator threshold, per chip. The ESP32-S3
+# has no DAC; boards with it (e.g. the DIN board) use a fixed threshold.
+DAC_PINS = {
+    VARIANT_ESP32: (25, 26),
+    VARIANT_ESP32S2: (17, 18),
+}
+
+# Driver functions the bus ISRs call are put in IRAM, so bus timing keeps
+# running while flash is written (OTA, saving preferences). The core checks
+# for all of them (GDOOR_ISR_IRAM_SAFE in defines.h).
+IRAM_SDKCONFIG_OPTIONS = (
+    "CONFIG_GPTIMER_ISR_CACHE_SAFE",
+    "CONFIG_GPTIMER_CTRL_FUNC_IN_IRAM",
+    "CONFIG_GPIO_CTRL_FUNC_IN_IRAM",
+    "CONFIG_LEDC_CTRL_FUNC_IN_IRAM",
+)
+
 
 def hex_string(length=None):
     """Validate a hex string (spaces allowed), optionally of an exact byte length."""
@@ -109,6 +128,24 @@ FILTER_SCHEMA = {
 
 GDOOR_CHILD_SCHEMA = cv.Schema({cv.GenerateID(CONF_GDOOR_ID): cv.use_id(GDoorComponent)})
 
+
+def validate_rx_threshold_pin(config):
+    if CONF_RX_THRESHOLD_PIN not in config:
+        return config
+    variant = esp32.get_esp32_variant()
+    dac_pins = DAC_PINS.get(variant)
+    if dac_pins is None:
+        raise cv.Invalid(
+            f"The {variant} has no DAC; leave out rx_threshold_pin (the board needs a fixed RX threshold)",
+            path=[CONF_RX_THRESHOLD_PIN],
+        )
+    if config[CONF_RX_THRESHOLD_PIN] not in dac_pins:
+        raise cv.Invalid(
+            f"rx_threshold_pin must be a DAC pin of the {variant}: {', '.join(f'GPIO{p}' for p in dac_pins)}",
+            path=[CONF_RX_THRESHOLD_PIN],
+        )
+    return config
+
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
@@ -117,16 +154,16 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_TX_PIN, default=DEFAULT_TX_PIN): pins.internal_gpio_output_pin_number,
             cv.Optional(CONF_TX_ENABLE_PIN, default=DEFAULT_TX_ENABLE_PIN): pins.internal_gpio_output_pin_number,
             # Only the v3.1 "adjustable" input on IO22 has a DAC driven comparator threshold (GPIO26)
-            cv.Optional(CONF_RX_THRESHOLD_PIN): cv.one_of(25, 26, int=True),
+            cv.Optional(CONF_RX_THRESHOLD_PIN): pins.internal_gpio_output_pin_number,
             cv.Optional(CONF_RX_SENSITIVITY, default=1.45): cv.All(cv.float_, cv.Range(min=0.0, max=3.3)),
             cv.Optional(CONF_LOG_INVALID, default=False): cv.boolean,
             cv.Optional(CONF_ON_MESSAGE): automation.validate_automation({}),
             cv.Optional(CONF_ON_SENT): automation.validate_automation({}),
         }
     ).extend(cv.COMPONENT_SCHEMA),
+    # The bus timing uses the ESP-IDF gptimer, LEDC and GPIO drivers (Arduino or ESP-IDF framework)
     cv.only_on_esp32,
-    # The bus timing uses the Arduino core 3.x hardware timer and LEDC API
-    cv.only_with_arduino,
+    validate_rx_threshold_pin,
 )
 
 _CALLBACK_AUTOMATIONS = (
@@ -151,6 +188,10 @@ async def to_code(config):
     cg.add(var.set_tx_enable_pin(config[CONF_TX_ENABLE_PIN]))
     if CONF_RX_THRESHOLD_PIN in config:
         cg.add(var.set_rx_threshold_pin(config[CONF_RX_THRESHOLD_PIN]))
+        # ESPHome leaves the DAC driver out of the build unless a component asks for it
+        esp32.include_builtin_idf_component("esp_driver_dac")
+    for option in IRAM_SDKCONFIG_OPTIONS:
+        esp32.add_idf_sdkconfig_option(option, True)
     cg.add(var.set_rx_sensitivity(config[CONF_RX_SENSITIVITY]))
     cg.add(var.set_log_invalid(config[CONF_LOG_INVALID]))
     await automation.build_callback_automations(var, config, _CALLBACK_AUTOMATIONS)
