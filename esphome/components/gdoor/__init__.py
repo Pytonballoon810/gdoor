@@ -188,8 +188,10 @@ async def to_code(config):
     cg.add(var.set_tx_enable_pin(config[CONF_TX_ENABLE_PIN]))
     if CONF_RX_THRESHOLD_PIN in config:
         cg.add(var.set_rx_threshold_pin(config[CONF_RX_THRESHOLD_PIN]))
-        # ESPHome leaves the DAC driver out of the build unless a component asks for it
         esp32.include_builtin_idf_component("esp_driver_dac")
+    # ESPHome leaves these drivers out of the build unless a component asks for them
+    for idf_component in ("esp_driver_gptimer", "esp_driver_ledc"):
+        esp32.include_builtin_idf_component(idf_component)
     for option in IRAM_SDKCONFIG_OPTIONS:
         esp32.add_idf_sdkconfig_option(option, True)
     cg.add(var.set_rx_sensitivity(config[CONF_RX_SENSITIVITY]))
