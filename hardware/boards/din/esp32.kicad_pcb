@@ -5038,7 +5038,7 @@
 				)
 			)
 		)
-		(property "Value" "100k"
+		(property "Value" "82k"
 			(at 0 1.17 90)
 			(layer "F.Fab")
 			(uuid "306d548b-d234-45a8-8ec9-9ef9b3f1c112")
@@ -5071,7 +5071,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25741"
+		(property "MPN" "C2909388"
 			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)
@@ -27031,7 +27031,7 @@
 				)
 			)
 		)
-		(property "Value" "100k"
+		(property "Value" "82k"
 			(at 0 1.17 90)
 			(layer "F.Fab")
 			(uuid "61884e1c-456e-42c2-be58-0212427a93bd")
@@ -27064,7 +27064,7 @@
 				)
 			)
 		)
-		(property "MPN" "C25741"
+		(property "MPN" "C2909388"
 			(at 0 0 90)
 			(layer "F.SilkS")
 			(hide yes)

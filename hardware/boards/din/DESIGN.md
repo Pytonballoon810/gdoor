@@ -152,6 +152,24 @@ Found and fixed: the BOOT/RESET labels on the silkscreen (2026-10-17) and on
 the enclosure lid were swapped. SW101 is wired to EN (RESET), SW102 to IO0
 (BOOT).
 
+## Simulation (2026-10-21)
+
+`spice/` has an ngspice model of the bus side (bridge, RX and TX band-pass,
+comparator, `+5V_onoff` switch, codec coupling). It runs on KiCad's bundled
+`ngspice.dll`; numbers, assumptions and plots are in `spice/README.md`.
+
+- **Fixed:** with R3/R4 = 100k the RX band-pass oscillated (see
+  *Manufacturing*). They are back at 82k, as on v4.0.
+- RX (82k) needs about 0.6 Vpp of 60 kHz carrier, or 0.4 Vpp at 52 kHz, on
+  the bus terminals. TX puts 0.8–2.0 Vpp on them, depending on the bus
+  impedance (assumed 30–300 Ω; not measured).
+- Open risks, not confirmed on hardware: a driving codec MONOOUT shorts the
+  RX signal through R32/C21. During TX, 16–31 mA of carrier flows into
+  MONOOUT's ESD diodes. Plugging into a live bus pushes about 250 µC
+  through MONOOUT into the codec supply, which U7 cannot sink (`+3.3V_ANA`
+  rises to about 5 V in the model). The comparator rests only about 15 mV
+  above its threshold.
+
 ## Manufacturing
 
 JLCPCB files live in `production/gdoor_din/` (gerbers, drill, BOM, CPL,
@@ -222,15 +240,22 @@ part, so they were moved to fee-free parts:
 
 - 18k (C25762), 2.4k (C25882) and 6.8 nF (C1542): same values,
   Preferred Extended parts (no loading fee in Economic PCBA).
-- 82k → 100k Basic (C25741): R3/R4 and R18/R19 are 1:1 reference dividers,
-  so the midpoints stay 1.65 V / 2.5 V; R35 changes the bus-voltage divider
-  (see the table above).
+- 82k → 100k Basic (C25741) for R18/R19 and R35. R18/R19 set the 2.5 V
+  midpoint of the TX band-pass and are also its ground leg: with 100k its peak
+  moves from 56 to 51 kHz, onto the 52 kHz TX carrier (+2.8 dB). R35
+  changes the bus-voltage divider (see the table above).
+- **R3/R4 stay 82k** (C2909388, Extended, $3). They were 100k from 7ce317d
+  until 2026-10-21. They are the ground leg of the RX Sallen-Key band-pass
+  (gain 1.94), and with 100k it oscillates on its own at about 49 kHz.
+  It is stable below about 90k. JLC has no fee-free 82k in 0402. See
+  *Simulation*.
 - R112/R113/R117/R118, 3.3 Ω → 0 Ω (C17168): series resistors between the
   W5500 TX/RX pins and the 49.9 Ω terminations, which sit on the magnetics
   side. The footprints stay, so 3.3 Ω can go back if EMI needs it.
 - D103 green → red (C2286), R105 100 Ω → 1 kΩ (C11702).
 - Still Extended at JLC: U1, U5, U104, J101, Y101, R1/R20 (130k, RX
-  filter) and R108 (12.4k 1%, W5500 bias; must stay).
+  filter), R3/R4 (82k, RX filter; must stay) and R108 (12.4k 1%, W5500
+  bias; must stay).
 
 The iBOMs: `ibom.html` comes from the InteractiveHtmlBom plugin (with tracks
 and nets), `ibom-partdb.html` from `partdb_ibom.py` (Part-DB storage and JLC

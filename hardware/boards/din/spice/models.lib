@@ -1,0 +1,54 @@
+* Behavioural models for the GDoor DIN bus/audio front end.
+* Op-amp and comparator models are written from datasheet figures, not vendor
+* macromodels: GBW, slew rate, rail-to-rail output with a drop, output current
+* limit, quiescent current, and ESD diodes on every pin to the rails.
+
+* Rail-to-rail-output op amp, single pole.
+* gbw: gain-bandwidth [Hz], sr: slew rate [V/s], imax: output current limit [A]
+.subckt OPA inp inn vcc vee out params: gbw=1meg sr=1e6 imax=40m drop=50m iq=100u
+Rin inp inn 10meg
+Biq vcc vee I = {iq}*tanh(V(vcc,vee)/0.3)
+* output stage only works with a supply; unpowered, the output is high-Z (ESD diodes only)
+Ben en 0 V = 0.5*(1+tanh((V(vcc,vee)-1.8)/0.2))
+Bmid mid 0 V = (V(vcc)+V(vee))/2
+Bg mid int I = {sr*1n}*tanh({2*3.14159*gbw/sr}*(V(inp)-V(inn)))
+Ci int mid 1n
+Ra int mid {1e5/(2*3.14159*gbw*1n)}
+Ehi hi 0 vcc 0 1
+Elo lo 0 vee 0 1
+Dh int hi DCLAMP
+Dl lo int DCLAMP
+Bsrc vcc out I = V(en)*max({imax}*tanh((max(min(V(int),V(vcc)-{drop}),V(vee)+{drop})-V(out))/(20*{imax})),0)
+Bsnk out vee I = V(en)*max(-{imax}*tanh((max(min(V(int),V(vcc)-{drop}),V(vee)+{drop})-V(out))/(20*{imax})),0)
+* pin protection
+D1 out vcc DESD
+D2 vee out DESD
+D3 inp vcc DESD
+D4 vee inp DESD
+D5 inn vcc DESD
+D6 vee inn DESD
+.ends
+
+* LM393-style open-collector comparator: sinks when inn > inp.
+.subckt CMP inp inn vcc vee out
+Biq vcc vee I = 0.4m*tanh(V(vcc,vee)/0.3)
+Bd d 0 V = 0.5*(1+tanh((V(inn)-V(inp))/2m))
+Rd d d2 1k
+Cd d2 0 300p
+Bs out vee I = 16m*V(d2)*tanh(V(out,vee)/0.1)
+D1 vee out DESD
+D3 vee inp DESD
+D4 vee inn DESD
+.ends
+
+.model DCLAMP D(IS=1e-15 N=0.05)
+.model DESD D(IS=1e-14 N=1 RS=2)
+* MB10S bridge diode (1 A, 1000 V glass passivated)
+.model DBR D(IS=7n RS=0.04 N=1.8 CJO=10p BV=1000)
+* SS14 Schottky
+.model DSS14 D(IS=2u RS=0.05 N=1.1 CJO=110p BV=40)
+* MMBT2222A / MMBT5401 (standard 2N2222A / 2N5401 parameter sets)
+.model Q2222 NPN(IS=14.34f BF=255.9 VAF=74.03 IKF=.2847 ISE=14.34f NE=1.307 BR=6.092
++ RC=1 CJE=22.01p TF=411.1p CJC=7.306p TR=46.91n VJE=0.75 MJE=0.377 VJC=0.75 MJC=0.3416)
+.model Q5401 PNP(IS=21.48f VAF=100 BF=132.1 NE=1.375 ISE=21.48f IKF=.1848 BR=3.661
++ NC=2 RC=1.6 CJC=17.63p MJC=.5312 VJC=.75 CJE=73.39p MJE=.3777 VJE=.75 TR=1.476n TF=641.9p)

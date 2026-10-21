@@ -1,0 +1,123 @@
+* GDoor DIN bus and audio front end (esp32.kicad_sch), values as on 2026-10-21.
+* R3/R4 (R_RX) and R18/R19 (R_TX) are parameters; the board has 82k / 100k (sim.py DEFAULTS).
+* Node names follow the KiCad nets. Included by sim.py, which adds the sources.
+* 0 = board GND.
+
+* --- Bus connector J1 and bridge D1 (MB10S) ---
+DA J1_1 BUS DBR
+DB J1_2 BUS DBR
+DC 0 J1_1 DBR
+DD 0 J1_2 DBR
+Rleak J1_2 0 10meg
+
+* --- Bus voltage measurement ---
+R35 BUS BUS_DCVOLT 100k
+R73 BUS_DCVOLT 0 10k
+
+* --- RX band-pass U2 (LMV321, 3.3 V) ---
+R1 BUS RXA 130k
+C2 RXA 0 100p
+C4 RXA U2P 100p
+R3 U2P VDD33 {R_RX}
+R4 U2P 0 {R_RX}
+R10 RX_ANA RXA 18k
+R5 VDD33 U2N 5.1k
+R7 U2N 0 5.1k
+R12 RX_ANA U2N 2.4k
+XU2 U2P U2N VDD33 0 RX_ANA OPA params: gbw={GBW_U2} sr=1e6 imax=40m drop=20m iq=70u
+
+* --- RX comparator U6A (LM393) ---
+R26 RX_ANA U6AN 4.7k
+R28 RX U6AP 47k
+R23 U6AP 0 10k
+R24 U6AP R24B 10k
+R25 VDD33 R24B 2.4k
+R29 RX VDD33 10k
+XU6A U6AP U6AN VDD33 0 RX CMP
+* GPIO6 input
+CRX RX 0 5p
+
+* --- +5V_onoff switch Q1/Q2 ---
+R13 TX_EN Q2B 10k
+Q2 Q2C Q2B 0 Q2222
+R9 Q2C VDD5 47k
+R8 Q1B Q2C 10k
+Q1 V5ON Q1B VDD5 Q5401
+C3 V5ON 0 100n
+C7 V5ON 0 100n
+C15 V5ON 0 100n
+
+* --- TX input network (GPIO4 -> R34 0R) ---
+R34 TX TXN 0.001
+C10 TXN 0 1n
+R21 TXN 0 4.7k
+
+* --- TX band-pass U3 (LMV321, +5V_onoff) ---
+R20 TXN C8A 130k
+C9 C8A 0 100p
+C8 C8A U3P 100p
+R18 U3P V5ON {R_TX}
+R19 U3P 0 {R_TX}
+R15 U3OUT C8A 18k
+R17 V5ON U3N 5.1k
+R16 U3N 0 5.1k
+R14 U3OUT U3N 1k
+XU3 U3P U3N V5ON 0 U3OUT OPA params: gbw=1meg sr=1e6 imax=40m drop=20m iq=70u
+
+* --- Line driver U1 (TLV9351, +5V_onoff) ---
+R11 U3OUT U1P 10k
+C18 U1P 0 100p
+R33 V5ON U1N 18k
+R6 U1N 0 18k
+R2 U1OUT U1N 22k
+XU1 U1P U1N V5ON 0 U1OUT OPA params: gbw=3.5meg sr=20e6 imax=60m drop=100m iq=600u
+VIU1 U1OUT C1A 0
+C1 C1A BUS 47n
+
+* --- Audio codec U5 (ES8374) bus coupling ---
+* MONOOUT -> R32 22R -> C21 10u -> R36 0R -> BUS
+R32 MONOOUT C21A 22
+C21 C21A BUS 10u
+* BUS -> R74 0R -> C29/C31 -> R38/R40 1k -> MIC1P/MIC2P
+C29 C29A BUS 10u
+R38 C29A MIC1P 1k
+C31 C31A BUS 10u
+R40 C31A MIC2P 1k
+
+* Codec pins: MONOOUT as VMID source behind RMO (see sim.py), mic inputs as
+* 20k to VMID; ESD diodes from each pin to AVDD and GND.
+VVMID VMID 0 1.65
+RMO VMID MONOOUT {RMO}
+RM1 MIC1P VMID 20k
+RM2 MIC2P VMID 20k
+VIESD_MO MONOOUT MO_E 0
+DMO1 MO_E AVDD DESD
+DMO2 0 MO_E DESD
+VIESD_M1 MIC1P M1_E 0
+DM11 M1_E AVDD DESD
+DM12 0 M1_E DESD
+DM21 MIC2P AVDD DESD
+DM22 0 MIC2P DESD
+
+* Codec supplies: R41 33R + C43/C42 on AVDD; other rails lumped into the load.
+R41 AVDD V33A 33
+C43 AVDD 0 10u
+C42 AVDD 0 100n
+RLAVDD AVDD 0 330
+* +3.3V_ANA / +3.3V_AUDIO (R58 0R): U7 AMS1117, which sources but cannot sink.
+BU7 0 V33A I = max(0,(3.3-V(V33A))*50)
+RU7MIN V33A 0 3.3k
+C59 V33A 0 100u
+C32 V33A 0 100n
+C54 V33A 0 10u
+C56 V33A 0 10u
+C52 V33A 0 10u
+C47 V33A 0 10u
+C55 V33A 0 100n
+C53 V33A 0 100n
+C51 V33A 0 100n
+C46 V33A 0 100n
+
+* --- Digital rails (U103 3.3 V, 5 V after the OR diodes) ---
+V5 VDD5 0 5
+V33 VDD33 0 3.3
