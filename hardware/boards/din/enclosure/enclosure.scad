@@ -120,7 +120,7 @@ frame_t       = 1.2;
 // support. It bends sideways, in the print plane. A hook at its tip drops
 // in behind the plug's back face once the plug is slid fully home, so the
 // plug cannot be pushed back when the cable plug goes on.
-clip_t        = 1.5;    // finger thickness, bends in X (1.0 flexed too much)
+clip_t        = 2.0;    // finger thickness, bends in X (1.0 flexed too much)
 clip_free     = 10.0;   // free finger length, back from the hook ramp's end
 clip_lip      = 1.0;    // hook overlap on the back face, beside the wire entries
 clip_ramp     = 2.0;    // lead-in ramp length of the hook
@@ -129,9 +129,10 @@ clip_under    = 0.3;    // undercut of the catching face: pushing the plug
                         // back pulls the hooks in instead of spreading them
 clip_zw       = plug_z0 + 0.5;   // side walls' edge towards the board, away
                                  // from the frame (at the frame: level with it)
-// frame half-width: at least as wide as the side walls, so they end on the
-// frame and not against the base wall beside its slot
-frame_hw      = max(barrel_w / 2 + frame_t, plug_w / 2 + plug_clr + clip_t);
+// frame half-width. The side walls end on the frame, no wider than it, so
+// they stay clear of the base wall beside its slot. Wider than this and the
+// 5 V plug's slot (x = 46) runs into the front wall at x = 52.8.
+frame_hw      = barrel_w / 2 + frame_t + 0.55;
 
 // ---- lid features ------------------------------------------------------------
 // RESET (SW101, ESP_EN) and BOOT (SW102, IO0), top-actuated, poked through
@@ -373,7 +374,12 @@ module plug_cradle(xc) {
                 // deeper towards the board, but level with the frame where
                 // it meets it, so it stays clear of the base wall
                 translate([xa, yr, clip_zw]) cube([clip_t, plug_y_step - 0.2 - yr, lid_z - clip_zw + eps]);
-                translate([xa, yr, fz]) cube([clip_t, plug_y_step - yr + eps, lid_z - fz + eps]);
+                translate([xa, yr, fz]) cube([clip_t, plug_y_step - 0.2 - yr, lid_z - fz + eps]);
+                // last 0.2 mm into the frame: no wider than the frame, which
+                // has to fit its slot in the base wall
+                ct = min(clip_t, frame_hw - xi);
+                translate([s < 0 ? xw - ct : xw, plug_y_step - 0.2 - eps, fz])
+                    cube([ct, 0.2 + 2 * eps, lid_z - fz + eps]);
             }
             translate([xa - 1, 0, 0]) rotate([90, 0, 90]) linear_extrude(clip_t + 2)
                 polygon([[yf, lid_z + 1], [yf, lid_z],
