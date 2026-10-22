@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GDoor DIN Showcase</title>
+<style>
+  :root {
+    --bg: #0b0e13; --panel: rgba(16, 20, 27, 0.78); --line: rgba(255,255,255,0.12);
+    --text: #e8ecf1; --muted: #93a0b0; --accent: #39d98a; --bus: #ffb020; --net: #3fa9ff;
+  }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+  #view { position: fixed; inset: 0; }
+  #view canvas { display: block; }
+  #caption { position: fixed; left: 16px; top: 16px; max-width: min(420px, calc(100vw - 32px));
+    pointer-events: none; background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 16px 14px; backdrop-filter: blur(8px); box-sizing: border-box; }
+  #caption .step { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  #caption h1 { font-size: 26px; margin: 4px 0 6px; font-weight: 650; letter-spacing: -.01em; }
+  #caption p { margin: 0; color: var(--muted); }
+  #caption .fade { transition: opacity .5s; }
+  #bar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+    width: min(760px, calc(100vw - 32px)); background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 10px 12px; backdrop-filter: blur(8px); box-sizing: border-box; }
+  #row { display: flex; gap: 8px; align-items: center; }
+  button { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--line);
+    border-radius: 9px; padding: 6px 10px; font: inherit; cursor: pointer; white-space: nowrap; }
+  button:hover { background: rgba(255,255,255,0.12); }
+  button.on { border-color: var(--accent); color: var(--accent); }
+  #chapters { display: flex; gap: 6px; flex: 1; overflow-x: auto; }
+  #chapters button { flex: 1; }
+  #track { position: relative; height: 6px; margin-top: 10px; background: rgba(255,255,255,0.08);
+    border-radius: 3px; cursor: pointer; }
+  #fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 3px; }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; color: var(--muted);
+    background: var(--bg); transition: opacity .6s; z-index: 5; }
+  .lbl { padding: 3px 8px; border-radius: 6px; background: rgba(12,15,20,0.82); border: 1px solid var(--line);
+    color: var(--text); font-size: 12px; white-space: nowrap; transition: opacity .35s; pointer-events: none; }
+  .lbl b { color: var(--accent); font-weight: 600; }
+  .lbl.bus b { color: var(--bus); } .lbl.net b { color: var(--net); }
+  body.capture #bar { display: none; }
+  body.capture #caption .fade, body.capture .lbl { transition: none; }
+  @media (max-width: 600px) {
+    #caption h1 { font-size: 20px; }
+    #row > button.opt { display: none; }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="view"></div>
+<div id="caption"><div class="fade" id="capInner"><div class="step" id="capStep"></div><h1 id="capTitle"></h1><p id="capText"></p></div></div>
+<div id="bar">
+  <div id="row">
+    <button id="play" title="Play / pause (space)">❚❚</button>
+    <div id="chapters"></div>
+    <button id="free" class="opt" title="Orbit the camera yourself">Free camera</button>
+  </div>
+  <div id="track"><div id="fill"></div></div>
+</div>
+<div id="loading">Loading board and enclosure…</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// Units are mm. World: X along the DIN rail, Y up, Z out of the panel
+// (0 = the modules' mounting face on the rail).
+// The device itself is built in enclosure.scad's frame (X depth, Y height,
+// Z width) and turned into the world by DEVICE_ROT.
+
+const PARAMS = new URLSearchParams(location.search);
+const CAPTURE = PARAMS.has('capture');
+
+// ---- enclosure.scad numbers -------------------------------------------------
+const H = 90, W = 35, wall = 1.8;
+const pcb_front_x = 52.4, pcb_top_y = 87.5, pcb_z0 = wall + 3.5, pcb_t = 1.6, pcb_z1 = pcb_z0 + pcb_t;
+const front_x = pcb_front_x + 0.4 + wall + 6;     // 60.6
+const rail_y = H / 2;
+const plug = { w: 8.35, h: 11, mate_h: 7, mate_len: 7.8, back: 17 };
+plug.z1 = (W - wall) - 4; plug.z0 = plug.z1 - plug.h;
+plug.y0 = H - plug.back; plug.ystep = H - wall; plug.y1 = plug.ystep + plug.mate_len;
+const PLUGS = { top: { x: 46, top: true }, bus: { x: 32, top: false } };
+const RJ45 = { y: 57.2, z: pcb_z1 + 6.9 };
+const LEDS = [30.9, 32.9], led_z = pcb_z1 + 7.6;
+
+// ---- world layout -------------------------------------------------------------
+const X0 = 20;                     // world x of the gdoor's lid side (base wall at X0 - W)
+const PSU_X = -55, MCB_X = -163;   // left edges
+const BOX = { x0: -200, x1: 120, y0: -78, y1: 168, back: -7.5 };
+const DUCT_LO = { y0: -56, y1: -30 }, DUCT_HI = { y0: 120, y1: 146 };
+const DOOR = new THREE.Vector3(255, 35, -2);
+const ROUTER = new THREE.Vector3(-150, -175, 20);
+const PHONE = new THREE.Vector3(70, -175, 110);
+
+// ---- timeline -------------------------------------------------------------------
+const CHAPTERS = [
+  { t: 0,  step: '1 / 4', title: 'Assembly', text: 'Board on its rails, the two pluggable terminals in their cradles, lid snapped on. Printed in PETG, no screws.' },
+  { t: 10, step: '2 / 4', title: 'Onto the rail', text: '2 modules, 35 mm. Hook the top over the TS35 rail, press the bottom until the latch clicks.' },
+  { t: 17, step: '3 / 4', title: 'Wired up', text: '5 V from a DIN-rail supply on the top terminal, the 2-wire door bus on the bottom, Ethernet at the front.' },
+  { t: 24, step: '4 / 4', title: 'Ding dong', text: 'Someone rings. The bus telegram is picked up by the RX comparator, decoded on the ESP32-S3 and sent over Ethernet to Home Assistant.' },
+];
+const DURATION = 46;
+
+const clamp01 = v => Math.min(1, Math.max(0, v));
+const seg = (t, a, b) => clamp01((t - a) / (b - a));
+const ease = x => x * x * x * (x * (x * 6 - 15) + 10);
+const es = (t, a, b) => ease(seg(t, a, b));
+const lerp = (a, b, k) => a + (b - a) * k;
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+
+// ---- renderer ---------------------------------------------------------------------
+const host = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: PARAMS.has('capture') });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+host.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(innerWidth, innerHeight);
+Object.assign(labelRenderer.domElement.style, { position: 'fixed', inset: '0', pointerEvents: 'none' });
+document.body.appendChild(labelRenderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0e13);
+scene.fog = new THREE.Fog(0x0b0e13, 900, 2200);
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.55;
+
+const camera = new THREE.PerspectiveCamera(32, innerWidth / innerHeight, 1, 5000);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enabled = false;
+
+scene.add(new THREE.HemisphereLight(0xdfe8ff, 0x1a1712, 0.55));
+const key = new THREE.DirectionalLight(0xfff3e4, 2.4);
+key.position.set(-260, 420, 520);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+Object.assign(key.shadow.camera, { left: -420, right: 420, top: 360, bottom: -360, near: 10, far: 1600 });
+key.shadow.bias = -0.0004;
+key.shadow.normalBias = 0.6;
+scene.add(key);
+const rim = new THREE.DirectionalLight(0x9cc4ff, 0.9);
+rim.position.set(500, 200, -100);
+scene.add(rim);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.8, 0.45, 2.0);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// ---- helpers ----------------------------------------------------------------------
+const fadeables = [];   // materials that fade in with the breaker box
+function mat(color, opts = {}) {
+  return new THREE.MeshPhysicalMaterial({ color, roughness: 0.55, metalness: 0, ...opts });
+}
+function fmat(color, opts) { const m = mat(color, opts); fadeables.push(m); return m; }
+function mesh(geo, m, cast = true, recv = true) {
+  const o = new THREE.Mesh(geo, m); o.castShadow = cast; o.receiveShadow = recv; return o;
+}
+// Box from min / max corners
+function boxMM(m, x0, y0, z0, x1, y1, z1, r = 0) {
+  const g = r > 0 ? new RoundedBoxGeometry(x1 - x0, y1 - y0, z1 - z0, 3, r) : new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0);
+  const o = mesh(g, m);
+  o.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+  return o;
+}
+function canvasTex(w, h, draw) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  return t;
+}
+function label(html, cls = '') {
+  const d = document.createElement('div'); d.className = 'lbl ' + cls; d.innerHTML = html; d.style.opacity = 0;
+  const o = new CSS2DObject(d); o.userData.el = d; return o;
+}
+const labels = [];
+function addLabel(parent, pos, html, cls, show) {
+  const l = label(html, cls); l.position.copy(pos); parent.add(l); labels.push({ l, show }); return l;
+}
+
+// ---- glow sprites for the signal ----------------------------------------------------
+const glowTex = canvasTex(64, 64, (g, w) => {
+  const r = g.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2);
+  r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.25, 'rgba(255,255,255,0.8)');
+  r.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = r; g.fillRect(0, 0, w, w);
+});
+function makePulse(color, size, n = 10) {
+  const g = new THREE.Group();
+  for (let i = 0; i < n; i++) {
+    const m = new THREE.SpriteMaterial({ map: glowTex, color: new THREE.Color(color).multiplyScalar(3),
+      blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false, transparent: true, toneMapped: false });
+    const s = new THREE.Sprite(m); s.renderOrder = 10;
+    s.userData.k = i / n; s.scale.setScalar(size * (1 - 0.7 * i / n));
+    g.add(s);
+  }
+  g.visible = false; scene.add(g);
+  return g;
+}
+// Place a pulse on a curve: p in 0..1 (head position), trail length in curve fraction
+function showPulse(pulse, curve, p, trail = 0.08, alpha = 1) {
+  pulse.visible = p > 0 && p < 1 && alpha > 0;
+  if (!pulse.visible) return;
+  for (const s of pulse.children) {
+    const u = p - s.userData.k * trail;
+    s.visible = u >= 0 && u <= 1;
+    if (s.visible) { curve.getPointAt(u, s.position); s.material.opacity = alpha * (1 - s.userData.k); }
+  }
+}
+
+// ---- wires ------------------------------------------------------------------------
+const wires = [];
+function wire(points, color, radius, grow, opts = {}) {
+  const curve = new THREE.CatmullRomCurve3(points, false, 'centripetal');
+  const segs = Math.max(40, Math.round(curve.getLength() / 3));
+  const geo = new THREE.TubeGeometry(curve, segs, radius, 10, false);
+  const m = mesh(geo, mat(color, { roughness: opts.rough ?? 0.42, clearcoat: 0.4 }));
+  m.userData.count = geo.index.count;
+  scene.add(m);
+  const w = { m, curve, grow, segs }; wires.push(w); return w;
+}
+
+// ================= breaker box (environment) ===================================
+const env = new THREE.Group(); scene.add(env);
+const wallMat = mat(0x20242b, { roughness: 0.95 });
+const wallPlane = mesh(new THREE.PlaneGeometry(1600, 900), wallMat, false, true);
+wallPlane.position.set(40, -40, BOX.back - 6); env.add(wallPlane);
+
+const boxMat = fmat(0xeeede8, { roughness: 0.6 });
+env.add(boxMM(boxMat, BOX.x0, BOX.y0, BOX.back - 5, BOX.x1, BOX.y1, BOX.back));            // back plate
+env.add(boxMM(boxMat, BOX.x0 - 4, BOX.y0 - 4, BOX.back - 5, BOX.x0, BOX.y1 + 4, 92, 1));   // walls
+env.add(boxMM(boxMat, BOX.x1, BOX.y0 - 4, BOX.back - 5, BOX.x1 + 4, BOX.y1 + 4, 92, 1));
+env.add(boxMM(boxMat, BOX.x0, BOX.y0 - 4, BOX.back - 5, BOX.x1, BOX.y0, 92, 1));
+env.add(boxMM(boxMat, BOX.x0, BOX.y1, BOX.back - 5, BOX.x1, BOX.y1 + 4, 92, 1));
+
+// TS35 rail: brims at the mounting face (z 0), crown on the back plate
+const railMat = fmat(0xc9ccd2, { metalness: 0.85, roughness: 0.32 });
+const rx0 = BOX.x0 + 6, rx1 = BOX.x1 - 6, yb = rail_y - 17.5;
+env.add(boxMM(railMat, rx0, yb, -1, rx1, yb + 5, 0));
+env.add(boxMM(railMat, rx0, yb + 30, -1, rx1, yb + 35, 0));
+env.add(boxMM(railMat, rx0, yb + 4, -7.5, rx1, yb + 5, -1));
+env.add(boxMM(railMat, rx0, yb + 30, -7.5, rx1, yb + 31, -1));
+env.add(boxMM(railMat, rx0, yb + 5, -7.5, rx1, yb + 30, -6.5));
+
+// Slotted wiring ducts
+const ductMat = fmat(0x9aa0a6, { roughness: 0.75 });
+const ductLid = fmat(0xa9afb4, { roughness: 0.7 });
+for (const d of [DUCT_LO, DUCT_HI]) {
+  env.add(boxMM(ductMat, BOX.x0 + 4, d.y0, BOX.back, BOX.x1 - 4, d.y0 + 1.5, 40));
+  env.add(boxMM(ductLid, BOX.x0 + 4, d.y0, 40, BOX.x1 - 4, d.y1, 42.5, 0.6));
+  const fingers = new THREE.InstancedMesh(new THREE.BoxGeometry(4, d.y1 - d.y0 - 1.5, 2), ductMat, 120);
+  fingers.castShadow = true; fingers.receiveShadow = true;
+  const tm = new THREE.Matrix4();
+  let n = 0;
+  for (let x = BOX.x0 + 8; x < BOX.x1 - 6; x += 6.5) for (const z of [BOX.back + 1, 39]) {
+    if (n >= 120) break; tm.makeTranslation(x, (d.y0 + d.y1) / 2 + 0.75, z); fingers.setMatrixAt(n++, tm);
+  }
+  fingers.count = n; env.add(fingers);
+}
+
+// DIN 43880 modules (breakers and the 5 V supply), same profile as the gdoor housing
+function dinModule(x, widthMods, front, opts = {}) {
+  const g = new THREE.Group(); g.position.x = x;
+  const w = widthMods * 17.5 - 0.4;
+  const body = fmat(opts.color ?? 0xf3f2ee, { roughness: 0.5, clearcoat: 0.3 });
+  g.add(boxMM(body, 0.2, 0, 0, w, H, 54.6, 1.2));
+  const face = boxMM(fmat(opts.color ?? 0xf3f2ee, { roughness: 0.45, clearcoat: 0.3 }), 0.2, rail_y - 22.5, 50, w, rail_y + 22.5, 60.6, 1.2);
+  g.add(face);
+  const tex = canvasTex(256 * widthMods, 640, front);
+  const lm = fmat(0xffffff, { map: tex, roughness: 0.5, transparent: true });
+  const lp = mesh(new THREE.PlaneGeometry(w - 2.4, 43), lm, false, false);
+  lp.position.set(w / 2, rail_y, 60.65); g.add(lp);
+  // terminal screws on the shoulders, wire holes on top and bottom faces
+  const screwM = fmat(0xb8bcc4, { metalness: 0.9, roughness: 0.3 });
+  const holeM = fmat(0x1b1d22, { roughness: 0.9 });
+  const poles = opts.poles ?? 1;
+  for (let p = 0; p < poles; p++) {
+    const cx = w * (p + 0.5) / poles;
+    for (const top of [true, false]) {
+      const y = top ? H - 7 : 7;
+      const s = mesh(new THREE.CylinderGeometry(2.3, 2.3, 0.8, 20), screwM); s.rotation.x = Math.PI / 2;
+      s.position.set(cx, y, 54.9); g.add(s);
+      const slot = boxMM(holeM, cx - 2, y - 0.35, 55.2, cx + 2, y + 0.35, 55.4); g.add(slot);
+      const h = mesh(new THREE.BoxGeometry(5, 0.6, 5), holeM, false, false);
+      h.position.set(cx, top ? H + 0.05 : -0.05, 40); g.add(h);
+    }
+  }
+  if (opts.lever) {
+    g.add(boxMM(fmat(opts.lever, { roughness: 0.4 }), w / 2 - 3.5, rail_y - 2, 60.6, w / 2 + 3.5, rail_y + 9, 68, 1.2));
+  }
+  env.add(g); return g;
+}
+function mcbFront(rating) {
+  return (g, w, h) => {
+    g.fillStyle = '#f3f2ee'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#2b2f36'; g.font = 'bold 54px system-ui'; g.textAlign = 'center';
+    g.fillText(rating, w / 2, 120);
+    g.font = '30px system-ui'; g.fillStyle = '#6a7079'; g.fillText('230/400V~', w / 2, 560);
+    g.fillText('6000', w / 2, 600);
+    g.strokeStyle = '#2b2f36'; g.lineWidth = 3; g.strokeRect(w / 2 - 34, 470, 68, 46);
+    g.fillStyle = '#2b2f36'; g.fillText('3', w / 2, 503);
+  };
+}
+const mcbs = [['B16', 0x2d6cdf], ['B16', 0x2d6cdf], ['C10', 0x2d6cdf], ['B13', 0x2d6cdf], ['B16', 0x2d6cdf], ['B10', 0x2d6cdf]];
+mcbs.forEach(([r, c], i) => dinModule(MCB_X + i * 17.5, 1, mcbFront(r), { lever: c }));
+
+const psuLed = new THREE.MeshBasicMaterial({ color: 0x113311, toneMapped: false });
+const psu = dinModule(PSU_X, 2, (g, w, h) => {
+  g.fillStyle = '#e9ebe7'; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#1f6f4a'; g.fillRect(0, 0, w, 120);
+  g.fillStyle = '#fff'; g.font = 'bold 64px system-ui'; g.textAlign = 'center';
+  g.fillText('5 V ⎓ 2 A', w / 2, 82);
+  g.fillStyle = '#2b2f36'; g.font = '34px system-ui';
+  g.fillText('DIN-rail power supply', w / 2, 200);
+  g.fillText('IN 100–240 V~', w / 2, 250);
+  g.font = '30px system-ui'; g.fillStyle = '#6a7079';
+  g.fillText('DC OK', w / 2 - 90, 455);
+  g.fillText('+V  −V', w / 2, 140 + 420);
+}, { poles: 2, color: 0xe9ebe7 });
+{
+  const led = mesh(new THREE.SphereGeometry(1.6, 16, 10), psuLed, false, false);
+  led.position.set(17.5 - 13, rail_y - 4.5, 60.8); psu.add(led);
+}
+
+// ================= the gdoor device =================================================
+const mountPivot = new THREE.Group(); scene.add(mountPivot);
+const hookOff = new THREE.Group(); hookOff.position.set(0, -(rail_y + 17.5), 0); mountPivot.add(hookOff);
+const spin = new THREE.Group(); spin.position.set(-W / 2, H / 2, 30); hookOff.add(spin);
+const unspin = new THREE.Group(); unspin.position.set(W / 2, -H / 2, -30); spin.add(unspin);
+const device = new THREE.Group(); device.rotation.y = -Math.PI / 2; unspin.add(device);
+// device is the real device's frame (enclosure.scad's output: lid at Z = 0).
+// encl is enclosure.scad's design frame, its mirror image about z = W/2; the
+// plugs, LEDs and plug positions below are given in it, like in the .scad.
+const encl = new THREE.Group(); device.add(encl);
+encl.scale.z = -1; encl.position.z = W;
+
+const baseMat = mat(0xdcdfe3, { roughness: 0.62, clearcoat: 0.15, side: THREE.DoubleSide });
+const lidMat = mat(0xe9ebee, { roughness: 0.6, clearcoat: 0.15, side: THREE.DoubleSide, transparent: true });
+const lidGroup = new THREE.Group(); encl.add(lidGroup);
+const boardGroup = new THREE.Group(); device.add(boardGroup);
+const plugGroups = {};
+
+// Female 3.81 mm pluggable terminal, built in enclosure coordinates
+function femalePlug(p) {
+  const g = new THREE.Group();
+  const s = p.top ? 1 : -1, yc = p.top ? 0 : H;   // bottom one: mirrored about y = H/2
+  const Y = y => p.top ? y : H - y;
+  const green = mat(0x1f9d4c, { roughness: 0.45, clearcoat: 0.3 });
+  const body = plug.y1 - plug.mate_len - plug.y0;
+  const bx = (a, b, z0, z1, y0, y1) => boxMM(green, p.x + a, Math.min(Y(y0), Y(y1)), z0, p.x + b, Math.max(Y(y0), Y(y1)), z1, 0.4);
+  g.add(bx(-plug.w / 2, plug.w / 2, plug.z0, plug.z1, plug.y0, plug.y0 + body));
+  g.add(bx(-plug.w / 2, plug.w / 2, plug.z1 - plug.mate_h, plug.z1, plug.y0 + body - 0.2, plug.y1));
+  const screwM = mat(0xb8bcc4, { metalness: 0.9, roughness: 0.3 });
+  for (const dx of [-1.905, 1.905]) {
+    const sc = mesh(new THREE.CylinderGeometry(1.3, 1.3, 0.6, 16), screwM); sc.rotation.x = Math.PI / 2;
+    sc.position.set(p.x + dx, Y(plug.y0 + 9), plug.z0 - 0.2); g.add(sc);
+  }
+  void s; void yc;
+  return g;
+}
+// Male cable plug that goes on the barrel when the wiring is done
+function malePlug(p) {
+  const g = new THREE.Group();
+  const green = mat(0x1f9d4c, { roughness: 0.45, clearcoat: 0.3 });
+  const Y = y => p.top ? y : H - y;
+  const a = plug.y1 - 2, b = plug.y1 + 12;
+  g.add(boxMM(green, p.x - plug.w / 2 - 0.6, Math.min(Y(a), Y(b)), plug.z1 - plug.mate_h - 3.5, p.x + plug.w / 2 + 0.6, Math.max(Y(a), Y(b)), plug.z1 + 0.6, 0.5));
+  const screwM = mat(0xb8bcc4, { metalness: 0.9, roughness: 0.3 });
+  for (const dx of [-1.905, 1.905]) {
+    const sc = mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.6, 16), screwM); sc.rotation.x = Math.PI / 2;
+    sc.position.set(p.x + dx, Y(plug.y1 + 7), plug.z1 + 0.7); g.add(sc);
+  }
+  return g;
+}
+for (const [k, p] of Object.entries(PLUGS)) { plugGroups[k] = femalePlug(p); encl.add(plugGroups[k]); }
+const maleTop = malePlug(PLUGS.top), maleBus = malePlug(PLUGS.bus);
+encl.add(maleTop, maleBus);
+
+// RJ45 patch plug in the front window
+const rjPlug = new THREE.Group(); encl.add(rjPlug);
+{
+  const clear = mat(0xdfe8f0, { transmission: 0.6, roughness: 0.15, thickness: 2, transparent: true, opacity: 0.9 });
+  rjPlug.add(boxMM(clear, front_x - 9, RJ45.y - 5.8, RJ45.z - 7, front_x + 5, RJ45.y + 5.8, RJ45.z + 7, 0.6));
+  rjPlug.add(boxMM(mat(0x2f86d6, { roughness: 0.5 }), front_x + 5, RJ45.y - 4.5, RJ45.z - 5.5, front_x + 17, RJ45.y + 4.5, RJ45.z + 5.5, 2.5));
+}
+
+// Status LEDs glowing through the window holes
+const ledMats = LEDS.map(() => new THREE.MeshBasicMaterial({ color: 0x220000, toneMapped: false }));
+LEDS.forEach((y, i) => {
+  const l = mesh(new THREE.CylinderGeometry(0.75, 0.75, 1, 16), ledMats[i], false, false);
+  l.rotation.z = Math.PI / 2; l.position.set(front_x - 0.3, y, led_z); encl.add(l);
+});
+
+// Inner wires: bus plug -> J1, 5 V plug -> J4 (shown when the lid goes see-through)
+const toWorldDevice = v => encl.localToWorld(v.clone());
+
+// ---- board (KiCad GLB, metres, Y up = component side) -----------------------------------
+// In the real device: X = 52.4 - (kx - 100), Y = 87.5 - (ky - 60), and
+// Z = W - pcb_z0 - height above the board's back side (component side
+// towards the lid at Z = 0). A plain rotation of the board.
+const boardFrame = new THREE.Group();
+boardFrame.matrixAutoUpdate = false;
+boardFrame.matrix.makeBasis(V(-1, 0, 0), V(0, 0, -1), V(0, -1, 0));
+boardFrame.matrix.setPosition(pcb_front_x, pcb_top_y, W - pcb_z0);
+boardGroup.add(boardFrame);
+const boardPt = (kx, ky, h = 2) => V(kx - 100, h, ky - 60);   // in boardFrame space
+
+// ---- signal paths --------------------------------------------------------------------
+let busWire, netWire, wifiCurve, boardCurve, innerBus;
+const busPulse = makePulse(0xffb020, 9, 14);
+const boardPulse = makePulse(0xffb020, 6, 14);
+const netPulse = makePulse(0x3fa9ff, 9, 14);
+const wifiPulse = makePulse(0x3fa9ff, 12, 12);
+
+// ---- door station, router, phone ------------------------------------------------------------
+const door = new THREE.Group(); door.position.copy(DOOR); scene.add(door);
+const doorBtnGlow = new THREE.MeshBasicMaterial({ color: 0x000000, toneMapped: false });
+let doorBtn, finger;
+{
+  const alu = mat(0xb9bec6, { metalness: 0.92, roughness: 0.33 });
+  door.add(boxMM(alu, -45, -95, 0, 45, 95, 9, 3));
+  const dark = mat(0x16181c, { roughness: 0.8 });
+  const holes = new THREE.InstancedMesh(new THREE.CylinderGeometry(1.4, 1.4, 1, 10), dark, 60);
+  const tm = new THREE.Matrix4().makeRotationX(Math.PI / 2); let n = 0;
+  for (let r = 0; r < 4; r++) for (let a = 0; a < (r === 0 ? 1 : r * 7); a++) {
+    const ang = a / (r * 7 || 1) * Math.PI * 2, rr = r * 5.2;
+    tm.setPosition(Math.cos(ang) * rr, 52 + Math.sin(ang) * rr, 9.1); holes.setMatrixAt(n++, tm);
+  }
+  holes.count = n; door.add(holes);
+  const tag = canvasTex(512, 160, (g, w, h) => {
+    g.fillStyle = '#f7f3e6'; g.fillRect(0, 0, w, h); g.fillStyle = '#25282d';
+    g.font = '600 64px system-ui'; g.textAlign = 'center'; g.fillText('No. 12', w / 2, 104);
+  });
+  const tagM = mesh(new THREE.PlaneGeometry(60, 18.75), new THREE.MeshStandardMaterial({ map: tag, emissive: 0xffffff, emissiveMap: tag, emissiveIntensity: 0.35 }), false);
+  tagM.position.set(0, -2, 9.15); door.add(tagM);
+  const ring = mesh(new THREE.TorusGeometry(10.5, 1.2, 12, 40), doorBtnGlow, false, false);
+  ring.position.set(0, -42, 9.2); door.add(ring);
+  doorBtn = mesh(new THREE.CylinderGeometry(9, 9, 4, 40), mat(0xd7dbe1, { metalness: 0.95, roughness: 0.22 }));
+  doorBtn.rotation.x = Math.PI / 2; doorBtn.position.set(0, -42, 10.5); door.add(doorBtn);
+  const bell = canvasTex(128, 128, (g, w) => {
+    g.fillStyle = 'rgba(0,0,0,0)'; g.fillRect(0, 0, w, w); g.strokeStyle = '#5a6068'; g.lineWidth = 7;
+    g.beginPath(); g.moveTo(34, 86); g.quadraticCurveTo(40, 30, 64, 30); g.quadraticCurveTo(88, 30, 94, 86); g.closePath(); g.stroke();
+    g.beginPath(); g.arc(64, 96, 8, 0, Math.PI * 2); g.stroke();
+  });
+  const bellM = mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshBasicMaterial({ map: bell, transparent: true }), false, false);
+  bellM.position.set(0, 0, 2.05); bellM.rotation.x = -Math.PI / 2; doorBtn.add(bellM);
+  finger = new THREE.Group();
+  const skin = mat(0xe2b49a, { roughness: 0.55, sheen: 0.6, sheenColor: new THREE.Color(0xffd7c2) });
+  const f = mesh(new THREE.CapsuleGeometry(8, 60, 8, 20), skin); f.rotation.x = Math.PI / 2; f.position.z = 38; finger.add(f);
+  const nail = mesh(new THREE.SphereGeometry(5.5, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat(0xf1d2c6, { roughness: 0.3, clearcoat: 0.8 }), false);
+  nail.scale.set(1, 0.4, 1.3); nail.position.set(0, 7.2, 8); finger.add(nail);
+  finger.rotation.x = -0.25;
+  door.add(finger);
+}
+
+const router = new THREE.Group(); router.position.copy(ROUTER); scene.add(router);
+const routerLeds = [];
+{
+  router.add(boxMM(mat(0x1d2128, { roughness: 0.4, clearcoat: 0.6 }), -70, -18, -40, 70, 18, 40, 4));
+  const tex = canvasTex(512, 96, (g, w, h) => {
+    g.fillStyle = '#1d2128'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#41bdf5'; g.beginPath();
+    g.moveTo(40, 30); g.lineTo(64, 12); g.lineTo(88, 30); g.lineTo(88, 72); g.lineTo(40, 72); g.closePath(); g.fill();
+    g.fillStyle = '#e8ecf1'; g.font = '600 40px system-ui'; g.fillText('Home Assistant', 110, 62);
+  });
+  const p = mesh(new THREE.PlaneGeometry(100, 18.75), new THREE.MeshBasicMaterial({ map: tex }), false, false);
+  p.position.set(-8, 0, 40.1); router.add(p);
+  for (let i = 0; i < 3; i++) {
+    const m = new THREE.MeshBasicMaterial({ color: 0x0a2a14, toneMapped: false }); routerLeds.push(m);
+    const l = mesh(new THREE.SphereGeometry(1.4, 12, 8), m, false, false); l.position.set(52 + i * 5, 0, 40.4); router.add(l);
+  }
+}
+
+const phone = new THREE.Group(); phone.position.copy(PHONE); scene.add(phone);
+let phoneCtx, phoneTex, phoneDrawn = -1;
+{
+  phone.add(mesh(new RoundedBoxGeometry(72, 148, 8, 6, 9), mat(0x111317, { metalness: 0.6, roughness: 0.3, clearcoat: 1 })));
+  const c = document.createElement('canvas'); c.width = 540; c.height = 1110; phoneCtx = c.getContext('2d');
+  phoneTex = new THREE.CanvasTexture(c); phoneTex.colorSpace = THREE.SRGBColorSpace; phoneTex.anisotropy = 8;
+  const screen = mesh(new THREE.PlaneGeometry(66, 142 * 66 / 69), new THREE.MeshBasicMaterial({ map: phoneTex, toneMapped: false }), false, false);
+  screen.position.z = 4.05; phone.add(screen);
+  phone.rotation.set(-0.12, -0.32, 0.04);
+}
+const TODAY = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+function drawPhone(k) {   // k: 0 = idle lock screen, 1 = notification fully in
+  const q = Math.round(k * 60) / 60;
+  if (q === phoneDrawn) return; phoneDrawn = q;
+  const g = phoneCtx, w = 540, h = 1110;
+  const bg = g.createLinearGradient(0, 0, w, h); bg.addColorStop(0, '#1b2a4a'); bg.addColorStop(1, '#3a1d3f');
+  g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  g.fillStyle = 'rgba(255,255,255,0.92)'; g.textAlign = 'center';
+  g.font = '200 150px system-ui'; g.fillText(new Date().toTimeString().slice(0, 5), w / 2, 260);
+  g.font = '34px system-ui'; g.fillText(TODAY, w / 2, 120);
+  if (q > 0) {
+    const y = lerp(-220, 380, ease(Math.min(1, q * 1.6)));
+    g.globalAlpha = Math.min(1, q * 2);
+    g.fillStyle = 'rgba(245,247,250,0.94)';
+    g.beginPath(); g.roundRect(28, y, w - 56, 190, 34); g.fill();
+    g.fillStyle = '#41bdf5'; g.beginPath(); g.roundRect(56, y + 30, 64, 64, 14); g.fill();
+    g.fillStyle = '#fff'; g.font = 'bold 40px system-ui'; g.fillText('🔔', 88, y + 77);
+    g.textAlign = 'left'; g.fillStyle = '#5b6470'; g.font = '26px system-ui'; g.fillText('HOME ASSISTANT · now', 140, y + 56);
+    g.fillStyle = '#111'; g.font = '600 36px system-ui'; g.fillText('Doorbell', 140, y + 100);
+    g.fillStyle = '#2b3038'; g.font = '30px system-ui'; g.fillText('Someone is at the front door', 56, y + 154);
+    g.globalAlpha = 1; g.textAlign = 'center';
+  }
+  phoneTex.needsUpdate = true;
+}
+drawPhone(0);
+
+// ================= load models ======================================================
+const gltfLoader = new GLTFLoader(); gltfLoader.setMeshoptDecoder(MeshoptDecoder);
+const stl = new STLLoader();
+const load = (l, url) => new Promise((res, rej) => l.load(url, res, undefined, rej));
+const [gltf, baseGeo, lidGeo] = await Promise.all([
+  load(gltfLoader, 'models/board.min.glb'),
+  load(stl, '../enclosure/gdoor-din-base.stl'),
+  load(stl, '../enclosure/gdoor-din-lid.stl'),
+]);
+gltf.scene.scale.setScalar(1000);
+gltf.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+boardFrame.add(gltf.scene);
+// STLs in print orientation. Base: translate([0, H, W]) rotate([180, 0, 0])
+// of the real part; given here in the design frame (encl), so y -> H - y only.
+const base = mesh(baseGeo, baseMat); base.scale.set(1, -1, 1); base.position.set(0, H, 0); encl.add(base);
+// Lid: printed as it sits in the real device; z -> W - z into the design frame.
+const lid = mesh(lidGeo, lidMat); lid.scale.set(1, 1, -1); lid.position.set(0, 0, W); lidGroup.add(lid);
+
+// ---- world-space paths (need the device in its mounted pose) -------------------------------
+function setMounted() {
+  mountPivot.position.set(X0, rail_y + 17.5, 0); mountPivot.rotation.set(0, 0, 0); spin.rotation.set(0, 0, 0);
+  for (const k in plugGroups) plugGroups[k].position.set(0, 0, 0);
+  lidGroup.position.set(0, 0, 0); boardGroup.position.set(0, 0, 0);
+  scene.updateMatrixWorld(true);
+}
+setMounted();
+const D = (x, y, z) => toWorldDevice(V(x, y, z));
+const topEnd = D(PLUGS.top.x, plug.y1 + 12, plug.z1 - 3.5);
+const busEnd = D(PLUGS.bus.x, H - (plug.y1 + 12), plug.z1 - 3.5);
+const rjEnd = D(front_x + 17, RJ45.y, RJ45.z);
+
+// mains: breaker -> PSU input (L brown, N blue from the duct)
+const psuIn = [PSU_X + 35 * 0.25, PSU_X + 35 * 0.75], psuOut = psuIn;
+const mcbOut = MCB_X + 5 * 17.5 + 17.5 / 2;
+wire([V(mcbOut, -0.5, 40), V(mcbOut, -12, 40), V(mcbOut - 6, -30, 30), V(psuIn[0] + 6, -30, 30), V(psuIn[0], -12, 40), V(psuIn[0], -0.5, 40)], 0x7a4a24, 1.25, [17, 19]);
+wire([V(psuIn[1] + 40, -34, 22), V(psuIn[1] + 6, -32, 34), V(psuIn[1], -14, 40), V(psuIn[1], -0.5, 40)], 0x2f6fd0, 1.25, [17.3, 19]);
+// existing feed to the breakers from the top duct
+for (let i = 0; i < 6; i++) {
+  const x = MCB_X + 17.5 * (i + 0.5);
+  wire([V(x, H + 0.5, 40), V(x, H + 12, 40), V(x + 2, DUCT_HI.y0 + 2, 30)], 0x7a4a24, 1.25, null);
+  wire([V(x, -0.5, 40), V(x, -12, 40), V(x - 2, DUCT_LO.y1 - 2, 30)], 0x7a4a24, 1.25, null);
+}
+// 5 V: PSU output (top) -> gdoor top plug
+for (const [i, col] of [[0, 0xd22b2b], [1, 0x1a1a1a]]) {
+  const e = topEnd.clone().add(V(0, 0, (i - 0.5) * 3.8));
+  wire([V(psuOut[i], H + 0.5, 40), V(psuOut[i], H + 14, 40 - i * 2), V(lerp(psuOut[i], e.x, 0.5), H + 30 + i * 3, 44), V(e.x, e.y + 14, e.z), e], col, 0.9, [18.6 + i * 0.3, 20.6]);
+}
+// bus: 2-wire cable from the bottom plug through the duct to the door station
+busWire = wire([busEnd, busEnd.clone().add(V(0, -14, 0)), V(busEnd.x + 4, DUCT_LO.y1 - 3, 22), V(-20, -44, 20), V(80, -44, 20),
+  V(BOX.x1 - 6, -44, 20), V(BOX.x1 + 20, -60, 20), V(DOOR.x - 20, -120, 10), V(DOOR.x, -110, 4), V(DOOR.x, -96, 4)], 0x9aa3ad, 2.4, [20.2, 22.6]);
+// Ethernet patch cable from the front out to Home Assistant
+netWire = wire([rjEnd, rjEnd.clone().add(V(0, 0, 16)), V(rjEnd.x, rjEnd.y - 30, 82), V(rjEnd.x - 18, DUCT_LO.y1 + 6, 66),
+  V(rjEnd.x - 40, -60, 50), V(-150, BOX.y0 - 20, 40), V(ROUTER.x + 30, ROUTER.y + 30, 25), V(ROUTER.x + 30, ROUTER.y + 18, 20)], 0x2f86d6, 2.1, [21.8, 23.8]);
+wifiCurve = new THREE.QuadraticBezierCurve3(ROUTER.clone().add(V(40, 20, 30)), V(-20, -110, 140), PHONE.clone().add(V(0, 40, 10)));
+
+// inside: bus plug screws -> J1, then over the board to the RJ45
+const kB = (kx, ky, h) => {   // KiCad board point -> world
+  const v = boardPt(kx, ky, h); boardFrame.updateMatrixWorld(true); return boardFrame.localToWorld(v);
+};
+const busScrew = D(PLUGS.bus.x, H - (plug.y0 + 9), plug.z0 - 0.5);
+const topScrew = D(PLUGS.top.x, plug.y0 + 9, plug.z0 - 0.5);
+const J1 = kB(143, 64.5, 9), J4 = kB(108.6, 64.5, 9);
+innerBus = wire([busScrew, busScrew.clone().add(V(4, 0, 0)), J1.clone().lerp(busScrew, 0.5).add(V(-3, 0, 0)), J1.clone().add(V(-4, 0, 0)), J1], 0xd0d4da, 0.6, [6.4, 8.4]);
+for (const [i, col] of [[0, 0xd22b2b], [1, 0x1a1a1a]])
+  wire([topScrew.clone().add(V(0, 0, (i - 0.5) * 3.8)), topScrew.clone().add(V(3, -4, (i - 0.5) * 3.8)), J4.clone().add(V(0, 0, (i - 0.5) * 3.8))], col, 0.5, [6.4, 8.4]);
+const inner = wires.slice(-3);
+for (const w of inner) device.attach(w.m);   // they travel with the device while it is assembled
+boardCurve = new THREE.CatmullRomCurve3([J1, kB(140, 72, 4), kB(137.5, 77.7, 4.5), kB(136, 100, 4), kB(135, 128, 6),
+  kB(133, 112, 4), kB(131.5, 89.5, 4), kB(118, 90.3, 4), kB(106, 90.3, 15)], false, 'centripetal');
+
+// labels
+addLabel(scene, door.position.clone().add(V(0, 108, 0)), '<b>●</b> Door station', 'bus', t => t > 24.5 && t < 45);
+addLabel(scene, ROUTER.clone().add(V(0, 34, 0)), '<b>●</b> Home Assistant', 'net', t => t > 24.5 && t < 45);
+addLabel(scene, V(PSU_X + 17.5, H + 44, 50), '<b>●</b> 5 V supply', '', t => t > 18 && t < 24);
+addLabel(scene, V(X0 - 17.5, H + 52, 50), '<b>●</b> GDoor DIN', '', t => (t > 12.5 && t < 24) || (t > 41 && t < 45));
+addLabel(scene, V(150, -60, 30), '<b>●</b> 2-wire door bus', 'bus', t => t > 21 && t < 24);
+addLabel(scene, J1.clone().add(V(-10, 10, 0)), '<b>●</b> Bus RX', 'bus', t => t > 31.3 && t < 35.4);
+addLabel(scene, kB(135, 132, 6).add(V(-12, -6, 0)), '<b>●</b> ESP32-S3', '', t => t > 32.3 && t < 35.4);
+addLabel(scene, kB(131.5, 89.5, 4).add(V(-12, 8, 0)), '<b>●</b> W5500 Ethernet', 'net', t => t > 33.4 && t < 35.4);
+
+// ================= camera script ====================================================
+const ASM = V(X0 - W / 2, 45, 195);          // where the device is assembled, in front of the box
+const shots = [
+  [0,    ASM.clone().add(V(150, 150, 400)), ASM.clone().add(V(55, 0, 0))],
+  [2,    ASM.clone().add(V(130, 120, 370)), ASM.clone().add(V(45, 0, 0))],
+  [8.5,  ASM.clone().add(V(110, 80, 300)), ASM.clone().add(V(0, 0, 0))],
+  [10.5, V(ASM.x - 10, 120, 420), ASM.clone().add(V(-10, 0, -60))],
+  [14,   V(X0 + 150, 120, 300), V(X0 - 15, 50, 20)],
+  [16.5, V(X0 + 120, 110, 260), V(X0 - 25, 40, 20)],
+  [18,   V(-60, 160, 470), V(-50, 30, 20)],
+  [23.5, V(-20, 120, 560), V(-40, 10, 20)],
+  [25.5, V(40, 30, 900), V(40, -30, 0)],
+  [27,   DOOR.clone().add(V(170, 10, 230)), DOOR.clone().add(V(0, -35, 15))],
+  [28.4, DOOR.clone().add(V(150, 0, 215)), DOOR.clone().add(V(0, -40, 15))],
+  [30.2, V(190, -10, 560), V(120, -40, 0)],
+  [31.6, V(X0 + 190, 70, 175), V(X0 - 18, 45, 25)],
+  [35.2, V(X0 + 180, 60, 180), V(X0 - 18, 45, 30)],
+  [36.4, V(-60, -40, 520), V(-70, -80, 20)],
+  [38.4, V(20, -120, 420), V(-20, -160, 50)],
+  [39.4, V(PHONE.x - 40, PHONE.y + 20, PHONE.z + 360), PHONE.clone()],
+  [42.4, V(PHONE.x - 30, PHONE.y + 10, PHONE.z + 330), PHONE.clone()],
+  [44.4, V(40, 30, 900), V(40, -30, 0)],
+  [46,   ASM.clone().add(V(150, 150, 400)), ASM.clone().add(V(55, 0, 0))],
+];
+const camPos = V(0, 0, 0), camTgt = V(0, 0, 0);
+function cameraAt(t) {
+  let i = 0; while (i < shots.length - 2 && t >= shots[i + 1][0]) i++;
+  const [ta, pa, qa] = shots[i], [tb, pb, qb] = shots[i + 1];
+  const k = ease(seg(t, ta, tb));
+  camPos.lerpVectors(pa, pb, k); camTgt.lerpVectors(qa, qb, k);
+}
+
+// ================= scene state at time t =============================================
+const boxFadeMats = fadeables;
+for (const m of boxFadeMats) { m.userData.baseOpacity = m.opacity; m.userData.baseTransparent = m.transparent; }
+function setEnvOpacity(a) {
+  env.visible = a > 0.001;
+  for (const m of boxFadeMats) {
+    const tr = a < 0.999 || m.userData.baseTransparent;
+    if (m.transparent !== tr) { m.transparent = tr; m.needsUpdate = true; }
+    m.opacity = m.userData.baseOpacity * a; m.depthWrite = a > 0.5;
+  }
+}
+
+function apply(t) {
+  // -- assembly (reverse explosion), in enclosure coordinates
+  const kBoard = es(t, 2, 4.6), kPlug = es(t, 4.2, 6.4), kLid = es(t, 6.2, 8.4);
+  boardGroup.position.set(0, (1 - kBoard) * 8, -(1 - kBoard) * 75);
+  boardGroup.rotation.set(0, 0, 0);
+  plugGroups.top.position.set(0, (1 - kPlug) * 40, (1 - kPlug) * 40);
+  plugGroups.bus.position.set(0, -(1 - kPlug) * 40, (1 - kPlug) * 40);
+  lidGroup.position.set(0, 0, (1 - kLid) * 120 - Math.sin(Math.PI * seg(t, 8.2, 8.8)) * 0.8);
+  for (const w of inner) w.m.visible = t > 8;   // inner wiring is fitted with the lid
+
+  // -- mounting: travel to the rail, hook on, tilt in, click
+  const kTravel = es(t, 10.6, 14.2), kTilt = es(t, 14.4, 15.6);
+  const click = Math.sin(Math.PI * seg(t, 15.5, 15.9)) * 0.012;
+  const hookLift = Math.sin(Math.PI * seg(t, 13.6, 14.6)) * 3;
+  const asmPivot = V(X0, rail_y + 17.5, ASM.z - 30);
+  mountPivot.position.set(X0, rail_y + 17.5 + hookLift, lerp(asmPivot.z, 0, kTravel));
+  mountPivot.rotation.x = -lerp(0.32, 0, kTilt) * es(t, 10.6, 12.5) + click;
+  spin.rotation.y = lerp(-0.9, 0, es(t, 0, 9.6)) + Math.sin(t * 0.6) * 0.04 * (1 - es(t, 8, 10));
+  setEnvOpacity(es(t, 10, 12.2));
+  door.visible = router.visible = phone.visible = env.visible;
+
+  // -- wiring
+  for (const w of wires) {
+    if (!w.grow) { w.m.visible = env.visible; continue; }
+    if (inner.includes(w)) continue;
+    const k = es(t, w.grow[0], w.grow[1]);
+    w.m.visible = k > 0.001;
+    w.m.geometry.setDrawRange(0, Math.floor(w.m.userData.count * k / 60) * 60 + (k >= 1 ? 1e9 : 0));
+  }
+  maleTop.visible = t > 18.6; maleTop.position.y = (1 - es(t, 18.6, 19.2)) * 20;
+  maleBus.visible = t > 20.2; maleBus.position.y = -(1 - es(t, 20.2, 20.8)) * 20;
+  rjPlug.visible = t > 21.8; rjPlug.position.x = (1 - es(t, 21.8, 22.4)) * 25;
+  const powered = t > 20.7;
+  psuLed.color.setHex(t > 19.2 ? 0x30ff60 : 0x103010);
+
+  // -- the ring
+  const press = Math.sin(Math.PI * seg(t, 27.3, 28.3));
+  finger.position.set(26 - 26 * es(t, 26, 27.3) + 26 * es(t, 28.3, 29.5), -42 - 12 + 12 * es(t, 26, 27.3) - 12 * es(t, 28.3, 29.5), 70 - 50 * es(t, 26, 27.3) + 50 * es(t, 28.3, 29.5));
+  finger.position.z -= press * 4.5;
+  finger.visible = t > 25.5 && t < 30;
+  doorBtn.position.z = 10.5 - press * 1.5;
+  doorBtnGlow.color.setRGB(2.2 * (press + 0.6 * es(t, 27.6, 28) * (1 - es(t, 29, 31))), 1.3 * press + 0.8 * es(t, 27.6, 28) * (1 - es(t, 29, 31)), 0.15);
+
+  const pBus = seg(t, 27.9, 31.4);
+  showPulse(busPulse, busWire.curve, 1 - pBus, 0.06, pBus > 0 ? 1 : 0);   // from the door to the gdoor
+  // inside the device: the lid goes see-through
+  const see = es(t, 30.8, 31.6) * (1 - es(t, 35.3, 36.2));
+  lidMat.opacity = 1 - 0.86 * see; lidMat.depthWrite = see < 0.5;
+  for (const w of inner) if (t > 8) w.m.visible = true;
+  const pIn = seg(t, 31.2, 31.8), pBoard = seg(t, 31.8, 34.6);
+  showPulse(boardPulse, innerBus.curve, pIn, 0.2, pIn > 0 && pIn < 1 ? 1 : 0);
+  if (pIn <= 0 || pIn >= 1) showPulse(boardPulse, boardCurve, pBoard, 0.12, pBoard > 0 ? 1 : 0);
+  // status LED: steady once powered, flashing while the telegram is handled
+  const blink = t > 32.3 && t < 35.5 ? (Math.floor(t * 8) % 2) : 0;
+  ledMats[0].color.setRGB(powered ? 2.4 : 0.15, powered ? 0.12 : 0, 0.02);
+  ledMats[1].color.setRGB(blink ? 3 : 0.15, blink ? 0.25 : 0, 0.02);
+  const pNet = seg(t, 34.6, 37.6);
+  showPulse(netPulse, netWire.curve, pNet, 0.05, pNet > 0 ? 1 : 0);
+  routerLeds.forEach((m, i) => m.color.setRGB(0.1, (t > 21.8 ? 1.2 : 0.15) + (t > 37.4 && t < 38.6 && (Math.floor(t * 10 + i) % 2) ? 2 : 0), 0.3));
+  const pWifi = seg(t, 37.6, 39);
+  showPulse(wifiPulse, wifiCurve, pWifi, 0.15, pWifi > 0 ? 1 : 0);
+  drawPhone(es(t, 38.9, 40.2) * (1 - es(t, 44.6, 45.6)));
+  phone.position.y = PHONE.y + Math.sin(t * 1.3) * 1.5;
+
+  // labels
+  for (const { l, show } of labels) l.userData.el.style.opacity = show(t) ? 1 : 0;
+}
+
+// ================= UI and loop ====================================================
+let t = Number(PARAMS.get('t') ?? 0), playing = !PARAMS.has('paused'), free = false;
+const chaptersEl = document.getElementById('chapters');
+const chapterBtns = CHAPTERS.map((c, i) => {
+  const b = document.createElement('button'); b.textContent = c.title;
+  b.onclick = () => { t = c.t + 0.001; playing = true; syncPlay(); };
+  chaptersEl.appendChild(b); return b;
+});
+const playBtn = document.getElementById('play');
+const syncPlay = () => { playBtn.textContent = playing ? '❚❚' : '▶'; };
+playBtn.onclick = () => { playing = !playing; syncPlay(); };
+addEventListener('keydown', e => { if (e.code === 'Space') { playing = !playing; syncPlay(); e.preventDefault(); } });
+const freeBtn = document.getElementById('free');
+freeBtn.onclick = () => {
+  free = !free; freeBtn.classList.toggle('on', free); controls.enabled = free;
+  if (free) controls.target.copy(camTgt);
+};
+const track = document.getElementById('track'), fill = document.getElementById('fill');
+let dragging = false;
+const scrub = e => { const r = track.getBoundingClientRect(); t = clamp01((e.clientX - r.left) / r.width) * DURATION; };
+track.addEventListener('pointerdown', e => { dragging = true; track.setPointerCapture(e.pointerId); scrub(e); });
+track.addEventListener('pointermove', e => { if (dragging) scrub(e); });
+track.addEventListener('pointerup', () => { dragging = false; });
+syncPlay();
+
+let shownChapter = -1;
+const capInner = document.getElementById('capInner');
+function updateCaption() {
+  let c = 0; for (let i = 0; i < CHAPTERS.length; i++) if (t >= CHAPTERS[i].t) c = i;
+  if (CAPTURE) {   // deterministic: no timers, fade from t alone
+    const next = CHAPTERS[c + 1]?.t ?? DURATION;
+    capInner.style.opacity = Math.min(1, (t - CHAPTERS[c].t) / 0.4, (next - t) / 0.3);
+    if (c === shownChapter) return; shownChapter = c;
+    document.getElementById('capStep').textContent = CHAPTERS[c].step;
+    document.getElementById('capTitle').textContent = CHAPTERS[c].title;
+    document.getElementById('capText').textContent = CHAPTERS[c].text;
+    return;
+  }
+  if (c === shownChapter) return; shownChapter = c;
+  chapterBtns.forEach((b, i) => b.classList.toggle('on', i === c));
+  capInner.style.opacity = 0;
+  setTimeout(() => {
+    document.getElementById('capStep').textContent = CHAPTERS[c].step;
+    document.getElementById('capTitle').textContent = CHAPTERS[c].title;
+    document.getElementById('capText').textContent = CHAPTERS[c].text;
+    capInner.style.opacity = 1;
+  }, 250);
+}
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
+  labelRenderer.setSize(innerWidth, innerHeight);
+});
+
+const clock = new THREE.Clock();
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.1);
+  if (playing && !dragging) t = (t + dt) % DURATION;
+  renderAt(t);
+  requestAnimationFrame(frame);
+}
+function renderAt(time) {
+  t = time;
+  apply(t);
+  cameraAt(t);
+  // wider field of view on portrait screens so the scene still fits
+  const fovScale = Math.max(1, 1.25 / camera.aspect);
+  if (free) controls.update();
+  else {
+    camera.position.copy(camTgt).add(camPos.clone().sub(camTgt).multiplyScalar(fovScale));
+    camera.lookAt(camTgt);
+  }
+  fill.style.width = (t / DURATION * 100) + '%';
+  updateCaption();
+  composer.render();
+  labelRenderer.render(scene, camera);
+}
+if (CAPTURE) document.getElementById('loading').remove();
+else {
+  document.getElementById('loading').style.opacity = 0;
+  setTimeout(() => document.getElementById('loading').remove(), 700);
+}
+window.__showcase = { renderAt, DURATION,  camera, controls, scene, lidMat, setFree: v => { free = v; controls.enabled = v; }, setTime: v => { t = v; }, get t() { return t; }, pause: () => { playing = false; syncPlay(); } };
+// ?capture: no clock and no controls; a recorder calls __showcase.renderAt(t)
+// for each frame and screenshots the page (see record.mjs).
+if (CAPTURE) {
+  document.body.classList.add('capture');
+  renderAt(0);
+  window.__showcaseReady = true;
+} else frame();
+</script>
+</body>
+</html>

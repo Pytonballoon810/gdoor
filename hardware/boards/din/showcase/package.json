@@ -1,0 +1,13 @@
+{
+  "name": "gdoor-din-showcase",
+  "private": true,
+  "description": "Renders the showcase page to showcase.mp4 and showcase.gif",
+  "type": "module",
+  "scripts": {
+    "record": "node record.mjs"
+  },
+  "devDependencies": {
+    "ffmpeg-static": "5.2.0",
+    "puppeteer-core": "23.11.1"
+  }
+}

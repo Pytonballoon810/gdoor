@@ -15,3 +15,10 @@ Older board sources are not kept as folders; check out the git tag of a release
 
 Each board keeps its own `3dmodels/`, because the boards store the model paths
 relative to their project folder.
+
+## DIN board in action
+
+[![GDoor DIN: assembly, mounting, wiring and a doorbell press travelling to Home Assistant](boards/din/showcase/showcase.gif)](boards/din/showcase/showcase.mp4)
+
+Click the preview for the full video. The interactive 3D version is in
+[`boards/din/showcase/`](boards/din/showcase/README.md).
