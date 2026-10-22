@@ -17,6 +17,7 @@ substitutions:
   audio_end_busdata: ""           # learned AUDIO_VIDEO_END busdata
   codec_mic_gain_db: "6"          # PGA gain; the ES8374 driver rejects >= 24 dB
   call_volume: "0.7"
+  monoout_gain: "0x19"            # ES8374 reg 0x1B: bits 3:0 x 1.5 dB (0x19 = 13.5 dB, driver default)
 
 esphome:
   # voip_stack needs 2026.9.0+. esphome-audio-stack 2026.10.2 does not build
@@ -104,7 +105,9 @@ script:
   # Board-specific ES8374 registers the driver does not set (register map
   # from Everest's reference drivers, see "Codec notes" in README.md). The driver
   # switches the class-D speaker on at every start; it is not connected on
-  # this board, so switch it off again. 7-bit I2C address 0x10 = 0x20 >> 1.
+  # this board, so switch it off again (the values Everest's Linux driver uses
+  # to power the speaker down), then set the MONOOUT level that drives the bus.
+  # 7-bit I2C address 0x10 = 0x20 >> 1.
   - id: codec_board_setup
     mode: restart
     then:
@@ -114,6 +117,7 @@ script:
             {0x1C, 0x10},  // speaker mixer: DAC and LIN not routed to the speaker
             {0x1D, 0x10},  // speaker mixer gain off
             {0x1E, 0x40},  // class-D driver off
+            {0x1B, ${monoout_gain}},  // MONOOUT gain
           };
           for (const auto &reg : regs) {
             if (id(codec_i2c)->write(0x10, reg, 2) != i2c::ERROR_OK)

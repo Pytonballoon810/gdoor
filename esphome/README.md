@@ -183,12 +183,30 @@ Setup:
 4. Bring-up: check the ES8374 answers on I2C (address 0x10 in 7-bit form),
    call the adapter and listen at the door station, then raise or lower
    `codec_mic_gain_db` (below 24, the driver rejects more) and `call_volume`.
+   If the door station is too loud or too quiet even then, change
+   `monoout_gain` (analog MONOOUT gain).
 
-Codec notes (from Everest's reference drivers, the datasheet has no register
-map): the driver fixes the input to MIC1P/MIC1N (LIN1/RIN1), which is where the
-bus is coupled in, adds a +15 dB differential boost, and routes the DAC to
-MONOOUT. It also switches on the unused class-D speaker at every start; the
-`codec_board_setup` script switches it off again.
+Codec notes. The public ES8374 datasheet has no register map; these come from
+Espressif's `esp_codec_dev` driver and Everest's Linux ALSA drivers:
+
+| Register | Bits | Meaning | Driver writes |
+|---|---|---|---|
+| 0x21 | 7:6 | ADC/input power-down (1 = off) | 00 while running |
+| 0x21 | 5:4 | input: 00 none, 01 LIN1-RIN1 (MIC1P/N), 10 LIN2-RIN2 (MIC2P/N), 11 LIN1-LIN2 | 01 |
+| 0x21 | 2 | differential (D2SE) boost, 0 or +15 dB | 1 |
+| 0x22 | 7:4, 3:0 | PGA gain, 3 dB steps | from `codec_mic_gain_db` |
+| 0x1A | 7, 6 | DAC to MONOOUT, LIN to MONOOUT | 1, 0 |
+| 0x1A | 2:0 | analog input mux to the mixers | 0 (LIN1) |
+| 0x1B | 3:0 | MONOOUT gain, 1.5 dB steps from 0 dB | 9 (13.5 dB, value 0x19) |
+| 0x1C | 7, 6 | DAC to speaker, LIN to speaker | `codec_board_setup` clears both |
+| 0x1D, 0x1E | | speaker mixer gain, class-D driver | `codec_board_setup` writes 0x10, 0x40 |
+
+On the DIN board the bus reaches both MIC1P (C29, R38) and MIC2P (C31, R40),
+with MIC1N and MIC2N returned to ground through R37/R60 and R39/R59. The
+driver's fixed input LIN1-RIN1 is therefore the bus, single-ended into a
+differential input, with the +15 dB boost on top of the PGA. Input 11
+(LIN1-LIN2) would subtract the bus from itself and must not be used. LIN is
+not mixed into MONOOUT, so the bus signal is not looped back onto the bus.
 
 ## Limitations
 

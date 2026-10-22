@@ -20,9 +20,13 @@ board is routed but not built.
 
 ## Phase 0 — prerequisites (owner: Philipp)
 
-1. ES8374 datasheet: register 0x21 (input select) — does the driver's fixed `LIN1`
+1. ~~ES8374 datasheet: register 0x21 (input select) — does the driver's fixed `LIN1`
    input equal the MIC1P/MIC2P pair the bus feeds (C29/C31)? Registers for MONOOUT
-   level and for switching off the class-D speaker output (unused on this board).
+   level and for switching off the class-D speaker output (unused on this board).~~
+   Answered 2026-10-22 from the driver sources (the public datasheet has no
+   register map): 0x21 bits 5:4 = 01 is MIC1P/MIC1N, which carries the bus;
+   MONOOUT level is 0x1B, speaker off is 0x1C/0x1D/0x1E. Table in
+   `esphome/README.md`, "Codec notes"; the writes are in `din/voice.yaml`.
 2. A classic GDoor adapter (v3.1, ESP32) on the bus, for regression-testing the
    ported bus timing before the DIN board exists.
 3. Order and assemble the DIN board (JLCPCB files in `hardware/boards/din`), plus
