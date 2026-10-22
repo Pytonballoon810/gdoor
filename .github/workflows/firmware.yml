@@ -2,6 +2,8 @@ name: PlatformIO CI
 
 on: 
   push:
+    branches: ['**']
+    tags-ignore: ['din-*'] # DIN board releases are din-release.yml
     paths: # only run if firmware changes
       - 'firmware/**'
       - '.github/workflows/firmware.yml'

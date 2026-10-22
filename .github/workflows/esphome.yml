@@ -2,6 +2,8 @@ name: ESPHome component
 
 on:
   push:
+    branches: ['**']
+    tags-ignore: ['din-*'] # din-release.yml builds the DIN images for those
     paths: # the component compiles the firmware's bus core, so build on changes to either
       - 'esphome/**'
       - 'firmware/src/**'

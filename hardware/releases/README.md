@@ -16,4 +16,7 @@ bennymeg's Fabrication Toolkit (JLCPCB file names, drill maps included); its IPC
 netlist matched the upstream one and is not kept twice.
 
 The DIN board is not released yet; its JLCPCB files are in
-`../boards/din/production/`.
+`../boards/din/production/`. DIN releases are not copied into this folder: a
+`din-*` tag (e.g. `din-1.0`) runs `.github/workflows/din-release.yml`, which
+attaches the production files, the board and enclosure 3D files, and the
+ESPHome Ethernet and WiFi images to a draft GitHub release.

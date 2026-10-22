@@ -1,0 +1,142 @@
+name: DIN board release
+
+# Builds the DIN board's ESPHome firmware, collects its production and 3D
+# files, and attaches them to a draft release. Push a tag such as din-1.0.
+# Run it by hand (workflow_dispatch) to get the same files as a workflow
+# artifact, without a release.
+
+on:
+  push:
+    tags:
+      - 'din-*'
+  workflow_dispatch:
+
+jobs:
+  firmware:
+    if: github.repository == 'Pytonballoon810/gdoor'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        # The voice config is not built: din/voice.yaml needs per-install values.
+        network: [ethernet, wifi]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio
+          key: ${{ runner.os }}-esphome-gdoor-din-${{ matrix.network }}.yaml
+
+      - name: Check the component's copy of the bus core is up to date
+        run: python tools/sync_esphome_core.py --check
+
+      - name: Install ESPHome
+        run: pip install esphome
+
+      # The WiFi image cannot know the user's network: it fails to join these
+      # placeholder credentials and opens its fallback hotspot with the captive portal.
+      - name: Compile gdoor-din-${{ matrix.network }}.yaml
+        working-directory: ./esphome
+        run: |
+          printf 'wifi_ssid: "gdoor-setup"\nwifi_password: "gdoor-setup"\n' > secrets.yaml
+          esphome compile gdoor-din-${{ matrix.network }}.yaml
+
+      - name: Collect images
+        run: |
+          mkdir out
+          factory=$(find esphome/.esphome/build -name firmware.factory.bin | head -n1)
+          ota=$(find esphome/.esphome/build -name firmware.ota.bin | head -n1)
+          test -n "$factory" && test -n "$ota"
+          cp "$factory" out/firmware-${{ matrix.network }}.factory.bin
+          cp "$ota" out/firmware-${{ matrix.network }}.ota.bin
+          ls -l out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.network }}
+          path: out/*.bin
+
+  release:
+    if: github.repository == 'Pytonballoon810/gdoor'
+    runs-on: ubuntu-latest
+    needs: firmware
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/din-* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/din-}
+          else
+            VERSION=$(git rev-parse --short HEAD)
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: firmware-*
+          merge-multiple: true
+          path: fw
+
+      - name: Collect release files
+        run: |
+          D=hardware/boards/din
+          P=$D/production/gdoor_din
+          E=$D/enclosure
+          N=gdoor-din-${VERSION}
+          mkdir release
+          # JLCPCB order: upload gerbers, BOM and positions as they are
+          cp $P/gdoor_din_gerbers.zip release/$N-gerbers.zip
+          cp $P/bom.csv               release/$N-bom.csv
+          cp $P/positions.csv         release/$N-positions.csv
+          cp $P/designators.csv       release/$N-designators.csv
+          cp $P/netlist.ipc           release/$N-netlist.ipc
+          cp $P/lcsc_hand_soldered.csv release/$N-lcsc-hand-soldered.csv
+          cp $P/ibom.html             release/$N-ibom.html
+          # 3D: the board STEP is ~60 MB, zipped it is ~10 MB
+          (cd $D && zip -9 -q ../../../release/$N-board-step.zip PowerModule.step)
+          (cd $E && zip -9 -q ../../../../release/$N-enclosure-step.zip \
+            gdoor-din-enclosure.step gdoor-din-base.step gdoor-din-lid.step)
+          cp $E/gdoor-din-base.stl release/$N-enclosure-base.stl
+          cp $E/gdoor-din-lid.stl  release/$N-enclosure-lid.stl
+          cp $E/preview.png        release/$N-enclosure-preview.png
+          for f in fw/*.bin; do cp "$f" release/$N-$(basename "$f"); done
+          ls -l release
+
+      - name: Write release notes
+        run: |
+          N=gdoor-din-${VERSION}
+          cat > notes.md <<EOF
+          DIN-rail board (ESP32-S3, Ethernet, audio), see [DESIGN.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_SHA}/hardware/boards/din/DESIGN.md).
+
+          **Fabrication (JLCPCB):** \`$N-gerbers.zip\`, \`$N-bom.csv\`, \`$N-positions.csv\`. Parts JLC does not place are in \`$N-lcsc-hand-soldered.csv\`; \`$N-ibom.html\` is the interactive assembly view.
+
+          **3D:** \`$N-board-step.zip\` (whole board with components), \`$N-enclosure-step.zip\`, and the printable \`$N-enclosure-base.stl\` and \`$N-enclosure-lid.stl\`.
+
+          **Firmware (ESPHome):** flash \`*.factory.bin\` over USB at offset 0x0 (e.g. with https://web.esphome.io), use \`*.ota.bin\` for updates. The Ethernet image needs no setup. The WiFi image cannot join any network at first, so it opens its fallback hotspot (named after the device); join it and enter your network in the page that opens. The voice build is not included; compile \`esphome/gdoor-din-voice.yaml\` yourself.
+          EOF
+
+      - name: Create draft release
+        if: startsWith(github.ref, 'refs/tags/din-')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "DIN board ${{ env.VERSION }}"
+          body_path: notes.md
+          files: release/*
+          draft: true
+
+      - name: Keep files as an artifact (manual run)
+        if: ${{ !startsWith(github.ref, 'refs/tags/din-') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: din-release-${{ env.VERSION }}
+          path: |
+            release/*
+            notes.md
