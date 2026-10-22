@@ -92,13 +92,16 @@ jobs:
           E=$D/enclosure
           N=gdoor-din-${VERSION}
           mkdir release
-          # JLCPCB order: upload gerbers, BOM and positions as they are
+          # JLCPCB order: upload gerbers, BOM and positions as they are.
+          # Recommended: JLC leaves the hand-soldered parts off; full PCBA: JLC places them too.
           cp $P/gdoor_din_gerbers.zip release/$N-gerbers.zip
-          cp $P/bom.csv               release/$N-bom.csv
-          cp $P/positions.csv         release/$N-positions.csv
+          cp $P/bom.csv               release/$N-recommended-bom.csv
+          cp $P/positions.csv         release/$N-recommended-positions.csv
+          cp $P/hand_soldered.csv     release/$N-hand-soldered.csv
+          cp $P/bom-full.csv          release/$N-full-pcba-bom.csv
+          cp $P/positions-full.csv    release/$N-full-pcba-positions.csv
           cp $P/designators.csv       release/$N-designators.csv
           cp $P/netlist.ipc           release/$N-netlist.ipc
-          cp $P/lcsc_hand_soldered.csv release/$N-lcsc-hand-soldered.csv
           cp $P/ibom.html             release/$N-ibom.html
           # 3D: the board STEP is ~60 MB, zipped it is ~10 MB
           (cd $D && zip -9 -q ../../../release/$N-board-step.zip PowerModule.step)
@@ -116,11 +119,31 @@ jobs:
           cat > notes.md <<EOF
           DIN-rail board (ESP32-S3, Ethernet, audio), see [DESIGN.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_SHA}/hardware/boards/din/DESIGN.md).
 
-          **Fabrication (JLCPCB):** \`$N-gerbers.zip\`, \`$N-bom.csv\`, \`$N-positions.csv\`. Parts JLC does not place are in \`$N-lcsc-hand-soldered.csv\`; \`$N-ibom.html\` is the interactive assembly view.
+          ## Ordering the board from JLCPCB
 
-          **3D:** \`$N-board-step.zip\` (whole board with components), \`$N-enclosure-step.zip\`, and the printable \`$N-enclosure-base.stl\` and \`$N-enclosure-lid.stl\`.
+          Both options use the same \`$N-gerbers.zip\`; they differ in the BOM and positions file you upload.
 
-          **Firmware (ESPHome):** flash \`*.factory.bin\` over USB at offset 0x0 (e.g. with https://web.esphome.io), use \`*.ota.bin\` for updates. The Ethernet image needs no setup. The WiFi image cannot join any network at first, so it opens its fallback hotspot (named after the device); join it and enter your network in the page that opens. The voice build is not included; compile \`esphome/gdoor-din-voice.yaml\` yourself.
+          ### Recommended (cheaper): JLC assembly plus a few parts by hand
+
+          Upload \`$N-recommended-bom.csv\` and \`$N-recommended-positions.csv\`, then order the parts in \`$N-hand-soldered.csv\` (quantities per board) from LCSC and solder them yourself. This is the cheaper way to build the board:
+
+          - The board fits JLC's **Economic PCBA**. The ESP32-S3 module (U101) cannot be placed in Economic, so ordering it from JLC forces Standard PCBA, which costs more to set up.
+          - Each JLC Extended part costs a \$3 loading fee per part type. The hand-soldered list leaves out six of them (terminals, RJ45 jack, regulator, ESD diode, op-amps, 100 µF caps).
+          - The through-hole parts (screw terminals, RJ45 jack, pin header) would otherwise need JLC's through-hole assembly as well.
+
+          Everything on the list takes a soldering iron except the ESP32 module's centre ground pad, which needs hot air or a hot plate. \`$N-ibom.html\` is the interactive assembly view.
+
+          ### Full PCBA: JLC places everything
+
+          Upload \`$N-full-pcba-bom.csv\` and \`$N-full-pcba-positions.csv\` and choose **Standard PCBA**. Only C18 (100 pF 0402, on the bottom side) is still yours to solder, because the assembly is single-sided. Check the rotations in JLC's placement preview, above all U101, U102, U103, J102 and J103.
+
+          ## 3D models
+
+          \`$N-board-step.zip\` (whole board with components), \`$N-enclosure-step.zip\`, and the printable \`$N-enclosure-base.stl\` and \`$N-enclosure-lid.stl\`.
+
+          ## Firmware (ESPHome)
+
+          Flash \`*.factory.bin\` over USB at offset 0x0 (e.g. with https://web.esphome.io), use \`*.ota.bin\` for updates. The Ethernet image needs no setup. The WiFi image cannot join any network at first, so it opens its fallback hotspot (named after the device); join it and enter your network in the page that opens. The voice build is not included; compile \`esphome/gdoor-din-voice.yaml\` yourself.
           EOF
 
       - name: Create draft release

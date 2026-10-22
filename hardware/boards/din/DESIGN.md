@@ -231,8 +231,12 @@ On the copy, before the toolkit runs:
   +X on this board, where J101 sits at -90°. The CPL point is therefore
   97.09 / -108.0, not 95.70.
 - **Hand-soldered parts left out:** `HAND_SOLDERED` parts are marked DNP,
-  so they drop out of BOM and CPL like the DNP parts. J103 (expansion
-  header) has no LCSC part. U101 (ESP32-S3-WROOM-1-N8R2, C2913204) cannot
+  so they drop out of BOM and CPL like the DNP parts. This is the
+  recommended, cheaper order; `hand_soldered.csv` lists those parts with
+  C18 (quantities per board). A second pass keeps them in and writes
+  `bom-full.csv` / `positions-full.csv` for a full PCBA order (Standard
+  PCBA, C18 still by hand). J103 (expansion header) is a plain pin header
+  (C37208). U101 (ESP32-S3-WROOM-1-N8R2, C2913204) cannot
   be placed in JLC's Economic PCBA. Its castellated pins take an iron; the
   centre GND pad (pad 41, split into sub-pads, one 0.3 mm via) needs hot air
   or a hot plate. The module is also grounded through pins 1 and 40. J1
@@ -370,6 +374,6 @@ To check on the first build:
   (1.1 mm of wall left) need checking on the first print.
 - J1 should be DNP: the enclosure wires the bus plug straight to its pads,
   but it is in the JLC BOM as C695629.
-- J103 (expansion header) has no LCSC number; it is hand-soldered.
+- J103 (expansion header, C37208) is hand-soldered in the recommended order.
 - Several decoupling caps sit further from their pins than ideal (C116,
   C57, C59, C61, C29 are 5–12 mm away), and some codec/W5500 routes meander.

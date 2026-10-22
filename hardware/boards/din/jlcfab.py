@@ -12,6 +12,8 @@ On the copy, before the toolkit runs:
 - POS_OFFSET parts get an `FT Position Offset` (toolkit frame: footprint-local, y up, rotated by the
   footprint angle), for footprints whose origin differs from JLC's model.
 - HAND_SOLDERED parts are marked DNP, which leaves them out of BOM and CPL like the DNP parts.
+  A second pass keeps them in and writes bom-full.csv / positions-full.csv, for a full PCBA order;
+  hand_soldered.csv lists what the recommended order leaves to the iron (plus HAND_SOLDERED_ALWAYS).
 After it runs, the BOM columns are rewritten to JLC's template (Comment, Designator, Footprint,
 LCSC Part #); with the toolkit's "Value"/"Quantity" columns the PCBA quote fails.
 The toolkit refills all zones (-f) before plotting, so a stale fill in the saved board cannot reach
@@ -58,23 +60,30 @@ EXPECT = {"J101": (97.09, -108.0), "U101": (135.0, -128.623), "U7": (142.82, -85
 # answer. Each value comes from fitting JLC's EasyEDA footprint (pad numbers and pin names) onto
 # the board's pads. Library:SOT-23 and Library:SOT-23-5 are drawn 180 deg from KiCad's standard
 # ones; the EasyEDA SOT-23-6 of C2687116 is drawn turned 90 deg; J1's offset field (-180) put its
-# pads crosswise.
-ROT_OVERRIDE = {"Q1": 0, "Q2": 0, "U2": 0, "U3": 0, "D1": 0, "U102": -90, "J1": -90}
-EXPECT_ROT = {"Q1": 90, "Q2": 90, "U2": 0, "U3": 0, "D1": 0, "U102": 270, "J1": 0, "U1": 180}
-# Left off the JLC order and soldered by hand: J103 has no LCSC part; U101 (ESP32 module) cannot
-# be placed in JLC's Economic PCBA; the rest are Extended parts that are easy to solder by iron,
-# each saving JLC's $3 loading fee. J4 is the same terminal as J1. Y101 stays with JLC: its pads
-# are under the part. The rotation and position entries above stay for these parts, in case they
-# go back to JLC.
+# pads crosswise. J4 is the same terminal at the same angle; its field (90) turned it 180 deg from J1.
+ROT_OVERRIDE = {"Q1": 0, "Q2": 0, "U2": 0, "U3": 0, "D1": 0, "U102": -90, "J1": -90, "J4": -90}
+EXPECT_ROT = {"Q1": 90, "Q2": 90, "U2": 0, "U3": 0, "D1": 0, "U102": 270, "J1": 0, "J4": 0, "U1": 180}
+# Left off the recommended JLC order and soldered by hand: J103 is a plain pin header; U101 (ESP32
+# module) cannot be placed in JLC's Economic PCBA; the rest are Extended parts that are easy to
+# solder by iron, each saving JLC's $3 loading fee. J4 is the same terminal as J1. Y101 stays with
+# JLC: its pads are under the part. The full-PCBA files (bom-full.csv, positions-full.csv) keep
+# them in, which is what the rotation and position entries above are for.
 HAND_SOLDERED = ["J103", "U101", "J1", "J4", "J102", "U103", "U102", "U2", "U3", "C19", "C20", "C59"]
+# DNP on the board but hand-soldered in both orders: C18 is on B.Cu, and the assembly is single-sided.
+HAND_SOLDERED_ALWAYS = ["C18"]
 BOM_COLUMNS = ["Comment", "Designator", "Footprint", "LCSC Part #"]
+HAND_COLUMNS = ["LCSC Part #", "Quantity", "Designator", "Comment", "Footprint"]
 
 
-def prepare(path, sys_path):
-    sys.path.insert(0, sys_path)
+def prepare(path, sys_path, hand):
+    """Sets the offsets and marks the `hand` parts DNP. Returns {ref: (value, footprint, LCSC)} of
+    every hand-soldered part, for the hand-solder list."""
+    if sys_path not in sys.path:
+        sys.path.insert(0, sys_path)
     process = importlib.import_module(TOOLKIT + ".process")
     board = pcbnew.LoadBoard(path)
     pm = process.ProcessManager(board)
+    hand_parts = {}
 
     def set_field(f, name, text):
         fld = pcbnew.PCB_FIELD(f, f.GetNextFieldOrdinal(), name)
@@ -93,9 +102,25 @@ def prepare(path, sys_path):
             set_field(f, "FT Rotation Offset", str(float(manual) - db))
         if ref in POS_OFFSET:
             set_field(f, "FT Position Offset", "%g,%g" % POS_OFFSET[ref])
-        if ref in HAND_SOLDERED:
+        if ref in hand:
             f.SetDNP(True)
+        if ref in HAND_SOLDERED + HAND_SOLDERED_ALWAYS:
+            hand_parts[ref] = (f.GetValue(), str(f.GetFPID().GetLibItemName()),
+                               fields.get("LCSC") or fields.get("MPN") or "")
     pcbnew.SaveBoard(path, board)
+    return hand_parts
+
+
+def write_hand_list(path, parts):
+    # Quantities are per board; one line per LCSC part.
+    lines = {}
+    for ref, (value, fp, lcsc) in parts.items():
+        lines.setdefault(lcsc or (value, fp), [lcsc, value, fp, []])[3].append(ref)
+    with open(path, "w", encoding="utf-8-sig", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(HAND_COLUMNS)
+        for lcsc, value, fp, refs in sorted(lines.values(), key=lambda l: sorted(l[3])[0]):
+            w.writerow([lcsc, len(refs), ", ".join(sorted(refs)), value, fp])
 
 
 def run_toolkit(path):
@@ -133,7 +158,7 @@ def rewrite_bom(path):
     return rows
 
 
-def check(prod):
+def check(prod, hand):
     with open(os.path.join(prod, "positions.csv"), encoding="utf-8-sig", newline="") as fh:
         cpl = {r["Designator"]: r for r in csv.DictReader(fh)}
     with open(os.path.join(prod, "bom.csv"), encoding="utf-8-sig", newline="") as fh:
@@ -147,13 +172,13 @@ def check(prod):
         if not r["LCSC Part #"]:
             problems.append("no LCSC number: " + r["Designator"])
     for ref, (x, y) in EXPECT.items():
-        if ref in HAND_SOLDERED:
+        if ref in hand:
             continue
         got = (float(cpl[ref]["Mid X"]), float(cpl[ref]["Mid Y"]))
         if abs(got[0] - x) > 0.005 or abs(got[1] - y) > 0.005:
             problems.append("%s at %s, expected %s" % (ref, got, (x, y)))
     for ref, rot in EXPECT_ROT.items():
-        if ref in HAND_SOLDERED:
+        if ref in hand:
             continue
         if float(cpl[ref]["Rotation"]) % 360 != rot:
             problems.append("%s rotated %s, expected %s" % (ref, cpl[ref]["Rotation"], rot))
@@ -161,28 +186,47 @@ def check(prod):
     if len(lcsc) != len(set(lcsc)):
         problems.append("LCSC part on several BOM lines")
     for ref in HAND_SOLDERED:
-        if ref in cpl or ref in bom_refs:
+        if ref in hand and (ref in cpl or ref in bom_refs):
             problems.append(ref + " still in BOM/CPL")
+        if ref not in hand and (ref not in cpl or ref not in bom_refs):
+            problems.append(ref + " missing from BOM/CPL")
     return problems, len(bom), len(cpl)
 
 
-def main():
-    out = os.path.abspath(sys.argv[1])
+def build(hand):
+    """Runs the toolkit on a copy of the board with the `hand` parts left out. Returns the work
+    directory, its production/ folder, the hand-soldered parts and the check results."""
     work = tempfile.mkdtemp(prefix="gdoor-din-fab-")
     for name in COPY:
         shutil.copy(os.path.join(HERE, name), work)
     board = os.path.join(work, "esp32.kicad_pcb")
-    prepare(board, PLUGINS)
+    hand_parts = prepare(board, PLUGINS, hand)
     run_toolkit(board)
     prod = os.path.join(work, "production")
     rewrite_bom(os.path.join(prod, "bom.csv"))
-    problems, nbom, ncpl = check(prod)
+    return work, prod, hand_parts, check(prod, hand)
+
+
+def main():
+    out = os.path.abspath(sys.argv[1])
     os.makedirs(out, exist_ok=True)
+    problems = []
+    # Recommended order: JLC places everything but the hand-soldered parts (Economic PCBA).
+    work, prod, hand_parts, (p, nbom, ncpl) = build(HAND_SOLDERED)
     for name in ("bom.csv", "positions.csv", "designators.csv", "netlist.ipc"):
         shutil.copy(os.path.join(prod, name), out)
     shutil.copy(os.path.join(prod, "esp32.zip"), os.path.join(out, "gdoor_din_gerbers.zip"))
+    write_hand_list(os.path.join(out, "hand_soldered.csv"), hand_parts)
     shutil.rmtree(work)
-    print("BOM lines %d, CPL parts %d -> %s" % (nbom, ncpl, out))
+    print("Recommended: BOM lines %d, CPL parts %d, hand-soldered %d" % (nbom, ncpl, len(hand_parts)))
+    problems += p
+    # Full PCBA: JLC places the HAND_SOLDERED parts too (Standard PCBA); same gerbers.
+    work, prod, _, (p, nbom, ncpl) = build([])
+    shutil.copy(os.path.join(prod, "bom.csv"), os.path.join(out, "bom-full.csv"))
+    shutil.copy(os.path.join(prod, "positions.csv"), os.path.join(out, "positions-full.csv"))
+    shutil.rmtree(work)
+    print("Full PCBA:   BOM lines %d, CPL parts %d -> %s" % (nbom, ncpl, out))
+    problems += ["full PCBA: " + x for x in p]
     for p in problems:
         print("PROBLEM:", p)
     sys.exit(1 if problems else 0)
