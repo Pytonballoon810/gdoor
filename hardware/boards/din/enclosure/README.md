@@ -76,18 +76,21 @@ type, e.g. QUARKZMAN PCB-Klemmleiste) in a cradle on the lid:
   (`5V_IN`), labelled `5V`. The male cable plug goes on from above.
 - **BUS**: mating end out of the bottom face, labelled `BUS`. The male
   cable plug goes on from below. Its cradle is the top one mirrored, at
-  x = 42 so it clears the hold-down post at the lower front corner.
+  x = 32, so its wires leave the back of the plug clear of the RST and
+  BOOT button tubes (x = 44).
 
 The screws face the board, so they are reached with the lid off.
 
-Retention clip: each cradle side wall has a snap finger (4 mm wide, cut
-free by a 0.5 mm slot) at the step end of the plug body. Its lip reaches
-0.5 mm over the edge of the screw-side face, beside the screws, with a
-lead-in chamfer. Press the plug into the cradle from the open side, flat
-side first, until it clicks; no glue. To take it out, spread the two
-fingers. The fingers bend across the layers, but only by about 1 % strain,
-which PETG and PLA both take. If the lips land on the screw heads of your
-plug, or it is loose, change `clip_lip` / `clip_w`.
+Retention clips sit at the back (wire-entry) end of the plug. At each back
+corner an arm (2 mm thick) stands up from the lid plate behind the back
+face, overlapping it by 0.6 mm beside the wire entries; it takes the push
+when the cable plug goes on. A hook at the arm's tip reaches 0.8 mm over
+the back edge of the screw-side face, with a lead-in chamfer. The side
+walls only guide the plug sideways. Press the plug into the cradle from the
+open side, flat side first, until it clicks; no glue. To take it out, pull
+the two arms back. The arms bend across the layers, by about 1 % strain,
+which PETG and PLA both take. If the arms cover the wire entries of your
+plug, or it is loose, change `clip_back` / `clip_lip`.
 
 The outer size comes from the listing: female 8 x 11 x 15 mm (`plug_w`,
 `plug_h`, `plug_len`); the male cable half is 8 x 11 x 18 mm. The mating

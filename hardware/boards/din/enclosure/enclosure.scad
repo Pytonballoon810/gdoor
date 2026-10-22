@@ -88,7 +88,7 @@ led_d   = 1.3;
 // (female 8 x 11 x 15 mm, male 8 x 11 x 18 mm). The mating section
 // (plug_mate_len, plug_mate_h) is not in the listing and is still an
 // estimate: measure it.
-plugs         = [[46, 1, "5V"], [42, 0, "BUS"]];   // [x centre, 1 = top / 0 = bottom, label]
+plugs         = [[46, 1, "5V"], [32, 0, "BUS"]];   // [x centre, 1 = top / 0 = bottom, label]
 plug_w        = 8.0;    // listing: female 8 x 11 x 15 mm
 plug_h        = 11.0;
 plug_len      = 15.0;
@@ -100,14 +100,17 @@ plug_z0       = plug_z1 - plug_h;   // screw side, towards the board
 plug_y_step   = H - wall;           // step sits against the top wall
 plug_y0       = plug_y_step - (plug_len - plug_mate_len);   // wire end
 plug_y1       = plug_y0 + plug_len;                         // mating end
-// Retention clip: a snap finger in each cradle side wall, cut free by a
-// slot, with a lip that catches the edge of the screw-side face. The plug
-// presses in from the board side and clicks in; spread the fingers to take
-// it out.
-clip_w        = 4.0;    // finger width along Y, at the step end of the body
-clip_slot     = 0.5;    // slot between the finger and the rest of the wall
-clip_lip      = 0.5;    // overlap with the screw-side face (beside the screws)
+// Retention clips at the back (wire-entry) end: an arm at each back corner,
+// rooted in the lid plate, stands behind the back face beside the wire
+// entries and takes the push when the cable plug goes on. A hook at its tip
+// reaches over the back edge of the screw-side face. The plug presses in
+// from the board side, flat side first, and clicks in; pull the two arms
+// back to take it out.
+clip_t        = 2.0;    // arm thickness along Y, bends in Y
+clip_back     = 0.6;    // arm overlap on the back face, beside the wire entries
+clip_lip      = 0.8;    // hook overlap on the screw-side face
 clip_lead     = 1.2;    // lead-in chamfer height
+clip_gap      = 0.3;    // between the hooks and the side walls
 
 // ---- lid features ------------------------------------------------------------
 // RESET (SW101, ESP_EN) and BOOT (SW102, IO0), top-actuated, poked through
@@ -293,32 +296,24 @@ module plug_cradle(xc) {
     x0 = xc - plug_w / 2 - c;
     x1 = xc + plug_w / 2 + c;
     t = 1.6;
-    yw = plug_y0 - c - t;            // wire-end edge of the side walls
-    fy = plug_y_step - clip_w;       // clip finger, up to the step end
-    zc = plug_z0 - c;                // lip's catching face
-    zt = zc - clip_lead;             // finger tip
-    // side walls, each with a clip finger reaching past the screw side
-    for (x = [x0 - t, x1]) difference() {
-        union() {
-            translate([x, yw, plug_z0 + 1])
-                cube([t, plug_y_step - yw, lid_z - plug_z0 - 1 + eps]);
-            translate([x, fy, zt]) cube([t, clip_w, plug_z0 + 1 - zt + eps]);
-        }
-        // the slot frees the finger up to the lid plate
-        translate([x - 1, fy - clip_slot, zt - 1]) cube([t + 2, clip_slot, lid_z - zt + 1]);
-    }
-    // lips, chamfered on the side the plug comes in from
-    translate([0, fy + clip_w, 0]) rotate([90, 0, 0]) linear_extrude(clip_w) {
-        polygon([[x0 - eps, zc], [x0 + clip_lip, zc], [x0 - eps, zt]]);
-        polygon([[x1 + eps, zc], [x1 - clip_lip, zc], [x1 + eps, zt]]);
+    yb = plug_y0 - c;                // back face of the plug (wire end)
+    zc = plug_z0 - c;                // hooks' catching face
+    zt = zc - clip_lead;             // arm tip
+    // side walls, from just past the hooks to the step end
+    ys = yb + clip_lip + clip_gap;
+    for (x = [x0 - t, x1])
+        translate([x, ys, plug_z0 + 1])
+            cube([t, plug_y_step - ys, lid_z - plug_z0 - 1 + eps]);
+    // back clips: an arm behind each back corner, its hook over the edge of
+    // the screw-side face, chamfered on the side the plug comes in from
+    for (a = [[x0 - t, x0 + clip_back], [x1 - clip_back, x1 + t]]) {
+        translate([a[0], yb - clip_t, zt]) cube([a[1] - a[0], clip_t, lid_z - zt + eps]);
+        translate([a[0], 0, 0]) rotate([90, 0, 90]) linear_extrude(a[1] - a[0])
+            polygon([[yb - eps, zc], [yb + clip_lip, zc], [yb - eps, zt]]);
     }
     // backer against the flat side, filling the top-wall slot above the plug
-    translate([x0 + 0.15, plug_y0 - c, plug_z1 + c])
-        cube([x1 - x0 - 0.3, H - (plug_y0 - c), lid_z - plug_z1 - c + eps]);
-    // push-in stop under the wire end, on the screw side, clear of the
-    // wire entries
-    translate([x0 - t, plug_y0 - c - t, plug_z0 - 0.5])
-        cube([x1 - x0 + 2 * t, t, 3]);
+    translate([x0 + 0.15, yb, plug_z1 + c])
+        cube([x1 - x0 - 0.3, H - yb, lid_z - plug_z1 - c + eps]);
 }
 
 module lid() {
