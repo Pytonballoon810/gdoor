@@ -4,9 +4,16 @@ Run with KiCad's python, from hardware/boards/din:
     "C:/Program Files/KiCad/10.0/bin/python.exe" enclosure/board_export.py
 
 Each part becomes a box (its fab-layer body outline, at an estimated body
-height) and each through-hole pad a pin stub on the back side, in the
-enclosure's coordinates: X = depth (0 = DIN mounting face, board front edge at +X), Y = height
-(board top edge up), Z = width (board back side towards Z = 0).
+height) and each through-hole pad a pin stub on the back side, in
+enclosure.scad's design frame: X = depth (0 = DIN mounting face, board front
+edge at +X), Y = height (board top edge up), Z = width (board back side
+towards Z = 0, component side towards +Z, where enclosure.scad draws it).
+
+X and Y below, with the component side at +Z, are a reflection of the board,
+not a rotation: the design frame holds the board's mirror image.
+enclosure.scad mirrors every output about z = W/2 (its real() module), which
+turns this back into the real board, with the component side towards the
+lid at Z = 0. Do not "fix" one side of this without the other.
 The enclosure uses the result for the fit check only; the walls are not
 derived from it.
 """

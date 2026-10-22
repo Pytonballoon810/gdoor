@@ -1,5 +1,5 @@
 # Converts the OpenSCAD STLs into STEP solids: gdoor-din-base.step,
-# gdoor-din-lid.step (print orientation, like the STL) and
+# gdoor-din-lid.step (print orientation, like the STLs) and
 # gdoor-din-enclosure.step (base and lid in their assembled position).
 #
 # OpenSCAD 2021.01 cannot write STEP, so this sews the STL triangles into a
@@ -28,7 +28,7 @@ from OCP.Interface import Interface_Static
 from OCP.IFSelect import IFSelect_RetDone
 
 W = 35.0  # enclosure width
-H = 90.0  # enclosure height; the lid STL is turned 180 deg about y = H/2, z = W/2
+H = 90.0  # enclosure height; the base STL is turned 180 deg about y = H/2, z = W/2
 
 
 def load_solid(path):
@@ -77,21 +77,23 @@ def write(path, shape):
 
 src = sys.argv[1] if len(sys.argv) > 1 else "."
 out = sys.argv[2] if len(sys.argv) > 2 else "."
-base, nb = load_solid(os.path.join(src, "gdoor-din-base.stl"))
-lid_print, nl = load_solid(os.path.join(src, "gdoor-din-lid.stl"))
+base_print, nb = load_solid(os.path.join(src, "gdoor-din-base.stl"))
+lid, nl = load_solid(os.path.join(src, "gdoor-din-lid.stl"))
 print("shells:", nb, nl)
 
-# lid back in its assembled position: undo translate([0,H,W]) rotate([180,0,0])
+# The lid STL is already in its assembled position (its outer face is the
+# real device's Z = 0 side). The base is printed turned over: undo
+# translate([0,H,W]) rotate([180,0,0]).
 t = gp_Trsf()
 t.SetRotation(gp_Ax1(gp_Pnt(0, H / 2, W / 2), gp_Dir(1, 0, 0)), math.pi)
-lid = BRepBuilderAPI_Transform(lid_print, t, True).Shape()
+base = BRepBuilderAPI_Transform(base_print, t, True).Shape()
 
-report("base", base)
-report("lid (print)", lid_print)
-report("lid (assembled)", lid)
+report("base (print)", base_print)
+report("base (assembled)", base)
+report("lid", lid)
 
-write(os.path.join(out, "gdoor-din-base.step"), base)
-write(os.path.join(out, "gdoor-din-lid.step"), lid_print)
+write(os.path.join(out, "gdoor-din-base.step"), base_print)
+write(os.path.join(out, "gdoor-din-lid.step"), lid)
 comp = TopoDS_Compound()
 bb = BRep_Builder()
 bb.MakeCompound(comp)

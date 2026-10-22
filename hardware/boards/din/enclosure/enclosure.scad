@@ -1,9 +1,17 @@
 // GDoor DIN enclosure: 2 modules (35 mm), DIN 43880 style front, TS35 clip.
 //
-// Coordinates (mm):
+// Coordinates (mm), of the design frame everything below is modelled in:
 //   X = depth: 0 is the mounting face on the rail, the front window is at +X
 //   Y = height on the panel: 0 bottom, 90 top
 //   Z = width: 0 is the outside of the base's side wall, the lid closes at +Z
+//
+// The design frame is the mirror image of the real device. board_export.py
+// maps the board into it with X = 52.4 - (kx - 100), Y = 87.5 - (ky - 60) and
+// the component side at +Z, which is a reflection of the board, not a
+// rotation. Every output therefore goes through real(), a mirror about
+// z = W/2: in the real device the lid is the Z = 0 side, the base's side wall
+// is at Z = W, and the board is the real one, not its mirror image. Engraved
+// text is drawn pre-mirrored so that it reads correctly after real().
 //
 // The PCB stands on edge, parallel to the side walls, component side
 // towards the lid. Its front edge (RJ45, USB-C, LEDs) faces the window.
@@ -82,35 +90,45 @@ led_d   = 1.3;
 // bottom face. The parameters below describe the top one; the bottom one
 // is the same cradle mirrored about y = H/2.
 // Body measured along: w = pitch direction, h = towards the screws,
-// len = wire entry to mating end. The mating end is lower than the screw
-// section; that step bears against the inside of the top wall and stops
-// the plug being pulled out. Outer size from the QUARKZMAN listing
-// (female 8 x 11 x 15 mm, male 8 x 11 x 18 mm). The mating section
-// (plug_mate_len, plug_mate_h) is not in the listing and is still an
-// estimate: measure it.
+// len = wire entry to mating end. The mating end (the barrel) is lower than
+// the screw section; that step bears against the barrel frame and stops
+// the plug being pulled out. Height from the QUARKZMAN listing (female
+// 8 x 11 x 15 mm); width, barrel height and the back face position are
+// measured. The barrel's length outside the housing only matters for the
+// ghost and is a guess.
 plugs         = [[46, 1, "5V"], [32, 0, "BUS"]];   // [x centre, 1 = top / 0 = bottom, label]
-plug_w        = 8.0;    // listing: female 8 x 11 x 15 mm
+plug_w        = 8.35;   // body and barrel width
 plug_h        = 11.0;
-plug_len      = 15.0;
-plug_mate_len = 9.0;    // length of the lower mating section
-plug_mate_h   = 8.0;    // its height (flush with the side opposite the screws)
+plug_mate_h   = 7.0;    // barrel height (flush with the side opposite the screws)
+plug_mate_len = 7.8;    // barrel length past the step (guess)
+plug_back     = 17.0;   // outer face of the housing to the plug's back face
 plug_clr      = 0.25;
-plug_z1      = lid_z - 4;          // flat side (no screws), towards the lid
+plug_z1       = lid_z - 4;          // flat side (no screws), on the platform
 plug_z0       = plug_z1 - plug_h;   // screw side, towards the board
-plug_y_step   = H - wall;           // step sits against the top wall
-plug_y0       = plug_y_step - (plug_len - plug_mate_len);   // wire end
-plug_y1       = plug_y0 + plug_len;                         // mating end
-// Retention clips at the back (wire-entry) end: an arm at each back corner,
-// rooted in the lid plate, stands behind the back face beside the wire
-// entries and takes the push when the cable plug goes on. A hook at its tip
-// reaches over the back edge of the screw-side face. The plug presses in
-// from the board side, flat side first, and clicks in; pull the two arms
-// back to take it out.
-clip_t        = 2.0;    // arm thickness along Y, bends in Y
-clip_back     = 0.6;    // arm overlap on the back face, beside the wire entries
-clip_lip      = 0.8;    // hook overlap on the screw-side face
-clip_lead     = 1.2;    // lead-in chamfer height
-clip_gap      = 0.3;    // between the hooks and the side walls
+plug_y_step   = H - wall;           // step sits against the barrel frame
+plug_y0       = H - plug_back;      // wire end (back face)
+plug_y1       = plug_y_step + plug_mate_len;   // mating end
+plug_len      = plug_y1 - plug_y0;
+platform_len  = 8.05;   // platform under the flat side, from the outer face
+// Barrel frame: a closed frame on the lid, in the top wall's plane, that
+// the barrel press-fits through (barrel_w x barrel_h, from the platform).
+barrel_w      = 8.35;
+barrel_h      = 7.0;
+frame_t       = 1.2;
+// Retention clip: the back end of each cradle side wall is a spring finger,
+// cut free from the lid plate by a 45 deg slot so it prints without
+// support. It bends sideways, in the print plane. A hook at its tip drops
+// in behind the plug's back face once the plug is slid fully home, so the
+// plug cannot be pushed back when the cable plug goes on.
+clip_t        = 1.0;    // finger thickness, bends in X
+clip_free     = 10.0;   // free finger length, back from the hook ramp's end
+clip_lip      = 1.0;    // hook overlap on the back face, beside the wire entries
+clip_ramp     = 2.0;    // lead-in ramp length of the hook
+clip_land     = 0.5;    // flat at full depth between ramp and catching face
+clip_under    = 0.3;    // undercut of the catching face: pushing the plug
+                        // back pulls the hooks in instead of spreading them
+clip_zw       = plug_z0 + 0.5;   // side walls' edge towards the board, away
+                                 // from the frame (at the frame: level with it)
 
 // ---- lid features ------------------------------------------------------------
 // RESET (SW101, ESP_EN) and BOOT (SW102, IO0), top-actuated, poked through
@@ -119,11 +137,25 @@ buttons   = [[44.0, 23.0, "RST"], [44.0, 14.0, "BOOT"]];
 btn_top_z = pcb_z1 + 1.6;
 // Hold-down posts on free board spots (checked against the courtyards).
 posts     = [[3.8, 86.0], [4.0, 45.0], [4.0, 4.0], [50.5, 6.0], [35.5, 86.0]];
-post_d    = 2.6;
+// Each post keeps the thin tip on the board up to post_stem above it (clear
+// of the tall parts), then widens in a cone to post_root_d at the lid, so
+// it prints stiff instead of as a 26 mm needle.
+post_d      = 2.6;      // tip, on the board
+post_root_d = 6.0;      // at the lid plate
+post_stem   = 12;       // straight tip length above the board
 rim_t     = 1.2;
 rim_h     = 3;
 rim_clr   = 0.2;
-snap_y    = [[12, 0], [32, 0], [12, 1], [32, 1]];   // [x, 0=bottom/1=top]
+// Lid snaps: fingers in line with the rim reach down into the base; a hook
+// at the tip clicks into a window through the base's top or bottom wall.
+// To open, press the hooks in through the windows.
+snaps     = [[12, 0], [44, 0], [12, 1], [26, 1]];   // [x, 0=bottom/1=top], clear of plugs and posts
+snap_w    = 7;          // finger width along X
+snap_len  = 10;         // finger length below the lid plate
+snap_hook = 1.3;        // hook depth into the window (the wall is 1.8)
+snap_hh   = 2.0;        // hook height, lead-in ramp plus land (sets the base windows)
+snap_land = 0.6;        // flat at full depth, under the catching face
+snap_slot = 0.5;        // slots in the rim beside each finger
 
 // =============================================================================
 
@@ -220,7 +252,7 @@ module front_labels() {
     // Engraved on the window face, reading across the width.
     d = 0.4;
     module lbl(t, y, z) {
-        translate([front_x - d, y, z]) rotate([0, 90, 0])
+        translate([front_x - d, y, z]) mirror([0, 0, 1]) rotate([0, 90, 0])   // pre-mirrored for real()
             linear_extrude(d + 1) text(t, size = 3, halign = "center", valign = "center",
                                        font = "Liberation Sans:style=Bold");
     }
@@ -235,28 +267,34 @@ module plug_at(p) {
     else translate([0, H, 0]) mirror([0, 1, 0]) children();
 }
 
+// bottom of the slot in the top wall, under the lid's barrel frame
+notch_z = plug_z1 - barrel_h - frame_t - 0.2;
+
 module plug_notch(xc) {
-    // Slot in the top wall for the mating section, open towards the lid so
-    // the plug drops in with the lid.
-    c = plug_clr;
-    translate([xc - plug_w / 2 - c, H - wall - 1, plug_z1 - plug_mate_h - c])
-        cube([plug_w + 2 * c, wall + 2, lid_z - (plug_z1 - plug_mate_h - c) + eps]);
+    // Slot in the top wall for the barrel frame, open towards the lid so
+    // the frame drops in with the lid.
+    w = barrel_w + 2 * frame_t + 0.4;
+    translate([xc - w / 2, H - wall - 1, notch_z])
+        cube([w, wall + 2, lid_z - notch_z + eps]);
 }
 
 module plug_label(p) {
     // Engraved on the outer face, centred on the plug slot.
-    z = plug_z1 - plug_mate_h - plug_clr - 3.5;
-    if (p[1] == 1) translate([p[0], H - 0.4, z]) rotate([-90, 0, 0]) linear_extrude(1)
+    // Pre-mirrored about its own plane for real().
+    z = notch_z - 3.5;
+    if (p[1] == 1) translate([p[0], H - 0.4, z]) mirror([0, 0, 1]) rotate([-90, 0, 0]) linear_extrude(1)
         text(p[2], size = 3, halign = "center", valign = "center", font = "Liberation Sans:style=Bold");
-    else translate([p[0], 0.4, z]) rotate([90, 0, 0]) linear_extrude(1)
+    else translate([p[0], 0.4, z]) mirror([0, 0, 1]) rotate([90, 0, 0]) linear_extrude(1)
         text(p[2], size = 3, halign = "center", valign = "center", font = "Liberation Sans:style=Bold");
 }
 
-module snap_grooves() {
-    for (s = snap_y) {
-        y = s[1] == 0 ? wall - 0.5 : H - wall - eps;
-        translate([s[0] - 3.5, y, lid_z - rim_h + 1]) cube([7, 0.5 + eps, 1.0]);
-    }
+snap_zc = lid_z - snap_len + snap_hh;   // hook's catching face
+
+module snap_windows() {
+    // Through the top / bottom wall; the hook catches the window's lid-side
+    // edge.
+    for (s = snaps) plug_at(s) translate([s[0] - snap_w / 2 - 0.2, H - wall - 1, lid_z - snap_len - 0.3])
+        cube([snap_w + 0.4, wall + 2, snap_zc - (lid_z - snap_len - 0.3)]);
 }
 
 module base() {
@@ -269,7 +307,7 @@ module base() {
         front_openings();
         front_labels();
         for (p = plugs) { plug_at(p) plug_notch(p[0]); plug_label(p); }
-        snap_grooves();
+        snap_windows();
         latch_clearance();
     }
     // the back rail crosses the beam: cut it through its full height
@@ -279,41 +317,73 @@ module base() {
 
 // ---- lid -------------------------------------------------------------------
 
+module snap_finger(xc) {
+    // Drawn for the top wall. Bends towards the cavity; the hook is ramped
+    // on its tip side, so the lid pushes on, and flat on the lid side.
+    yo = H - wall - rim_clr;         // outer face, along the wall
+    zt = lid_z - snap_len;
+    translate([xc - snap_w / 2, yo - rim_t, zt]) cube([snap_w, rim_t, snap_len + eps]);
+    translate([xc - snap_w / 2, 0, 0]) rotate([90, 0, 90]) linear_extrude(snap_w)
+        polygon([[yo - eps, snap_zc], [yo + rim_clr + snap_hook, snap_zc],
+                 [yo + rim_clr + snap_hook, snap_zc - snap_land], [yo - eps, zt]]);
+}
+
 module lid_rim() {
     translate([0, 0, lid_z - rim_h]) linear_extrude(rim_h + eps) difference() {
         offset(delta = -rim_clr) cavity();
         offset(delta = -rim_clr - rim_t) cavity();
+        // slots that free the snap fingers from the rim
+        for (s = snaps) {
+            y = s[1] == 1 ? H - wall - rim_clr - rim_t - 1 : wall - 1;
+            translate([s[0] - snap_w / 2 - snap_slot, y]) square([snap_w + 2 * snap_slot, rim_t + rim_clr + 2]);
+        }
     }
-    // snap bumps
-    for (s = snap_y) {
-        y = s[1] == 0 ? wall + rim_clr - 0.4 : H - wall - rim_clr;
-        translate([s[0] - 3, y, lid_z - rim_h + 1.1]) cube([6, 0.4, 0.8]);
-    }
+    for (s = snaps) plug_at(s) snap_finger(s[0]);
 }
 
 module plug_cradle(xc) {
-    c = plug_clr;
-    x0 = xc - plug_w / 2 - c;
-    x1 = xc + plug_w / 2 + c;
-    t = 1.6;
-    yb = plug_y0 - c;                // back face of the plug (wire end)
-    zc = plug_z0 - c;                // hooks' catching face
-    zt = zc - clip_lead;             // arm tip
-    // side walls, from just past the hooks to the step end
-    ys = yb + clip_lip + clip_gap;
-    for (x = [x0 - t, x1])
-        translate([x, ys, plug_z0 + 1])
-            cube([t, plug_y_step - ys, lid_z - plug_z0 - 1 + eps]);
-    // back clips: an arm behind each back corner, its hook over the edge of
-    // the screw-side face, chamfered on the side the plug comes in from
-    for (a = [[x0 - t, x0 + clip_back], [x1 - clip_back, x1 + t]]) {
-        translate([a[0], yb - clip_t, zt]) cube([a[1] - a[0], clip_t, lid_z - zt + eps]);
-        translate([a[0], 0, 0]) rotate([90, 0, 90]) linear_extrude(a[1] - a[0])
-            polygon([[yb - eps, zc], [yb + clip_lip, zc], [yb - eps, zt]]);
+    // The plug goes in flat side down behind the cradle and slides out
+    // through the frame, barrel first, until the hooks click in behind it.
+    c  = plug_clr;
+    xi = plug_w / 2 + c;             // side walls' inner faces, from xc
+    yb = plug_y0 - 0.1;              // hooks' catching face
+    yr = yb - clip_ramp;             // back end of the side walls
+    fw = barrel_w / 2 + frame_t;
+    fz = plug_z1 - barrel_h - frame_t;
+    // platform under the flat side, 0.3 mm clear of the fingers
+    translate([xc - xi + 0.3, H - platform_len, plug_z1])
+        cube([2 * xi - 0.6, platform_len, lid_z - plug_z1 + eps]);
+    // barrel frame in the top wall's plane: the step bears on its inside
+    difference() {
+        translate([xc - fw, plug_y_step, fz]) cube([2 * fw, wall, lid_z - fz + eps]);
+        translate([xc - barrel_w / 2, plug_y_step - 1, plug_z1 - barrel_h])
+            cube([barrel_w, wall + 2, barrel_h]);
     }
-    // backer against the flat side, filling the top-wall slot above the plug
-    translate([x0 + 0.15, yb, plug_z1 + c])
-        cube([x1 - x0 - 0.3, H - yb, lid_z - plug_z1 - c + eps]);
+    for (s = [-1, 1]) {
+        xw = xc + s * xi;                         // inner face
+        xa = s < 0 ? xw - clip_t : xw;
+        // side wall; below a 45 deg line from the finger's root it is cut
+        // free from the lid plate, which leaves the spring finger
+        yf = yr + clip_free;                      // finger root
+        difference() {
+            union() {
+                // deeper towards the board, but level with the frame where
+                // it meets it, so it stays clear of the base wall
+                translate([xa, yr, clip_zw]) cube([clip_t, plug_y_step - 0.2 - yr, lid_z - clip_zw + eps]);
+                translate([xa, yr, fz]) cube([clip_t, plug_y_step - yr + eps, lid_z - fz + eps]);
+            }
+            translate([xa - 1, 0, 0]) rotate([90, 0, 90]) linear_extrude(clip_t + 2)
+                polygon([[yf, lid_z + 1], [yf, lid_z],
+                         [yr - 1, lid_z - (yf - yr + 1)], [yr - 1, lid_z + 1]]);
+        }
+        // hook at the finger's tip: lead-in ramp on the side the plug comes
+        // from, a flat land at full depth, then the undercut catching face
+        zt = lid_z - (yf - yr);                   // finger's lower edge at the tip
+        xt = xw - s * (c + clip_lip);             // hook tip
+        translate([0, 0, clip_zw]) linear_extrude(zt - clip_zw)
+            polygon([[xw + s * eps, yr], [xt, yb - clip_land], [xt, yb],
+                     [xw + s * eps, yb - clip_under]]);
+    }
 }
 
 module lid() {
@@ -322,16 +392,26 @@ module lid() {
             translate([0, 0, lid_z]) linear_extrude(wall) outline();
             lid_rim();
             for (p = plugs) plug_at(p) plug_cradle(p[0]);
-            for (p = posts) translate([p[0], p[1], pcb_z1 + 0.1])
-                cylinder(d = post_d, h = lid_z - pcb_z1);
+            // posts: thin tip, cone to the lid, trimmed to the rim's
+            // outside so the cone stays clear of the base walls
+            intersection() {
+                for (p = posts) translate([p[0], p[1], pcb_z1 + 0.1]) {
+                    cylinder(d = post_d, h = lid_z - pcb_z1);
+                    translate([0, 0, post_stem - 0.1])
+                        cylinder(d1 = post_d, d2 = post_root_d, h = lid_z - pcb_z1 - post_stem + 0.1 + eps);
+                }
+                linear_extrude(W) offset(delta = -rim_clr) cavity();
+            }
             for (b = buttons) translate([b[0], b[1], btn_top_z + 1.5])
                 cylinder(d = 4.6, h = lid_z - btn_top_z - 1.5 + eps);
         }
         for (b = buttons) {
             translate([b[0], b[1], 0]) cylinder(d = 2.2, h = W + 1);
-            // left of the hole: to the right the lid ends at shoulder_x
-            translate([b[0] - 3.5, b[1], W - 0.4]) linear_extrude(1)
-                text(b[2], size = 2.5, halign = "right", valign = "center",
+            // behind the hole (towards -X): in front the lid ends at
+            // shoulder_x. Mirrored in X so that it reads correctly from
+            // outside after real(), starting next to the hole.
+            translate([b[0] - 3.5, b[1], W - 0.4]) mirror([1, 0, 0]) linear_extrude(1)
+                text(b[2], size = 2.5, halign = "left", valign = "center",
                      font = "Liberation Sans:style=Bold");
         }
     }
@@ -386,20 +466,25 @@ module rail_ghost() {
 
 // ---- output ------------------------------------------------------------------
 
-if (part == "base") base();
-// print orientation: turned over about the X axis (a rotation, not a mirror,
-// or the printed lid is the mirror image of the real one)
-else if (part == "lid") translate([0, H, W]) rotate([180, 0, 0]) lid();
-else if (part == "fit") {
+// The design frame is the mirror image of the real device (see the top of
+// this file); real() turns it into the real one. All outputs go through it.
+module real() { translate([0, 0, W]) mirror([0, 0, 1]) children(); }
+
+// Print orientation: each part flat on its outer side wall. In the real
+// device the lid's outer face is at Z = 0 already; the base is turned over
+// about the X axis (a rotation, not a mirror).
+if (part == "base") translate([0, H, W]) rotate([180, 0, 0]) real() base();
+else if (part == "lid") real() lid();
+else if (part == "fit") real() {
     intersection() { union() { base(); lid(); } board_ghost(0.05); }
     for (p = plugs) intersection() { union() { base(); lid(); } plug_at(p) plug_ghost(p[0], 0.05); }
 }
-else if (part == "open") {   // base with the board in it, lid off
+else if (part == "open") real() {   // base with the board in it, lid off
     color("SlateGray") base();
     color("ForestGreen") board_ghost();
     color("LimeGreen") for (p = plugs) plug_at(p) plug_ghost(p[0]);
 }
-else if (part == "assembly") {
+else if (part == "assembly") real() {
     color("SlateGray") base();
     color("LightGray", 0.6) lid();
     color("ForestGreen") board_ghost();

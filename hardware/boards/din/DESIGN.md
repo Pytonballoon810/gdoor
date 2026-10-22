@@ -74,6 +74,12 @@ Avoided: GPIO0/3/45/46 (strapping; GPIO0 only for the BOOT button, GPIO3,
 - The enclosure (printable base and lid, DIN clip) is in `enclosure/`; see
   its README. The bus connects through a pluggable 3.81 mm terminal on the
   top face, wired to J1's pads.
+- Enclosure mirror fix (2026-10-22): up to then the enclosure was drawn
+  around a mirror image of this board (`board_export.py` maps KiCad into the
+  enclosure frame with a reflection), so the real board would not have
+  fitted. `enclosure.scad` now mirrors every output about its mid-plane,
+  which puts the lid on the other side; the real board fits, and the fit
+  check is empty. See *Mirrored design frame* in the enclosure README.
 
 ## Layout
 

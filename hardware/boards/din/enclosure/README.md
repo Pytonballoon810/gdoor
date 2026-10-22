@@ -43,14 +43,44 @@ python step_export.py
 ## Print
 
 PETG preferred: the rail latch is a printed spring. 0.2 mm layers, no
-supports. Both parts print flat on their outer side wall; the lid STL is
-already flipped.
+supports. Both parts print flat on their outer side wall; the base STL is
+already turned over.
+
+## Mirrored design frame
+
+`enclosure.scad` models everything in a design frame that is the mirror
+image of the real device: `board_export.py` maps the board into it with a
+reflection (X = 52.4 − (kx − 100), Y = 87.5 − (ky − 60), component side at
++Z). Up to 2026-10-22 the parts were exported straight from that frame, so
+they were drawn for a mirror image of the board, and the real board would
+not have fitted (terminals at the wrong edge, RJ45, USB-C and LEDs off their
+openings).
+
+Now every output goes through `real()`, a mirror about z = W/2. The real
+board fits the exported parts, and the fit check covers it unchanged,
+because mirroring the housing and the ghost together does not change their
+overlap. In the real device the lid is the Z = 0 side, on the right when you
+look at the front window. Engraved labels are drawn pre-mirrored, so that
+they read correctly on the printed parts. Keep `board_export.py` and
+`real()` as a pair: changing either one alone mirrors the board against the
+housing again.
 
 ## Layout
 
 - The board stands on edge, its back side on four rails in the base
   (3.5 mm clearance for untrimmed THT leads), its component side towards
-  the lid. Five posts on the lid hold it down at free spots.
+  the lid. Five posts on the lid hold it down at free spots. Each keeps a
+  2.6 mm tip for the first 12 mm above the board, clear of the tall parts,
+  then widens in a cone to 6 mm at the lid plate, so it prints stiff.
+- Lid closure: four snap fingers (7 mm wide, 1.2 mm thick), two on the
+  top wall and two on the bottom wall, in line with the rim and cut free
+  from it by 0.5 mm slots. They reach 10 mm into the base. A hook at each
+  tip (1.3 mm deep into the 1.8 mm wall, ramped on the tip side, with a
+  0.6 mm flat at full depth under the catching face) clicks into a window
+  through the base wall. The fingers bend across the layers, by about
+  2.3 % strain: fine for PETG, at the limit for PLA.
+  To open, press the four hooks in through the windows with a small
+  screwdriver and lift the lid.
 - Front window: the board's front tab reaches into it, its edge in a
   0.3 mm groove in the window wall. The RJ45 jack goes through a body-sized
   opening (16.6 x 13.9 mm), and the USB-C receptacle in a stadium opening
@@ -81,24 +111,38 @@ type, e.g. QUARKZMAN PCB-Klemmleiste) in a cradle on the lid:
 
 The screws face the board, so they are reached with the lid off.
 
-Retention clips sit at the back (wire-entry) end of the plug. At each back
-corner an arm (2 mm thick) stands up from the lid plate behind the back
-face, overlapping it by 0.6 mm beside the wire entries; it takes the push
-when the cable plug goes on. A hook at the arm's tip reaches 0.8 mm over
-the back edge of the screw-side face, with a lead-in chamfer. The side
-walls only guide the plug sideways. Press the plug into the cradle from the
-open side, flat side first, until it clicks; no glue. To take it out, pull
-the two arms back. The arms bend across the layers, by about 1 % strain,
-which PETG and PLA both take. If the arms cover the wire entries of your
-plug, or it is loose, change `clip_back` / `clip_lip`.
+Each cradle on the lid has three parts:
 
-The outer size comes from the listing: female 8 x 11 x 15 mm (`plug_w`,
-`plug_h`, `plug_len`); the male cable half is 8 x 11 x 18 mm. The mating
-section (`plug_mate_len` 9 mm, `plug_mate_h` 8 mm) is still an estimate:
-measure it on the part. The step between the screw
-section and the lower mating section rests against the inside of the top
-wall (bottom wall for the bus plug) and keeps the plug in when the cable is
-pulled.
+- **Barrel frame**: a closed frame at the housing's outer face, in the
+  plane of the top wall (bottom wall for the bus plug), which sits in a
+  slot in the base wall. The barrel press-fits through its 8.35 x 7 mm hole
+  (`barrel_w`, `barrel_h`, measured from the platform the plug lies on).
+  The step between the screw section and the barrel bears on the inside of
+  the frame, so the plug stays in when the cable is pulled.
+- **Platform**: the plug's flat side lies on it, 8.05 mm in from the outer
+  face (`platform_len`).
+- **Side walls with clips**: the side walls run from the frame back to the
+  plug's back face, 17 mm in from the outer face (`plug_back`), about 9 mm
+  past the end of the platform. Their last 10 mm (`clip_free`) are spring
+  fingers, cut free from the lid plate by a 45 deg cut so they print
+  without support. They bend sideways, in the print plane (about 1.9 %
+  strain, fine for PETG). A hook at each tip, 4.5 mm tall, drops in behind
+  the plug's back face and overlaps it by 1.0 mm beside the wire entries
+  (`clip_lip`). Each hook has a 2 mm lead-in ramp, a 0.5 mm flat at full
+  depth and a catching face undercut by 0.3 mm (`clip_under`), so pushing
+  the plug back pulls the hooks in rather than spreading them. The plug
+  cannot be pushed back in when the cable plug goes on.
+
+To fit a plug: lay it flat side down behind the cradle and slide it out
+through the frame, barrel first, until both hooks click in behind it; no
+glue. To take it out, spread the two fingers and slide it back. If the
+hooks cover your plug's wire entries, reduce `clip_lip`; if the barrel is
+loose or too tight, change `barrel_w` / `barrel_h`.
+
+The height (11 mm, `plug_h`) comes from the listing. Width, barrel height
+and the back face position (17 mm from the outer face) are measured. How
+far the barrel sticks out (`plug_mate_len`) is a guess; it only shapes the
+ghost in the preview.
 
 Wiring: J1 (bus) and J4 (5 V) both sit on the board's top edge, and their
 wire entries face the top wall with about 1 mm to spare, so screw terminals
@@ -110,10 +154,9 @@ component side, under the lid).
 ## Assembly
 
 1. Solder the 5 V wires into J4's holes and the bus wires into J1's holes.
-2. Clip the plugs into the lid cradles, clamp the wires.
+2. Slide the plugs into the lid cradles until they click, clamp the wires.
 3. Lay the board into the base: back side down onto the rails, front tab
    into the groove in the window wall, so the RJ45 and USB-C come through
    their openings.
-4. Close the lid; the plugs drop into the slots in the top and bottom
-   walls. The rim
-   snaps into the base.
+4. Close the lid; the barrel frames drop into the slots in the top and
+   bottom walls, and the four snap hooks click into their windows.
