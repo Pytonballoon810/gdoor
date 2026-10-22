@@ -29992,7 +29992,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 73.533 54.61 90)
 			(hide yes)
 			(show_name no)
@@ -30024,7 +30024,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909388"
+		(property "MPN" "C23254"
 			(at 71.755 54.61 0)
 			(hide yes)
 			(show_name no)
@@ -31686,7 +31686,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 73.533 46.99 90)
 			(hide yes)
 			(show_name no)
@@ -31718,7 +31718,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909388"
+		(property "MPN" "C23254"
 			(at 71.755 46.99 0)
 			(hide yes)
 			(show_name no)
@@ -31781,7 +31781,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 51.435 57.658 90)
 			(hide yes)
 			(show_name no)
@@ -31813,7 +31813,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909318"
+		(property "MPN" "C22795"
 			(at 51.435 55.88 0)
 			(hide yes)
 			(show_name no)
@@ -32502,7 +32502,7 @@
 				)
 			)
 		)
-		(property "Footprint" "Library:R_0402_1005Metric_Pad0.72x0.64mm_HandSolder"
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
 			(at 146.05 140.208 90)
 			(hide yes)
 			(show_name no)
@@ -32534,7 +32534,7 @@
 				)
 			)
 		)
-		(property "MPN" "C2909318"
+		(property "MPN" "C22795"
 			(at 146.05 138.43 0)
 			(hide yes)
 			(show_name no)

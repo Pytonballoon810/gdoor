@@ -138,9 +138,10 @@ by block against the netlist:
   go to the module's USB pins.
 - **ESP32-S3:** EN has 10k/1 µF and IO0 a 10k pull-up. IO3/45/46 are open,
   so the defaults hold: 3.3 V flash and normal boot.
-- **W5500:** RSVD pins are tied to GND, PMODE pins high, EXRES 12.4k 1 %,
-  TOCAP 4.7 µF, 1V2O 10 nF. The 25 MHz crystal has 33 pF caps (18 pF until
-  2026-10-21, see *Simulation*) and 1 MΩ across it. Analog supply goes through FB101. TX has 49.9 Ω to AVDD, RX is
+- **W5500:** RSVD pins are tied to GND, PMODE pins high, EXRES 12.4k 1 %
+  (R108 10k + R123 2.4k in series, see *Manufacturing*), TOCAP 4.7 µF,
+  1V2O 10 nF. The 25 MHz crystal (C9006, CL 12 pF) has 15 pF caps and 1 MΩ
+  across it (see *Simulation*). Analog supply goes through FB101. TX has 49.9 Ω to AVDD, RX is
   terminated 2 × 49.9 Ω to RX_CM (10 nF), and the shield goes through
   1 nF / 2 kV.
 - **Bus:** RX is the v4.0 band-pass into U6A. TX is the band-pass U3 into
@@ -175,11 +176,13 @@ comparator, `+5V_onoff` switch, codec coupling). It runs on KiCad's bundled
   current gives the nominal 1.0 V MLT-3 level. FB101 has no resonance
   problem. C121/C122 put the RX low corner at 220 kHz, as in WIZnet's
   reference.
-- **Fixed: crystal load.** Y101 (C164045) is rated for CL = 20 pF. With 18 pF,
-  C108/C109 gave only 12–14 pF, and the model put the crystal +35…+55 ppm
-  fast, against 802.3u's ±50 ppm. They are now 33 pF (C1562, Basic), which keeps
-  it within ±7 ppm. Y101's own ±50 ppm over temperature still uses up that
-  budget; a ±20–30 ppm crystal would leave margin.
+- **Crystal load.** Y101 is C9006 (CL 12 pF, ±10 ppm, ±20 ppm over
+  temperature, JLC Basic) since 2026-10-22, with C108/C109 at 15 pF (C1548,
+  Basic). The model puts the pull at −5.5…+18.5 ppm for 3–5 pF stray, so the
+  worst case with tolerance and temperature is about +48.5 ppm, inside
+  802.3u's ±50 ppm. Before: C164045 (CL 20 pF, ±50 ppm over temperature,
+  Extended); its 18 pF caps gave only 12–14 pF (+35…+55 ppm fast), and the
+  33 pF fix of 2026-10-21 left no margin because of the ±50 ppm rating.
 
 ## Manufacturing
 
@@ -255,18 +258,36 @@ part, so they were moved to fee-free parts:
   midpoint of the TX band-pass and are also its ground leg: with 100k its peak
   moves from 56 to 51 kHz, onto the 52 kHz TX carrier (+2.8 dB). R35
   changes the bus-voltage divider (see the table above).
-- **R3/R4 stay 82k** (C2909388, Extended, $3). They were 100k from 7ce317d
-  until 2026-10-21. They are the ground leg of the RX Sallen-Key band-pass
-  (gain 1.94), and with 100k it oscillates on its own at about 49 kHz.
-  It is stable below about 90k. JLC has no fee-free 82k in 0402. See
-  *Simulation*.
+- **R3/R4 stay 82k.** They were 100k from 7ce317d until 2026-10-21. They are
+  the ground leg of the RX Sallen-Key band-pass (gain 1.94), and with 100k it
+  oscillates on its own at about 49 kHz. It is stable below about 90k. See
+  *Simulation*. JLC has no fee-free 82k in 0402, so they are 0603 since
+  2026-10-22 (see below).
 - R112/R113/R117/R118, 3.3 Ω → 0 Ω (C17168): series resistors between the
   W5500 TX/RX pins and the 49.9 Ω terminations, which sit on the magnetics
   side. The footprints stay, so 3.3 Ω can go back if EMI needs it.
 - D103 green → red (C2286), R105 100 Ω → 1 kΩ (C11702).
-- Still Extended at JLC: U1, U5, U104, J101, Y101, R1/R20 (130k, RX
-  filter), R3/R4 (82k, RX filter; must stay) and R108 (12.4k 1%, W5500
-  bias; must stay).
+
+Extended-part fees (2026-10-22): four more types made fee-free, values kept.
+That saves $12 of the $24 that the eight charged types cost.
+
+- R3/R4 82k: 0402 C2909388 → **0603 C23254** (Basic).
+- R1/R20 130k: 0402 C2909318 → **0603 C22795** (Preferred Extended).
+  The 0603 pads pushed two tracks: `Net-(J1-Pin_2)` between R3 and R5 now
+  runs at y = 68.72 instead of 68.6, and the `Net-(C8-Pad2)` diagonal next to
+  R20 moved 0.35 mm towards the `Net-(Q2-B)` track. The +3.3V via at R3 pad 2
+  and the GND via at R4 pad 1 now sit partly under their (same-net) pads, as
+  the C10-Pad2 via at R20 already did.
+- R108 12.4k 1% (C2929935) → **R108 10k (C25744, Basic) + R123 2.4k
+  (C25882, Preferred) in series**, 12.4k exactly; both 1 %. The node between
+  them is `ETH_EXRES_LO`. R123 sits below R108; the GND via that was next to
+  R108 pad 2 moved to R123 pad 2. R123's silkscreen reference is hidden (no
+  free spot; it is on F.Fab). A single 12k would raise the TX amplitude by
+  3.3 % of 802.3's ±5 %.
+- Y101 C164045 → **C9006** (Basic), same 3225-4P footprint; C108/C109
+  33 pF → **15 pF** (C1548) for its CL of 12 pF. See *Simulation*.
+- Still Extended at JLC: U1 (no fee-free op amp has 20 V/µs and ±60 mA),
+  U5, U104 and J101 (no fee-free USB-C exists).
 
 The iBOMs: `ibom.html` comes from the InteractiveHtmlBom plugin (with tracks
 and nets), `ibom-partdb.html` from `partdb_ibom.py` (Part-DB storage and JLC

@@ -106,39 +106,40 @@
   "at_100MHz": -69.01698964976146
  },
  "crystal": {
+  "part": "C9006",
   "C1_fF": 4.0,
   "C0_pF": 1.5,
-  "rated_CL_pF": 20,
+  "rated_CL_pF": 12.0,
   "load_cases": [
+   {
+    "caps_pF": 15.0,
+    "stray_pF": 3.0,
+    "CL_pF": 10.5,
+    "offset_ppm": 18.5
+   },
+   {
+    "caps_pF": 15.0,
+    "stray_pF": 4.0,
+    "CL_pF": 11.499999999999998,
+    "offset_ppm": 5.5
+   },
+   {
+    "caps_pF": 15.0,
+    "stray_pF": 5.0,
+    "CL_pF": 12.499999999999998,
+    "offset_ppm": -5.5
+   },
    {
     "caps_pF": 18.0,
     "stray_pF": 3.0,
     "CL_pF": 12.0,
-    "offset_ppm": 54.5
+    "offset_ppm": 0.0
    },
    {
     "caps_pF": 18.0,
     "stray_pF": 5.0,
     "CL_pF": 14.0,
-    "offset_ppm": 35.5
-   },
-   {
-    "caps_pF": 33.0,
-    "stray_pF": 3.0,
-    "CL_pF": 19.5,
-    "offset_ppm": 1.5
-   },
-   {
-    "caps_pF": 33.0,
-    "stray_pF": 5.0,
-    "CL_pF": 21.5,
-    "offset_ppm": -6.5
-   },
-   {
-    "caps_pF": 30.0,
-    "stray_pF": 4.0,
-    "CL_pF": 19.0,
-    "offset_ppm": 4.0
+    "offset_ppm": -19.5
    }
   ]
  }

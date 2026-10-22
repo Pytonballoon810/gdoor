@@ -49,8 +49,9 @@ beyond KiCad 10.
 
 ### 1. RX band-pass oscillates with R3/R4 = 100k; fixed with 82k
 
-The board now has 82k (C2909388), as upstream; 100k was there from 7ce317d
-until 2026-10-21.
+The board now has 82k, as upstream; 100k was there from 7ce317d until
+2026-10-21. Since 2026-10-22 R3/R4 are 0603 (C23254, JLC Basic) instead of
+0402 (C2909388, Extended); the value is the same.
 
 U2 is a Sallen-Key band-pass with gain K = 1 + R12/(R5‖R7) = 1.94. Its damping term is
 
@@ -194,27 +195,33 @@ FB101 is modelled as 0.25 Ω + (0.6 µH ∥ 150 Ω ∥ 1.5 pF). Noise on +3.3V r
 1 MHz, and −88 dB at 25 MHz. `+3.3V_ETHA` impedance peaks at 0.32 Ω at 45 kHz.
 The MLT-3 TX current makes 10 mVpp of ripple on it.
 
-### 8. 25 MHz crystal: load capacitance was too low; fixed with 33 pF
+### 8. 25 MHz crystal: C9006 with 15 pF
 
-Y101 is C164045 (Yajingxin TAXM25M4RLBCCT2T): 25 MHz, **rated for CL = 20 pF**,
-ESR 80 Ω, ±10 ppm tolerance, ±50 ppm over temperature. C108/C109 were 18 pF until
-2026-10-21. That gave CL = 9 pF plus stray (3–5 pF for pins and traces), i.e.
-12–14 pF, so the crystal ran fast. They are now 33 pF (C1562, JLC Basic). The model assumes typical motional values for a 3225 crystal
-(C1 4 fF, C0 1.5 pF); the pull scales roughly with C1.
+Y101 is C9006 (TXC X322525MOB4SI, JLC Basic) since 2026-10-22: 25 MHz, **rated
+for CL = 12 pF**, ESR 50 Ω, ±10 ppm tolerance, ±20 ppm over temperature, same
+3225-4P footprint. C108/C109 are 15 pF (C1548, JLC Basic). The load is the two
+caps in series plus stray (3–5 pF for pins and traces). The model assumes typical
+motional values for a 3225 crystal (C1 4 fF, C0 1.5 pF); the pull scales roughly
+with C1.
 
 | C108 = C109 | stray | CL | offset |
 |---|---|---|---|
-| 18 pF (before 2026-10-21) | 3 pF | 12.0 pF | **+54.5 ppm** |
-| 18 pF (before 2026-10-21) | 5 pF | 14.0 pF | **+35.5 ppm** |
-| 30 pF | 4 pF | 19.0 pF | +4.0 ppm |
-| 33 pF (board) | 3 pF | 19.5 pF | +1.5 ppm |
-| 33 pF (board) | 5 pF | 21.5 pF | −6.5 ppm |
+| 15 pF (board) | 3 pF | 10.5 pF | +18.5 ppm |
+| 15 pF (board) | 4 pF | 11.5 pF | +5.5 ppm |
+| 15 pF (board) | 5 pF | 12.5 pF | −5.5 ppm |
+| 18 pF | 3 pF | 12.0 pF | 0.0 ppm |
+| 18 pF | 5 pF | 14.0 pF | −19.5 ppm |
 
-IEEE 802.3u allows ±50 ppm for the 100BASE-TX clock. With 18 pF, the pull alone
-took 35–55 ppm of that, before the crystal's own ±10 ppm tolerance and ±50 ppm
-temperature drift. With 33 pF it stays within ±7 ppm. The crystal's ±50 ppm
-temperature rating alone still fills the 802.3u budget; a ±20–30 ppm part would
-leave margin.
+IEEE 802.3u allows ±50 ppm for the 100BASE-TX clock. With 15 pF the pull is
+−5.5…+18.5 ppm; with the crystal's ±10 ppm tolerance and ±20 ppm over temperature
+the worst case is about +48.5 ppm, inside the budget. 18 pF would be −19.5…0 ppm
+(worst case −49.5 ppm); 15 pF is closer to centred for the likely 4 pF stray.
+
+Before 2026-10-22, Y101 was C164045 (Yajingxin TAXM25M4RLBCCT2T, CL 20 pF, ESR
+80 Ω, ±50 ppm over temperature, JLC Extended). Its caps were 18 pF until
+2026-10-21, which gave only 12–14 pF of load and +35…+55 ppm of pull; 33 pF
+(C1562) brought that to −6.5…+1.5 ppm, but the ±50 ppm temperature rating alone
+still filled the 802.3u budget.
 
 ## Not simulated
 

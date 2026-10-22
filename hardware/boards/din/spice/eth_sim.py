@@ -266,12 +266,13 @@ R["avdd_noise_transfer_dB"] = {"peak_dB": float(h.max()), "peak_at_kHz": float(f
 curves["fb"] = (f, h)
 
 # ================================================================== 25 MHz crystal load
-# Y101 C164045 (Yajingxin TAXM25M4RLBCCT2T): 25 MHz, CL 20 pF, ESR 80 ohm, +-10 ppm,
-# +-50 ppm over temperature. Motional parameters assumed typical for 3225 25 MHz:
-# C1 4 fF, C0 1.5 pF; L1 set so the crystal is exactly on 25 MHz at its rated 20 pF.
+# Y101 C9006 (TXC X322525MOB4SI, JLC Basic) since 2026-10-22: 25 MHz, CL 12 pF, ESR 50 ohm,
+# +-10 ppm, +-20 ppm over temperature. Before: C164045 (CL 20 pF, +-50 ppm) with 33 pF caps.
+# Motional parameters assumed typical for 3225 25 MHz: C1 4 fF, C0 1.5 pF; L1 set so the
+# crystal is exactly on 25 MHz at its rated CL.
 # Load seen in the circuit: C108 and C109 in series plus stray (pins + traces, 3-5 pF).
-# C108/C109 are 33 pF (C1562) since 2026-10-21; 18 pF before (CL only 12-14 pF).
-C1, C0, CLR, F0 = 4e-15, 1.5e-12, 20e-12, 25e6
+# C108/C109 are 15 pF (C1548).
+C1, C0, CLR, F0 = 4e-15, 1.5e-12, 12e-12, 25e6
 L1 = 1 / ((2 * math.pi * F0) ** 2 * (C1 * (C0 + CLR) / (C1 + C0 + CLR)))
 
 
@@ -281,7 +282,7 @@ VX a 0 AC 1
 CLD a b {cl}
 LM b m1 {L1}
 CM m1 m2 {C1}
-RM m2 0 80
+RM m2 0 50
 C0 b 0 {C0}
 .ac lin 4001 {F0 * 0.999} {F0 * 1.001}
 .end""")
@@ -290,9 +291,9 @@ C0 b 0 {C0}
     return float(f[np.argmax(i)])
 
 
-R["crystal"] = {"C1_fF": C1 * 1e15, "C0_pF": C0 * 1e12, "rated_CL_pF": 20}
+R["crystal"] = {"part": "C9006", "C1_fF": C1 * 1e15, "C0_pF": C0 * 1e12, "rated_CL_pF": CLR * 1e12}
 rows = []
-for c, stray in ((18e-12, 3e-12), (18e-12, 5e-12), (33e-12, 3e-12), (33e-12, 5e-12), (30e-12, 4e-12)):
+for c, stray in ((15e-12, 3e-12), (15e-12, 4e-12), (15e-12, 5e-12), (18e-12, 3e-12), (18e-12, 5e-12)):
     cl = c / 2 + stray
     rows.append({"caps_pF": c * 1e12, "stray_pF": stray * 1e12, "CL_pF": cl * 1e12,
                  "offset_ppm": (xtal_f(cl) - F0) / F0 * 1e6})
