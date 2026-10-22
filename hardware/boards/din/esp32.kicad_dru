@@ -23,10 +23,10 @@
 	(layer inner)
 	(condition "A.Type == 'track' && B.Type == A.Type"))
 
-# silkscreen: 0.8 / 0.12 reference text, the Nobble hardware convention (JLC template had 1.0 / 0.15)
+# silkscreen: 0.5 / 0.1 reference text, deliberately small so every part gets its designator (was 0.8 / 0.12)
 (rule "Minimum Text"
-	(constraint text_thickness (min 0.12mm))
-	(constraint text_height (min 0.8mm))
+	(constraint text_thickness (min 0.1mm))
+	(constraint text_height (min 0.5mm))
 	(layer "?.Silkscreen"))
 
 (rule "Pad to Silkscreen"
