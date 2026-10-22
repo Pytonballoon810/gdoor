@@ -973,41 +973,41 @@
    "describe": "-30℃~+80℃ 1 10,000 cycles 16P 20V 5A 7.35mm Female Surface Mount, Right Angle Type-C SMD USB Connectors ROHS",
    "url": "https://www.lcsc.com/product-detail/usb-connectors_korean-hroparts-elec-type-c-31-m-12_C165948.html"
   },
-  "C12074": {
+  "C69427": {
    "found": true,
    "type": "expand",
    "ladder": [
     [
      1,
-     1.9787
+     3.0004
     ],
     [
      10,
-     1.5558
+     2.5344
     ],
     [
      31,
-     1.3338
+     2.142
     ],
     [
      93,
-     1.071
+     1.8428
     ],
     [
      496,
-     0.9551
+     1.7087
     ],
     [
      992,
-     0.9012
+     1.6499
     ]
    ],
    "loss": 0,
    "least": 0,
-   "stock": 66932,
-   "mpn": "HR911105A",
-   "describe": "0℃~+70℃ 1 Filtered Gold Non-PoE Phosphor bronze RJ45 Jack Right Angle Shielded With LED 插件 Ethernet Connectors / Modular Connectors (RJ45 RJ11) ROHS",
-   "url": "https://www.lcsc.com/product-detail/ethernet-connectors-modular-connectors-rj45-rj11_hanrun-zhongshan-hanrun-elec-hr911105a_C12074.html"
+   "stock": 5616,
+   "mpn": "HY911105AE",
+   "describe": "-40℃~+85℃ 1 Non-PoE RJ45 Jack Right Angle Shielded With Cross Pin With LED 插件 Ethernet Connectors / Modular Connectors (RJ45 RJ11) ROHS",
+   "url": "https://www.lcsc.com/product-detail/ethernet-connectors-modular-connectors-rj45-rj11_hanrun-zhongshan-hanrun-elec-hy911105ae_C69427.html"
   },
   "C8326": {
    "found": true,

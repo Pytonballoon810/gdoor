@@ -9496,7 +9496,7 @@
 				)
 			)
 		)
-		(property "Value" "HR911105A"
+		(property "Value" "HY911105AE"
 			(at 4.44 18.5 270)
 			(layer "F.Fab")
 			(uuid "d2249ead-ecc5-40c2-bf6a-8a9f30e23cc4")
@@ -9507,7 +9507,7 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.lcsc.com/datasheet/C69427.pdf"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")
@@ -9533,7 +9533,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C12074"
+		(property "LCSC" "C69427"
 			(at 0 0 270)
 			(unlocked yes)
 			(layer "F.Fab")

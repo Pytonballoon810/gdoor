@@ -26,7 +26,7 @@ red,D104,0603,C2286,1,base,0.15,0.00,easy,,,,,none,,,
 120R@100MHz,FB101,0603,C14709,1,base,0.30,0.00,easy,,,,,none,value matches 0805W8F1200T5E (0805) but the footprint does not,"120R 0805W8F1200T5E (0805): same value, 0805 instead of 0603",Cryo6 > Cryo6.3
 PlugIn_Terminal_Screw,J1,anschlussklemme2x1_3_5,C695629,1,expand,0.66,3.00,easy,,,,,none,,,
 USB-C,J101,USB_C_Receptacle_HRO_TYPE-C-31-M-12,C165948,1,expand,0.93,3.00,fiddly,Großes Kallax > Modulares Kleinstbauteil-Segregationsmagazin 4,18,TYPE-C-31-M-12,74,lcsc,,,
-HR911105A,J102,RJ45_Hanrun_HR911105A_Horizontal,C12074,1,expand,9.89,3.00,easy,,,,,none,,,
+HY911105AE,J102,RJ45_Hanrun_HR911105A_Horizontal,C69427,1,expand,15.00,3.00,easy,,,,,none,,,
 MMBT5401,Q1,SOT-23,C8326,1,base,0.15,0.00,easy,,,,,none,,,
 MMBT2222A,Q2,SOT-23,C8512,1,base,0.19,0.00,easy,,,,,none,,,
 130k,"R1, R20",0402,C2909318,2,expand,0.02,3.00,fiddly,,,,,none,,"150k 0402WGF1503TCE (0402): same package, 150k instead of 130k (x1.2) -- changes the circuit",Cryo1 > Cryo1.17

@@ -240,7 +240,7 @@ On the copy, before the toolkit runs:
   be placed in JLC's Economic PCBA. Its castellated pins take an iron; the
   centre GND pad (pad 41, split into sub-pads, one 0.3 mm via) needs hot air
   or a hot plate. The module is also grounded through pins 1 and 40. J1
-  (C695629), J102 (C12074), U103 (C150716), U102 (C2687116), U2/U3 (C7972)
+  (C695629), J102 (C69427, HY911105AE), U103 (C150716), U102 (C2687116), U2/U3 (C7972)
   and C19/C20/C59 (C23742) are Extended parts that are easy to solder by
   iron; leaving them off saves JLC's $3 loading fee per part type. Order
   all of them from LCSC separately. Y101 stays with JLC: its pads are under

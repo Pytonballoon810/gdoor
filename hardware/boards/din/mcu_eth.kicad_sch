@@ -8825,7 +8825,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Value" "HR911105A"
+    (property "Value" "HY911105AE"
       (at 378.46 92.71 0)
       (show_name no)
       (do_not_autoplace no)
@@ -8840,7 +8840,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "Datasheet" ""
+    (property "Datasheet" "https://www.lcsc.com/datasheet/C69427.pdf"
       (at 378.46 88.9 0)
       (hide yes)
       (show_name no)
@@ -8855,7 +8855,7 @@
       (effects
         (font
           (size 1.27 1.27))))
-    (property "LCSC" "C12074"
+    (property "LCSC" "C69427"
       (at 0 0 0)
       (hide yes)
       (show_name no)
