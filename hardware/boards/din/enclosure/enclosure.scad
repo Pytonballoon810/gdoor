@@ -120,7 +120,7 @@ frame_t       = 1.2;
 // support. It bends sideways, in the print plane. A hook at its tip drops
 // in behind the plug's back face once the plug is slid fully home, so the
 // plug cannot be pushed back when the cable plug goes on.
-clip_t        = 1.0;    // finger thickness, bends in X
+clip_t        = 1.5;    // finger thickness, bends in X (1.0 flexed too much)
 clip_free     = 10.0;   // free finger length, back from the hook ramp's end
 clip_lip      = 1.0;    // hook overlap on the back face, beside the wire entries
 clip_ramp     = 2.0;    // lead-in ramp length of the hook
@@ -129,6 +129,9 @@ clip_under    = 0.3;    // undercut of the catching face: pushing the plug
                         // back pulls the hooks in instead of spreading them
 clip_zw       = plug_z0 + 0.5;   // side walls' edge towards the board, away
                                  // from the frame (at the frame: level with it)
+// frame half-width: at least as wide as the side walls, so they end on the
+// frame and not against the base wall beside its slot
+frame_hw      = max(barrel_w / 2 + frame_t, plug_w / 2 + plug_clr + clip_t);
 
 // ---- lid features ------------------------------------------------------------
 // RESET (SW101, ESP_EN) and BOOT (SW102, IO0), top-actuated, poked through
@@ -273,7 +276,7 @@ notch_z = plug_z1 - barrel_h - frame_t - 0.2;
 module plug_notch(xc) {
     // Slot in the top wall for the barrel frame, open towards the lid so
     // the frame drops in with the lid.
-    w = barrel_w + 2 * frame_t + 0.4;
+    w = 2 * frame_hw + 0.4;
     translate([xc - w / 2, H - wall - 1, notch_z])
         cube([w, wall + 2, lid_z - notch_z + eps]);
 }
@@ -348,7 +351,7 @@ module plug_cradle(xc) {
     xi = plug_w / 2 + c;             // side walls' inner faces, from xc
     yb = plug_y0 - 0.1;              // hooks' catching face
     yr = yb - clip_ramp;             // back end of the side walls
-    fw = barrel_w / 2 + frame_t;
+    fw = frame_hw;
     fz = plug_z1 - barrel_h - frame_t;
     // platform under the flat side, 0.3 mm clear of the fingers
     translate([xc - xi + 0.3, H - platform_len, plug_z1])

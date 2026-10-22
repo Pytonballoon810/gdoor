@@ -124,9 +124,13 @@ Each cradle on the lid has three parts:
 - **Side walls with clips**: the side walls run from the frame back to the
   plug's back face, 17 mm in from the outer face (`plug_back`), about 9 mm
   past the end of the platform. Their last 10 mm (`clip_free`) are spring
-  fingers, cut free from the lid plate by a 45 deg cut so they print
-  without support. They bend sideways, in the print plane (about 1.9 %
-  strain, fine for PETG). A hook at each tip, 4.5 mm tall, drops in behind
+  fingers, 1.5 mm thick (`clip_t`), cut free from the lid plate by a 45 deg
+  cut so they print without support. They bend sideways, in the print plane
+  (about 2.8 % strain, fine for PETG, too much for PLA). At 1.0 mm they
+  flexed enough to let the plug give when the cable plug was pressed on;
+  1.5 mm is about 3.4 times as stiff. The barrel frame and its slot in the
+  base wall widen with them, so the side walls end on the frame. A hook at
+  each tip, 4.5 mm tall, drops in behind
   the plug's back face and overlaps it by 1.0 mm beside the wire entries
   (`clip_lip`). Each hook has a 2 mm lead-in ramp, a 0.5 mm flat at full
   depth and a catching face undercut by 0.3 mm (`clip_under`), so pushing
