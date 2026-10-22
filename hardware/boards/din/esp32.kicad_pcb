@@ -14650,6 +14650,18 @@
 				)
 			)
 		)
+		(property "LCSC" "C37208"
+			(at 0 0 0)
+			(layer "F.Fab")
+			(hide yes)
+			(uuid "91cf81c2-84ff-4182-83a4-90a869e840a0")
+			(effects
+				(font
+					(size 1 1)
+					(thickness 0.15)
+				)
+			)
+		)
 		(property ki_fp_filters "Connector*:*_1x??_*")
 		(path "/18031d49-fe6e-4904-bbba-e7ccc630a8ab/e6c5a420-bf62-4910-ad9e-05b677d10f8b")
 		(sheetname "/MCU, USB, Power, Ethernet/")
