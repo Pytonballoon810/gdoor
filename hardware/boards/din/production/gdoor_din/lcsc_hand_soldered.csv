@@ -1,0 +1,10 @@
+LCSC Part Number,Quantity,Manufacture Part Number,Manufacturer,Designator,Comment,Footprint
+C1546,2,0402CG101J500NT,FH (Guangdong Fenghua Advanced Tech),C18,100p,0402
+C23742,6,CL32A107MPVNNNE,Samsung Electro-Mechanics,"C19,C20,C59",100u,1210
+C695629,2,DB301V-3.5-2P-GN-S,DORABO,J1,PlugIn_Terminal_Screw,"Plugin,P=3.5mm"
+C12074,2,HR911105A,HANRUN(Zhongshan HanRun Elec),J102,HR911105A,Plugin
+C37208,2,2.54-1x6PStraight pin,BOOMELE(Boom Precision Elec),J103,EXP,"Plugin,P=2.54mm"
+C7972,4,LMV321IDBVR,Texas Instruments,"U2,U3",LMV321,SOT-23-5
+C2913204,2,ESP32-S3-WROOM-1-N8R2,Espressif Systems,U101,ESP32-S3-WROOM-1-N8R2,"SMD,25.5x18mm"
+C2687116,2,USBLC6-2SC6,"UMW(Youtai Semiconductor Co., Ltd.)",U102,USBLC6-2SC6,SOT-23-6
+C150716,2,AP2114H-3.3TRG1,Diodes Incorporated,U103,AP2114H-3.3TRG1,SOT-223
