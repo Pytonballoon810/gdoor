@@ -20,13 +20,15 @@ from OCP.Bnd import Bnd_Box
 from OCP.BRepBndLib import BRepBndLib
 from OCP.TopAbs import TopAbs_SHELL, TopAbs_FACE
 from OCP.TopExp import TopExp_Explorer
-from OCP.gp import gp_Trsf, gp_Ax2, gp_Pnt, gp_Dir, gp_Vec
+from OCP.gp import gp_Trsf, gp_Ax1, gp_Ax2, gp_Pnt, gp_Dir, gp_Vec
+import math
 from OCP.BRep import BRep_Builder
 from OCP.STEPControl import STEPControl_Writer, STEPControl_AsIs
 from OCP.Interface import Interface_Static
 from OCP.IFSelect import IFSelect_RetDone
 
-W = 35.0  # enclosure width, lid STL is mirrored about z = W/2 for printing
+W = 35.0  # enclosure width
+H = 90.0  # enclosure height; the lid STL is turned 180 deg about y = H/2, z = W/2
 
 
 def load_solid(path):
@@ -79,9 +81,9 @@ base, nb = load_solid(os.path.join(src, "gdoor-din-base.stl"))
 lid_print, nl = load_solid(os.path.join(src, "gdoor-din-lid.stl"))
 print("shells:", nb, nl)
 
-# lid back in its assembled position: undo translate([0,0,W]) mirror([0,0,1])
+# lid back in its assembled position: undo translate([0,H,W]) rotate([180,0,0])
 t = gp_Trsf()
-t.SetMirror(gp_Ax2(gp_Pnt(0, 0, W / 2), gp_Dir(0, 0, 1)))
+t.SetRotation(gp_Ax1(gp_Pnt(0, H / 2, W / 2), gp_Dir(1, 0, 0)), math.pi)
 lid = BRepBuilderAPI_Transform(lid_print, t, True).Shape()
 
 report("base", base)

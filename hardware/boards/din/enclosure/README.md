@@ -3,8 +3,8 @@
 3D-printable DIN-rail housing for the gdoor-din board: 2 modules (35 mm),
 90 mm high, DIN 43880 style front window (45 mm) standing 6 mm proud of the
 shoulders, TS35 rail clip. RJ45, USB-C and the two status LEDs face the
-front window. The bus connects through a pluggable 3.81 mm terminal on the
-top face.
+front window. Two pluggable 3.81 mm terminals: the external 5 V input on
+the top face, the bus on the bottom face.
 
 ![assembly](preview.png)
 
@@ -62,35 +62,55 @@ already flipped.
   is covered by the neighbouring module on the rail, so take the device off
   the rail to reach them.
 - Rail clip: fixed hook at the top, spring latch at the bottom. Hook the
-  top on, press the bottom on. To remove, pry the latch beam down with a
-  small screwdriver from below.
+  top on, press the bottom on. To remove, push the latch hook down with a
+  small screwdriver from below. The latch (10 mm wide) sits on a 2 x 4.6 mm
+  beam that runs 20 mm into the base under the board, cut free through the
+  back and side wall. It bends in the print plane, along the layers.
 
-## Bus plug
+## Plugs (5 V input, bus)
 
-The female half of a 2-pole 3.81 mm pluggable terminal (15EDGK type, e.g.
-QUARKZMAN PCB-Klemmleiste) sits in a cradle on the lid. Its mating end
-sticks out of the top face above J4; the male cable plug goes on from above.
-Its screws face the board, so they are reached with the lid off.
+Each plug is the female half of a 2-pole 3.81 mm pluggable terminal (15EDGK
+type, e.g. QUARKZMAN PCB-Klemmleiste) in a cradle on the lid:
+
+- **5 V** (external input): mating end out of the top face, above J4
+  (`5V_IN`), labelled `5V`. The male cable plug goes on from above.
+- **BUS**: mating end out of the bottom face, labelled `BUS`. The male
+  cable plug goes on from below. Its cradle is the top one mirrored, at
+  x = 42 so it clears the hold-down post at the lower front corner.
+
+The screws face the board, so they are reached with the lid off.
+
+Retention clip: each cradle side wall has a snap finger (4 mm wide, cut
+free by a 0.5 mm slot) at the step end of the plug body. Its lip reaches
+0.5 mm over the edge of the screw-side face, beside the screws, with a
+lead-in chamfer. Press the plug into the cradle from the open side, flat
+side first, until it clicks; no glue. To take it out, spread the two
+fingers. The fingers bend across the layers, but only by about 1 % strain,
+which PETG and PLA both take. If the lips land on the screw heads of your
+plug, or it is loose, change `clip_lip` / `clip_w`.
 
 The outer size comes from the listing: female 8 x 11 x 15 mm (`plug_w`,
 `plug_h`, `plug_len`); the male cable half is 8 x 11 x 18 mm. The mating
 section (`plug_mate_len` 9 mm, `plug_mate_h` 8 mm) is still an estimate:
 measure it on the part. The step between the screw
 section and the lower mating section rests against the inside of the top
-wall and keeps the plug in when the cable is pulled; if your plug has no
-such step, glue it into the cradle.
+wall (bottom wall for the bus plug) and keeps the plug in when the cable is
+pulled.
 
-Wiring: two short wires from the plug's screw clamps to the bus pads, J1.
-J1's wire entries face the top wall with about 1 mm to spare, so a screw
-terminal fitted there cannot take wires inside this housing. Leave J1
-unfitted and solder the wires into its holes.
+Wiring: J1 (bus) and J4 (5 V) both sit on the board's top edge, and their
+wire entries face the top wall with about 1 mm to spare, so screw terminals
+fitted there cannot take wires inside this housing. Leave both unfitted and
+solder wires into their holes: two short ones from J4 to the 5 V plug, and
+two from J1 down to the bus plug at the bottom (about 90 mm, run along the
+component side, under the lid).
 
 ## Assembly
 
-1. Solder the two bus wires into J1's holes.
-2. Put the plug in the lid cradle, clamp the wires.
+1. Solder the 5 V wires into J4's holes and the bus wires into J1's holes.
+2. Clip the plugs into the lid cradles, clamp the wires.
 3. Lay the board into the base: back side down onto the rails, front tab
    into the groove in the window wall, so the RJ45 and USB-C come through
    their openings.
-4. Close the lid; the plug drops into the slot in the top wall. The rim
+4. Close the lid; the plugs drop into the slots in the top and bottom
+   walls. The rim
    snaps into the base.
