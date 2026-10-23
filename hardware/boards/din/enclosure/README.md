@@ -188,8 +188,12 @@ Each cradle on the lid has three parts:
   about 1.5 % strain while the plug goes in (1.9 % if the plug sits
   off-centre), fine for PLA along the layers. The 5 V fingers' back part
   only reaches down to 2 mm above the RJ45 jack (`clip_step`, `clip_zr`).
-  The hook's catching face is 0.1 mm behind the plug's back face
-  (`clip_play`). The hook is 5 mm tall: it covers the back face from 5.5 to
+  The hook's catching face is 15.3 mm in from the outer face: 0.1 mm
+  behind the plug's modelled back face (`clip_play`), then 1.8 mm forward
+  (`clip_fwd`), because on the first print the hooks sat about 1.8 mm too
+  far back and did not touch the plug until it was pushed back. The plug's
+  position is unchanged, so in the model (fit check, STEP export) the
+  hooks now reach about 1.6 mm into the plug's back end. The hook is 5 mm tall: it covers the back face from 5.5 to
   10.5 mm above the plug's flat side, beside the wire entries (5.9 to
   9.4 mm), and overlaps it by 1.0 mm (`clip_lip`). It has a 2 mm lead-in
   ramp, a 0.5 mm flat at full depth and a catching face undercut by 0.3 mm

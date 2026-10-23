@@ -136,6 +136,10 @@ clip_t1       = 0.8;    // finger thickness at the hook
 // cut): 9.5 brings it 1.5 mm closer than 11 did, which sat too far out.
 clip_free     = 9.5;    // free finger length, root to the hook's catching face
 clip_play     = 0.1;    // catching face to the plug's back face
+// On the first print the hooks sat about 1.8 mm too far back and did not
+// touch the plug until it was pushed back; they move forward by that much
+// (the plug's position is unchanged).
+clip_fwd      = 1.8;
 clip_anchor   = 3.0;    // finger length behind the root, on the lid plate
 clip_gap      = 0.6;    // slot between the hook end and the side wall
 // The 5 V fingers' back part runs over the RJ45 (J102, top at z 20.4): more
@@ -403,7 +407,7 @@ module plug_cradle(xc) {
     // through the frame, barrel first, until the hooks click in behind it.
     c  = plug_clr;
     xi = plug_w / 2 + c;             // side walls' inner faces, from xc
-    yb = plug_y0 - clip_play;        // hooks' catching face
+    yb = plug_y0 - clip_play + clip_fwd;   // hooks' catching face
     yr = yb - clip_ramp;             // back end of the hooks' ramps
     y0 = yb - clip_free;             // finger root
     ys = yb + clip_gap;              // back end of the side walls
