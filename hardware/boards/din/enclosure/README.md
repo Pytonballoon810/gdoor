@@ -166,11 +166,10 @@ Each cradle on the lid has three parts:
   (`barrel_w`, `barrel_h`, measured from the platform the plug lies on).
   The step between the screw section and the barrel bears on the inside of
   the frame, so the plug stays in when the cable is pulled.
-- **Platform**: the plug's flat side lies on it, the full width for the
-  first 8.05 mm in from the outer face (`platform_len`), then 0.6 mm clear
-  of the fingers (`platform_clr`, so they do not fuse to it) back to the
-  fingers' anchors. Up to 2026-10-23 it stopped at 8.05 mm; the plug's back
-  end could then drop towards the lid plate and slip under the hooks.
+- **Platform**: the plug's flat side lies on it, 8.05 mm in from the outer
+  face (`platform_len`). 9 mm at most: any longer and the L-shaped plug
+  cannot be fitted (a full-length platform was tried on 2026-10-23 and
+  taken out again).
 - **Side walls**: fixed, 2.0 mm thick (`side_t`), from the frame back to
   0.6 mm (`clip_gap`) in front of the plug's back face, which is 17 mm in
   from the outer face (`plug_back`). The barrel frame and its slot in the
@@ -209,7 +208,7 @@ Each cradle on the lid has three parts:
   finger can be thin.
   **First print of that (2026-10-23):** the plug could slip under the
   hooks. Hence the hook 1.5 mm closer to the lid plate (`clip_free`
-  11 -> 9.5) and the platform under the whole plug.
+  11 -> 9.5).
 
 To fit a plug: lay it flat side down behind the cradle, between the two
 fingers and behind their hooks, and slide it out through the frame, barrel

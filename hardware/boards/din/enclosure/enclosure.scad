@@ -110,9 +110,7 @@ plug_y0       = H - plug_back;      // wire end (back face)
 plug_y1       = plug_y_step + plug_mate_len;   // mating end
 plug_len      = plug_y1 - plug_y0;
 platform_len  = 8.05;   // platform under the flat side, from the outer face
-// Behind that it continues, narrower, back to the fingers' anchors, so the
-// plug's back end cannot drop towards the lid plate and slip under the hooks.
-platform_clr  = 0.6;    // to the fingers, so they do not fuse to it
+                        // (9 mm at most, or the L-shaped plug does not fit)
 // Barrel frame: a closed frame on the lid, in the top wall's plane, that
 // the barrel press-fits through (barrel_w x barrel_h, from the platform).
 barrel_w      = 8.35;
@@ -416,8 +414,6 @@ module plug_cradle(xc) {
     // platform under the flat side, 0.3 mm clear of the fingers
     translate([xc - xi + 0.3, H - platform_len, plug_z1])
         cube([2 * xi - 0.6, platform_len, lid_z - plug_z1 + eps]);
-    translate([xc - xi + platform_clr, y0 - clip_anchor, plug_z1])
-        cube([2 * (xi - platform_clr), H - platform_len - (y0 - clip_anchor) + eps, lid_z - plug_z1 + eps]);
     // barrel frame in the top wall's plane: the step bears on its inside
     difference() {
         translate([xc - fw, plug_y_step, fz]) cube([2 * fw, wall, lid_z - fz + eps]);
