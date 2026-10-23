@@ -1,6 +1,8 @@
 # Converts the OpenSCAD STLs into STEP solids: gdoor-din-base.step,
 # gdoor-din-lid.step (print orientation, like the STLs) and
-# gdoor-din-enclosure.step (base and lid in their assembled position).
+# gdoor-din-enclosure.step (base and lid in their assembled position, with
+# both plugs from plug_model.py in their cradles and the cable plugs on them,
+# named and coloured).
 #
 # OpenSCAD 2021.01 cannot write STEP, so this sews the STL triangles into a
 # closed solid and merges coplanar triangles into planar faces. Flat faces come
@@ -29,6 +31,13 @@ from OCP.IFSelect import IFSelect_RetDone
 
 W = 35.0  # enclosure width
 H = 90.0  # enclosure height; the base STL is turned 180 deg about y = H/2, z = W/2
+# Plugs, as in enclosure.scad (plugs, plug_back, plug_z1) in the real frame:
+# [x centre, 1 = top / 0 = bottom]. Wire end H - plug_back from the face
+# (the female is plug_back long, so its mouth is flush), flat side at
+# W - plug_z1 = 5.8.
+PLUGS = [(46.0, 1), (32.0, 0)]
+PLUG_BACK = 17.0
+PLUG_Z = 5.8
 
 
 def load_solid(path):
@@ -94,10 +103,31 @@ report("lid", lid)
 
 write(os.path.join(out, "gdoor-din-base.step"), base_print)
 write(os.path.join(out, "gdoor-din-lid.step"), lid)
-comp = TopoDS_Compound()
-bb = BRep_Builder()
-bb.MakeCompound(comp)
-bb.Add(comp, base)
-bb.Add(comp, lid)
-write(os.path.join(out, "gdoor-din-enclosure.step"), comp)
+# Plugs: plug_model's local frame put in place, the female's shroud mouth flush
+# with the outer face. The top one is a translation; the bottom one (the scad
+# mirrors it about y = H/2) is turned 180 deg about Z instead, which is the
+# same for a part symmetric in x.
+import plug_model
+from OCP.BRepAlgoAPI import BRepAlgoAPI_Common
+assert plug_model.f_len == PLUG_BACK
+parts = [(base, "base", (0.45, 0.48, 0.52)), (lid, "lid", (0.85, 0.80, 0.86))]
+hits = 0.0
+for xc, top in PLUGS:
+    t = gp_Trsf()
+    if top:
+        t.SetTranslation(gp_Vec(xc, H - PLUG_BACK, PLUG_Z))
+    else:
+        r = gp_Trsf()
+        r.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), math.pi)
+        t.SetTranslation(gp_Vec(xc, PLUG_BACK, PLUG_Z))
+        t.Multiply(r)
+    for s, name, rgb in plug_model.mated():
+        placed = BRepBuilderAPI_Transform(s, t, True).Shape()
+        parts.append((placed, f"{'5V' if top else 'BUS'} {name}", rgb))
+        for part in (base, lid):
+            p = GProp_GProps()
+            BRepGProp.VolumeProperties_s(BRepAlgoAPI_Common(placed, part).Shape(), p)
+            hits += p.Mass()
+print(f"plugs: overlap with base and lid {hits:.3f} mm3")
+plug_model.write(os.path.join(out, "gdoor-din-enclosure.step"), parts)
 print("written")
