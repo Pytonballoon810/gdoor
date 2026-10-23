@@ -33,10 +33,10 @@ W = 35.0  # enclosure width
 H = 90.0  # enclosure height; the base STL is turned 180 deg about y = H/2, z = W/2
 # Plugs, as in enclosure.scad (plugs, plug_back, plug_z1) in the real frame:
 # [x centre, 1 = top / 0 = bottom]. Wire end H - plug_back from the face
-# (the female is 17 mm long, so its mouth stands 1.8 mm proud), flat side at
+# (the female is plug_back long, so its mouth is flush), flat side at
 # W - plug_z1 = 5.8.
 PLUGS = [(46.0, 1), (32.0, 0)]
-PLUG_BACK = 15.2
+PLUG_BACK = 17.0
 PLUG_Z = 5.8
 
 
@@ -103,14 +103,13 @@ report("lid", lid)
 
 write(os.path.join(out, "gdoor-din-base.step"), base_print)
 write(os.path.join(out, "gdoor-din-lid.step"), lid)
-# Plugs: plug_model's local frame put in place, the female's wire end PLUG_BACK
-# in from the outer face, so its shroud mouth stands f_len - PLUG_BACK proud.
-# The top one is a translation; the bottom one (the scad mirrors it about
-# y = H/2) is turned 180 deg about Z instead, which is the same for a part
-# symmetric in x.
+# Plugs: plug_model's local frame put in place, the female's shroud mouth flush
+# with the outer face. The top one is a translation; the bottom one (the scad
+# mirrors it about y = H/2) is turned 180 deg about Z instead, which is the
+# same for a part symmetric in x.
 import plug_model
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Common
-assert plug_model.f_len >= PLUG_BACK
+assert plug_model.f_len == PLUG_BACK
 parts = [(base, "base", (0.45, 0.48, 0.52)), (lid, "lid", (0.85, 0.80, 0.86))]
 hits = 0.0
 for xc, top in PLUGS:

@@ -85,7 +85,7 @@ def wires():
     direction the wire goes into the entry along Y)]"""
     out = []
     # 5 V: J4 pads (KiCad 105.25 / 108.75, 64.5) to the top plug at x = 46,
-    # wire end at Y = 74.8, entries facing -Y. The wire drops from the pad,
+    # wire end at Y = 73, entries facing -Y. The wire drops from the pad,
     # runs back over the plug (its screw face is at Z 16.8, the cradle's clip
     # fingers end at 16.3), turns down behind the plug clear of the RJ45
     # (its top ends at Y 65.3) and goes into the entry.
@@ -93,12 +93,12 @@ def wires():
                                (105.25, 46 + 1.905, "5V GND wire (J4 pin 1)", BLACK)]:
         x, y = kx(kxp), ky(64.5)
         path = [(x, y, BOARD_FRONT - 1.0), (x, y, 24.0), ((x + xe) / 2, y - 3.5, 20.5),
-                (xe, 75.8, 19.8), (xe, 71.3, 19.2), (xe, 69.1, 16.6), (xe, 70.3, 14.2),
-                (xe, 72.3, ENTRY_Z), (xe, 75.8, ENTRY_Z)]
-        out.append((name, col, (x, y), path, (xe, 75.8), +1))
+                (xe, 74.0, 19.8), (xe, 69.5, 19.2), (xe, 67.3, 16.6), (xe, 68.5, 14.2),
+                (xe, 70.5, ENTRY_Z), (xe, 74.0, ENTRY_Z)]
+        out.append((name, col, (x, y), path, (xe, 74.0), +1))
     # Bus: J1 pads (KiCad 141.25 / 144.75, 64.5) down to the bottom plug at
     # x = 32 (turned half a turn, so its entries face +Y, wire end at
-    # Y = 15.2). The wires drop to the entries' height and run diagonally
+    # Y = 17). The wires drop to the entries' height and run diagonally
     # across the component side, under the lid, then straight down the
     # channel between the cradle's clip fingers.
     for kxp, xe, name, col in [(144.75, 32 - 1.905, "BUS wire (J1 pin 2)", BLUE),
@@ -106,8 +106,8 @@ def wires():
         x, y = kx(kxp), ky(64.5)
         path = [(x, y, BOARD_FRONT - 1.0), (x, y, 19.0), (x + 0.8, y - 1.5, 14.6),
                 (x + 2.0, y - 4.0, ENTRY_Z), (xe - 1.0, 40.0, ENTRY_Z), (xe, 34.0, ENTRY_Z),
-                (xe, 25.0, ENTRY_Z), (xe, 14.2, ENTRY_Z)]
-        out.append((name, col, (x, y), path, (xe, 14.2), -1))
+                (xe, 25.0, ENTRY_Z), (xe, 16.0, ENTRY_Z)]
+        out.append((name, col, (x, y), path, (xe, 16.0), -1))
     return out
 
 

@@ -101,11 +101,7 @@ plug_w        = 8.35;   // body and barrel width
 plug_h        = 11.0;
 plug_mate_h   = 7.0;    // barrel height (flush with the side opposite the screws)
 plug_mate_len = 7.8;    // barrel length past the step (guess)
-// The female is 17 mm long, but in the printed cradle (2026-10-23) its back
-// face sits about 1.8 mm further forward than 17 mm from the outer face, so
-// the hooks did not touch it until it was pushed back: the mouth stands
-// about 1.8 mm proud.
-plug_back     = 15.2;   // outer face of the housing to the plug's back face
+plug_back     = 17.0;   // outer face of the housing to the plug's back face
 plug_clr      = 0.25;
 plug_z1       = lid_z - 4;          // flat side (no screws), on the platform
 plug_z0       = plug_z1 - plug_h;   // screw side, towards the board
@@ -139,7 +135,7 @@ clip_t1       = 0.8;    // finger thickness at the hook
 // Free length also sets how close the hook comes to the lid plate (45 deg
 // cut): 9.5 brings it 1.5 mm closer than 11 did, which sat too far out.
 clip_free     = 9.5;    // free finger length, root to the hook's catching face
-clip_play     = 0.3;    // catching face to the plug's back face
+clip_play     = 0.1;    // catching face to the plug's back face
 clip_anchor   = 3.0;    // finger length behind the root, on the lid plate
 clip_gap      = 0.6;    // slot between the hook end and the side wall
 // The 5 V fingers' back part runs over the RJ45 (J102, top at z 20.4): more

@@ -12,9 +12,7 @@
 # Both have a slotted clamp screw and a box clamp per pole, a square wire
 # entry under each screw and a test slot behind it. Sizes are taken off photos
 # of the real parts, scaled by the 11 mm height: about +-0.3 mm, except the
-# female's length (17 mm), which is measured. In the cradle its back face sits
-# 15.2 mm in from the outer face (plug_back in enclosure.scad), so its mouth
-# stands about 1.8 mm proud.
+# female's length (17 mm), which is the measured plug_back in enclosure.scad.
 #
 # Local frame of both parts: x across the poles (centred, pitch 3.81 mm), y from
 # the wire end (y = 0) towards the mating end, z from the flat side (z = 0) to

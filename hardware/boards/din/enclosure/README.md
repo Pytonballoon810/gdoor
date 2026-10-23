@@ -172,7 +172,7 @@ Each cradle on the lid has three parts:
   fingers' anchors. Up to 2026-10-23 it stopped at 8.05 mm; the plug's back
   end could then drop towards the lid plate and slip under the hooks.
 - **Side walls**: fixed, 2.0 mm thick (`side_t`), from the frame back to
-  0.6 mm (`clip_gap`) in front of the plug's back face, which is 15.2 mm in
+  0.6 mm (`clip_gap`) in front of the plug's back face, which is 17 mm in
   from the outer face (`plug_back`). The barrel frame and its slot in the
   base wall are 0.55 mm wider each side than the frame alone needs
   (`frame_hw`); the side walls narrow to that width over their last 0.2 mm,
@@ -188,7 +188,7 @@ Each cradle on the lid has three parts:
   about 1.5 % strain while the plug goes in (1.9 % if the plug sits
   off-centre), fine for PLA along the layers. The 5 V fingers' back part
   only reaches down to 2 mm above the RJ45 jack (`clip_step`, `clip_zr`).
-  The hook's catching face is 0.3 mm behind the plug's back face
+  The hook's catching face is 0.1 mm behind the plug's back face
   (`clip_play`). The hook is 5 mm tall: it covers the back face from 5.5 to
   10.5 mm above the plug's flat side, beside the wire entries (5.9 to
   9.4 mm), and overlaps it by 1.0 mm (`clip_lip`). It has a 2 mm lead-in
@@ -203,11 +203,9 @@ Each cradle on the lid has three parts:
   same push compresses the finger and bends the hook inward, further
   behind the plug, so the hold no longer depends on stiffness and the
   finger can be thin.
-  **First print of that (2026-10-23):** the hooks sat about 1.8 mm behind
-  the plug's back face, and the plug could slip under them. Hence
-  `plug_back` 17 -> 15.2 (the hooks 1.6 mm further forward, with 0.3 mm
-  play), the hook 1.5 mm closer to the lid plate (`clip_free` 11 -> 9.5),
-  and the platform under the whole plug.
+  **First print of that (2026-10-23):** the plug could slip under the
+  hooks. Hence the hook 1.5 mm closer to the lid plate (`clip_free`
+  11 -> 9.5) and the platform under the whole plug.
 
 To fit a plug: lay it flat side down behind the cradle, between the two
 fingers and behind their hooks, and slide it out through the frame, barrel
@@ -216,9 +214,8 @@ hooks cover your plug's wire entries, reduce `clip_lip`; if the barrel is
 loose or too tight, change `barrel_w` / `barrel_h`.
 
 The height (11 mm, `plug_h`) comes from the listing. Width and barrel
-height are measured. The back face position (15.2 mm from the outer face)
-comes from the first printed cradle: the female is 17 mm long, so its mouth
-stands about 1.8 mm proud of the outer face. How
+height and the back face position (17 mm from the outer face) are
+measured. How
 far the barrel sticks out (`plug_mate_len`) is a guess; it only shapes the
 ghost in the preview.
 
