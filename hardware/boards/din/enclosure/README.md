@@ -46,6 +46,12 @@ PETG preferred: the rail latch is a printed spring. 0.2 mm layers, no
 supports. Both parts print flat on their outer side wall; the base STL is
 already turned over.
 
+PLA works for the lid snaps (0.9 %) and the rail latch (about 1 %, along
+the layers), but not well for the plug clip fingers (3.8 % while the plug
+goes in, see below), and it softens from about 55 °C and creeps under
+steady load, which slowly relaxes the rail latch and the plug clips in a
+warm cabinet. Fine for a test fit; print the installed one in PETG or ASA.
+
 ## Mirrored design frame
 
 `enclosure.scad` models everything in a design frame that is the mirror
@@ -72,13 +78,20 @@ housing again.
   the lid. Five posts on the lid hold it down at free spots. Each keeps a
   2.6 mm tip for the first 12 mm above the board, clear of the tall parts,
   then widens in a cone to 6 mm at the lid plate, so it prints stiff.
-- Lid closure: four snap fingers (7 mm wide, 1.2 mm thick), two on the
-  top wall and two on the bottom wall, in line with the rim and cut free
-  from it by 0.5 mm slots. They reach 10 mm into the base. A hook at each
-  tip (1.3 mm deep into the 1.8 mm wall, ramped on the tip side, with a
-  0.6 mm flat at full depth under the catching face) clicks into a window
-  through the base wall. The fingers bend across the layers, by about
-  2.3 % strain: fine for PETG, at the limit for PLA.
+- Lid closure: four snap fingers (7 mm wide), two on the top wall and two
+  on the bottom wall, in line with the rim and cut free from it by 0.5 mm
+  slots. They reach 14 mm into the base and taper from 1.6 mm at the root
+  to 1.0 mm at the tip; the extra root thickness is on the cavity side, so
+  the outer face stays flat against the wall. A hook at each tip (1.0 mm
+  deep into the 1.8 mm wall, ramped on the tip side, with a 0.6 mm flat at
+  full depth under the catching face) clicks into a window through the
+  base wall. The fingers stand upright in the print, so they bend across
+  the layers, the weakest direction. They used to be 10 mm long, 1.2 mm
+  thick with a 1.3 mm hook (about 3.2 % strain) and broke off at the root.
+  Now the strain is about 0.9 %, and a 0.8 mm 45° chamfer at the root's
+  outer (tension) side, with a matching relief in the base wall's top
+  edge, removes the sharp corner the cracks started from. The tips stop
+  1.8 mm above J1 and J4 (17.4 mm), which sets the length.
   To open, press the four hooks in through the windows with a small
   screwdriver and lift the lid.
 - Front window: the board's front tab reaches into it, its edge in a

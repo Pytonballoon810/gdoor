@@ -153,13 +153,20 @@ rim_clr   = 0.2;
 // Lid snaps: fingers in line with the rim reach down into the base; a hook
 // at the tip clicks into a window through the base's top or bottom wall.
 // To open, press the hooks in through the windows.
+// The fingers stand upright in the print, so they bend across the layers:
+// keep the strain low (about 0.9 %, was 3.2 % at 10 mm x 1.2 mm with a
+// 1.3 mm hook, and they broke). Long, tapered, shallow hook, and a chamfer
+// at the root on the outer (tension) side.
 snaps     = [[12, 0], [44, 0], [12, 1], [26, 1]];   // [x, 0=bottom/1=top], clear of plugs and posts
 snap_w    = 7;          // finger width along X
-snap_len  = 10;         // finger length below the lid plate
-snap_hook = 1.3;        // hook depth into the window (the wall is 1.8)
+snap_len  = 14;         // finger length below the lid plate (tip clears J1/J4 at z 17.4)
+snap_t0   = 1.6;        // thickness at the root (the extra is on the cavity side)
+snap_t1   = 1.0;        // thickness at the tip
+snap_hook = 1.0;        // hook depth into the window (the wall is 1.8)
 snap_hh   = 2.0;        // hook height, lead-in ramp plus land (sets the base windows)
 snap_land = 0.6;        // flat at full depth, under the catching face
 snap_slot = 0.5;        // slots in the rim beside each finger
+snap_fil  = 0.8;        // 45 deg chamfer at the root's outer side
 
 // =============================================================================
 
@@ -299,6 +306,11 @@ module snap_windows() {
     // edge.
     for (s = snaps) plug_at(s) translate([s[0] - snap_w / 2 - 0.2, H - wall - 1, lid_z - snap_len - 0.3])
         cube([snap_w + 0.4, wall + 2, snap_zc - (lid_z - snap_len - 0.3)]);
+    // relief in the wall's top inner edge for the chamfer at the finger root
+    c = snap_fil + 0.1;
+    for (s = snaps) plug_at(s) translate([s[0] - snap_w / 2 - snap_slot, 0, 0]) rotate([90, 0, 90])
+        linear_extrude(snap_w + 2 * snap_slot)
+            polygon([[H - wall - eps, lid_z + eps], [H - wall + c, lid_z + eps], [H - wall - eps, lid_z - c - eps]]);
 }
 
 module base() {
@@ -326,10 +338,14 @@ module snap_finger(xc) {
     // on its tip side, so the lid pushes on, and flat on the lid side.
     yo = H - wall - rim_clr;         // outer face, along the wall
     zt = lid_z - snap_len;
-    translate([xc - snap_w / 2, yo - rim_t, zt]) cube([snap_w, rim_t, snap_len + eps]);
-    translate([xc - snap_w / 2, 0, 0]) rotate([90, 0, 90]) linear_extrude(snap_w)
+    translate([xc - snap_w / 2, 0, 0]) rotate([90, 0, 90]) linear_extrude(snap_w) {
+        // tapered finger, outer face flat, thicker towards the cavity at the root
+        polygon([[yo, lid_z + eps], [yo - snap_t0, lid_z + eps], [yo - snap_t1, zt], [yo, zt]]);
+        // root chamfer on the outer side, into the relief in the base wall
+        polygon([[yo - eps, lid_z + eps], [yo + snap_fil, lid_z + eps], [yo - eps, lid_z - snap_fil]]);
         polygon([[yo - eps, snap_zc], [yo + rim_clr + snap_hook, snap_zc],
                  [yo + rim_clr + snap_hook, snap_zc - snap_land], [yo - eps, zt]]);
+    }
 }
 
 module lid_rim() {
