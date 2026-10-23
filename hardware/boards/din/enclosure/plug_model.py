@@ -2,10 +2,10 @@
 # QUARKZMAN PCB-Klemmleiste kit) used for the 5 V and bus connections:
 #
 #   female: the 17 mm part in the lid cradle. Screw section, then a socket
-#           shroud (7 mm high, flush with its flat side) whose mouth sits flush
+#           shroud (7 mm high, flush with the screw face) whose mouth sits flush
 #           in the housing's outer wall: two pockets with a pin in each. Drawn
 #           without the side flanges with the screw holes.
-#   male:   the 15 mm cable plug. Screw section, then a tongue on its flat side,
+#   male:   the 15 mm cable plug. Screw section, then a tongue flush with its screw face,
 #           split into one prong per pole, that goes into the shroud: a contact
 #           opening in each prong and a latch nib at the tip.
 #
@@ -15,8 +15,10 @@
 # female's length (17 mm), which is the measured plug_back in enclosure.scad.
 #
 # Local frame of both parts: x across the poles (centred, pitch 3.81 mm), y from
-# the wire end (y = 0) towards the mating end, z from the flat side (z = 0) to
-# the screw face (z = 11). mated() puts the male in the female's frame.
+# the wire end (y = 0) towards the mating end, z across the height (0 .. 11).
+# Both parts have their screw face, with the wire entries next to it, at
+# z = 0, flush with the female's shroud and the male's tongue. mated() puts
+# the male in the female's frame.
 #
 # Needs OpenCascade's python bindings: pip install cadquery-ocp
 # Usage: python plug_model.py [out_dir]   writes plug-3.81-2p-female.step,
@@ -120,12 +122,20 @@ def screw_section(body, tag):
 
 
 def female():
-    """The part in the cradle, its shroud mouth at y = f_len."""
-    body = fuse(box(-w / 2, 0, 0, w / 2, f_step, h),
-                box(-w / 2, f_step - 0.01, 0, w / 2, f_len, f_sh_h))
-    # wire end set back towards the flat side, 0.7 mm at the flat side
+    """The part in the cradle, its shroud mouth at y = f_len, screw face and
+    shroud flush at z = 0."""
+    body = box(-w / 2, 0, 0, w / 2, f_step, h)
+    for x in poles:   # marks near the wire end, on the side opposite the screws
+        body = cut(body, box(x - 0.35, 0.9, -0.01, x + 0.35, 2.2, 0.5))
+    # screw section drawn with the screw face at z = h, then turned over
+    body, metal = screw_section(body, "female")
+    flip = gp_Trsf()
+    flip.SetRotation(gp_Ax1(gp_Pnt(0, 0, h / 2), gp_Dir(0, 1, 0)), math.pi)
+    body = fuse(moved(body, flip), box(-w / 2, f_step - 0.01, 0, w / 2, f_len, f_sh_h))
+    metal = [(moved(s, flip), n, c) for s, n, c in metal]
+    # wire end set back towards the screw face, 0.7 mm at the face
     body = cut(body, xprism([(-0.01, -0.01), (0.7, -0.01), (-0.01, 5.5)], -w / 2 - 1, w / 2 + 1))
-    # groove across the flat side at the step
+    # groove across the screw face at the step
     body = cut(body, box(-w / 2 - 1, f_step - 0.25, -0.01, w / 2 + 1, f_step + 0.25, 0.4))
     tip = f_len - (m_len - m_step)    # where the male's tongue tip ends up
     pins = []
@@ -134,19 +144,22 @@ def female():
                    box(x - pocket_w / 2, f_len - pocket_d, pocket_z[0], x + pocket_w / 2, f_len + 0.01, pocket_z[1]),
                    # recess for the male's latch nib, in the pocket floor
                    box(x - pocket_w / 2, tip - 0.15, 0.5, x + pocket_w / 2, tip + 1.2, pocket_z[0] + 0.01),
-                   # flat-side marks near the wire end
-                   box(x - 0.35, 0.9, -0.01, x + 0.35, 2.2, 0.5),
                    box(x - pin_t / 2, 7.0, pin_z - pin_t / 2, x + pin_t / 2, f_len - pocket_d + 0.01, pin_z + pin_t / 2))
         pins.append((box(x - pin_t / 2, 7.0, pin_z - pin_t / 2, x + pin_t / 2, f_len - pin_tip, pin_z + pin_t / 2),
                      f"female pin {i + 1}", METAL))
-    body, metal = screw_section(body, "female")
     return [(body, "female body", GREEN)] + metal + pins
 
 
 def male():
-    """The cable plug, tongue tip at y = m_len."""
-    body = box(-w / 2, 0, 0, w / 2, m_step, h)
-    zc = pin_z - pocket_z[0] - clr          # contact opening centre above the flat side
+    """The cable plug, tongue tip at y = m_len, screw face and tongue flush at
+    z = 0."""
+    # screw section drawn with the screw face at z = h, then turned over
+    body, metal = screw_section(box(-w / 2, 0, 0, w / 2, m_step, h), "male")
+    flip = gp_Trsf()
+    flip.SetRotation(gp_Ax1(gp_Pnt(0, 0, h / 2), gp_Dir(0, 1, 0)), math.pi)
+    body = moved(body, flip)
+    metal = [(moved(s, flip), n, c) for s, n, c in metal]
+    zc = pin_z - pocket_z[0] - clr          # contact opening centre above the screw face
     for x in poles:
         prong = box(x - prong_w / 2, m_step - 0.01, 0, x + prong_w / 2, m_len, prong_t)
         prong = cut(prong, box(x - 0.55, m_len - 6.1, zc - 0.55, x + 0.55, m_len + 0.01, zc + 0.55))
@@ -154,7 +167,6 @@ def male():
         nib = xprism([(m_len - 1.0, 0.01), (m_len - 1.0, -0.6), (m_len - 0.4, -0.6), (m_len, 0.01)],
                      x - 1.0, x + 1.0)
         body = fuse(body, prong, nib)
-    body, metal = screw_section(body, "male")
     return [(body, "male body", GREEN)] + metal
 
 

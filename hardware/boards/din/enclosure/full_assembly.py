@@ -73,7 +73,8 @@ def ky(y):
 
 # ---- wires ------------------------------------------------------------------
 WIRE_D, CORE_D = 1.6, 0.9
-ENTRY_Z = 5.8 + (5.9 + 9.4) / 2   # plugs' wire entries: flat side + entry centre
+import plug_model                  # plugs' wire entries: flat side + entry centre
+ENTRY_Z = 5.8 + plug_model.h - (plug_model.entry_z0 + plug_model.well_z) / 2
 STRIP = 4.0                        # stripped length inside the wire entry
 RED, BLACK = (0.80, 0.08, 0.08), (0.08, 0.08, 0.08)
 WHITE, BLUE = (0.92, 0.92, 0.90), (0.10, 0.30, 0.80)
