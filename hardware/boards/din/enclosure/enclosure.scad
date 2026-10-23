@@ -115,13 +115,27 @@ platform_len  = 8.05;   // platform under the flat side, from the outer face
 barrel_w      = 8.35;
 barrel_h      = 7.0;
 frame_t       = 1.2;
-// Retention clip: the back end of each cradle side wall is a spring finger,
-// cut free from the lid plate by a 45 deg slot so it prints without
-// support. It bends sideways, in the print plane. A hook at its tip drops
-// in behind the plug's back face once the plug is slid fully home, so the
-// plug cannot be pushed back when the cable plug goes on.
-clip_t        = 2.0;    // finger thickness, bends in X (1.0 flexed too much)
-clip_free     = 10.0;   // free finger length, back from the hook ramp's end
+// Retention clip: behind each cradle side wall, a spring finger runs back
+// from the hook to its root, cut free from the lid plate by a 45 deg slot
+// so it prints without support. It bends sideways, in the print plane. The
+// hook at its front end drops in behind the plug's back face once the plug
+// is slid fully home.
+// The root is behind the hook on purpose. Pushing the plug back (the cable
+// plug going on) then compresses the finger, and since the hook sits on
+// its inner side, that bends the hook further in behind the plug instead
+// of spreading it. With the root in front of the hook (up to 2026-10-23)
+// the same push pulled the finger and spread the hooks, so only stiffness
+// held the plug: 1.0 mm gave, 2.0 mm was too stiff to bend without cracking.
+side_t        = 2.0;    // fixed side wall between frame and hook
+clip_t0       = 1.4;    // finger thickness at the root, bends in X
+clip_t1       = 0.8;    // finger thickness at the hook
+clip_free     = 11.0;   // free finger length, root to the hook's catching face
+clip_anchor   = 3.0;    // finger length behind the root, on the lid plate
+clip_gap      = 0.6;    // slot between the hook end and the side wall
+// The 5 V fingers' back part runs over the RJ45 (J102, top at z 20.4): more
+// than clip_step behind the ramp, the finger only reaches down to clip_zr.
+clip_step     = 5.0;
+clip_zr       = lid_z - 12.2;
 clip_lip      = 1.0;    // hook overlap on the back face, beside the wire entries
 clip_ramp     = 2.0;    // lead-in ramp length of the hook
 clip_land     = 0.5;    // flat at full depth between ramp and catching face
@@ -367,7 +381,9 @@ module plug_cradle(xc) {
     c  = plug_clr;
     xi = plug_w / 2 + c;             // side walls' inner faces, from xc
     yb = plug_y0 - 0.1;              // hooks' catching face
-    yr = yb - clip_ramp;             // back end of the side walls
+    yr = yb - clip_ramp;             // back end of the hooks' ramps
+    y0 = yb - clip_free;             // finger root
+    ys = yb + clip_gap;              // back end of the side walls
     fw = frame_hw;
     fz = plug_z1 - barrel_h - frame_t;
     // platform under the flat side, 0.3 mm clear of the fingers
@@ -381,29 +397,33 @@ module plug_cradle(xc) {
     }
     for (s = [-1, 1]) {
         xw = xc + s * xi;                         // inner face
-        xa = s < 0 ? xw - clip_t : xw;
-        // side wall; below a 45 deg line from the finger's root it is cut
-        // free from the lid plate, which leaves the spring finger
-        yf = yr + clip_free;                      // finger root
+        xa = s < 0 ? xw - side_t : xw;
+        // fixed side wall, from the slot in front of the hook to the frame:
+        // deeper towards the board, but level with the frame where it meets
+        // it, so it stays clear of the base wall
+        translate([xa, ys, clip_zw]) cube([side_t, plug_y_step - 0.2 - ys, lid_z - clip_zw + eps]);
+        translate([xa, ys, fz]) cube([side_t, plug_y_step - 0.2 - ys, lid_z - fz + eps]);
+        // last 0.2 mm into the frame: no wider than the frame, which has to
+        // fit its slot in the base wall
+        ct = min(side_t, frame_hw - xi);
+        translate([s < 0 ? xw - ct : xw, plug_y_step - 0.2 - eps, fz])
+            cube([ct, 0.2 + 2 * eps, lid_z - fz + eps]);
+        // spring finger, tapered from the root to the hook, inner face flat;
+        // in front of a 45 deg line from the root it is cut free from the
+        // lid plate
         difference() {
-            union() {
-                // deeper towards the board, but level with the frame where
-                // it meets it, so it stays clear of the base wall
-                translate([xa, yr, clip_zw]) cube([clip_t, plug_y_step - 0.2 - yr, lid_z - clip_zw + eps]);
-                translate([xa, yr, fz]) cube([clip_t, plug_y_step - 0.2 - yr, lid_z - fz + eps]);
-                // last 0.2 mm into the frame: no wider than the frame, which
-                // has to fit its slot in the base wall
-                ct = min(clip_t, frame_hw - xi);
-                translate([s < 0 ? xw - ct : xw, plug_y_step - 0.2 - eps, fz])
-                    cube([ct, 0.2 + 2 * eps, lid_z - fz + eps]);
-            }
-            translate([xa - 1, 0, 0]) rotate([90, 0, 90]) linear_extrude(clip_t + 2)
-                polygon([[yf, lid_z + 1], [yf, lid_z],
-                         [yr - 1, lid_z - (yf - yr + 1)], [yr - 1, lid_z + 1]]);
+            translate([0, 0, clip_zw]) linear_extrude(lid_z - clip_zw + eps)
+                polygon([[xw - s * eps, y0 - clip_anchor], [xw + s * clip_t0, y0 - clip_anchor],
+                         [xw + s * clip_t0, y0], [xw + s * clip_t1, yb], [xw - s * eps, yb]]);
+            translate([min(xw, xw + s * clip_t0) - 1, 0, 0]) rotate([90, 0, 90]) linear_extrude(clip_t0 + 2)
+                polygon([[y0, lid_z + 1], [y0, lid_z],
+                         [yb + 1, lid_z - (yb + 1 - y0)], [yb + 1, lid_z + 1]]);
+            translate([min(xw, xw + s * clip_t0) - 1, y0 - clip_anchor - 1, clip_zw - 1])
+                cube([clip_t0 + 2, yr - clip_step - (y0 - clip_anchor - 1), clip_zr - clip_zw + 1]);
         }
-        // hook at the finger's tip: lead-in ramp on the side the plug comes
-        // from, a flat land at full depth, then the undercut catching face
-        zt = lid_z - (yf - yr);                   // finger's lower edge at the tip
+        // hook at the finger's front end: lead-in ramp on the side the plug
+        // comes from, a flat land at full depth, then the undercut catching face
+        zt = lid_z - clip_free;                   // finger's lower edge at the hook
         xt = xw - s * (c + clip_lip);             // hook tip
         translate([0, 0, clip_zw]) linear_extrude(zt - clip_zw)
             polygon([[xw + s * eps, yr], [xt, yb - clip_land], [xt, yb],
