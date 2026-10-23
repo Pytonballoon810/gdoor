@@ -101,7 +101,11 @@ plug_w        = 8.35;   // body and barrel width
 plug_h        = 11.0;
 plug_mate_h   = 7.0;    // barrel height (flush with the side opposite the screws)
 plug_mate_len = 7.8;    // barrel length past the step (guess)
-plug_back     = 17.0;   // outer face of the housing to the plug's back face
+// The female is 17 mm long, but in the printed cradle (2026-10-23) its back
+// face sits about 1.8 mm further forward than 17 mm from the outer face, so
+// the hooks did not touch it until it was pushed back: the mouth stands
+// about 1.8 mm proud.
+plug_back     = 15.2;   // outer face of the housing to the plug's back face
 plug_clr      = 0.25;
 plug_z1       = lid_z - 4;          // flat side (no screws), on the platform
 plug_z0       = plug_z1 - plug_h;   // screw side, towards the board
@@ -110,6 +114,9 @@ plug_y0       = H - plug_back;      // wire end (back face)
 plug_y1       = plug_y_step + plug_mate_len;   // mating end
 plug_len      = plug_y1 - plug_y0;
 platform_len  = 8.05;   // platform under the flat side, from the outer face
+// Behind that it continues, narrower, back to the fingers' anchors, so the
+// plug's back end cannot drop towards the lid plate and slip under the hooks.
+platform_clr  = 0.6;    // to the fingers, so they do not fuse to it
 // Barrel frame: a closed frame on the lid, in the top wall's plane, that
 // the barrel press-fits through (barrel_w x barrel_h, from the platform).
 barrel_w      = 8.35;
@@ -127,9 +134,12 @@ frame_t       = 1.2;
 // the same push pulled the finger and spread the hooks, so only stiffness
 // held the plug: 1.0 mm gave, 2.0 mm was too stiff to bend without cracking.
 side_t        = 2.0;    // fixed side wall between frame and hook
-clip_t0       = 1.4;    // finger thickness at the root, bends in X
+clip_t0       = 1.2;    // finger thickness at the root, bends in X
 clip_t1       = 0.8;    // finger thickness at the hook
-clip_free     = 11.0;   // free finger length, root to the hook's catching face
+// Free length also sets how close the hook comes to the lid plate (45 deg
+// cut): 9.5 brings it 1.5 mm closer than 11 did, which sat too far out.
+clip_free     = 9.5;    // free finger length, root to the hook's catching face
+clip_play     = 0.3;    // catching face to the plug's back face
 clip_anchor   = 3.0;    // finger length behind the root, on the lid plate
 clip_gap      = 0.6;    // slot between the hook end and the side wall
 // The 5 V fingers' back part runs over the RJ45 (J102, top at z 20.4): more
@@ -397,7 +407,7 @@ module plug_cradle(xc) {
     // through the frame, barrel first, until the hooks click in behind it.
     c  = plug_clr;
     xi = plug_w / 2 + c;             // side walls' inner faces, from xc
-    yb = plug_y0 - 0.1;              // hooks' catching face
+    yb = plug_y0 - clip_play;        // hooks' catching face
     yr = yb - clip_ramp;             // back end of the hooks' ramps
     y0 = yb - clip_free;             // finger root
     ys = yb + clip_gap;              // back end of the side walls
@@ -406,6 +416,8 @@ module plug_cradle(xc) {
     // platform under the flat side, 0.3 mm clear of the fingers
     translate([xc - xi + 0.3, H - platform_len, plug_z1])
         cube([2 * xi - 0.6, platform_len, lid_z - plug_z1 + eps]);
+    translate([xc - xi + platform_clr, y0 - clip_anchor, plug_z1])
+        cube([2 * (xi - platform_clr), H - platform_len - (y0 - clip_anchor) + eps, lid_z - plug_z1 + eps]);
     // barrel frame in the top wall's plane: the step bears on its inside
     difference() {
         translate([xc - fw, plug_y_step, fz]) cube([2 * fw, wall, lid_z - fz + eps]);
