@@ -17,6 +17,8 @@ the top face, the bus on the bottom face.
 | `gdoor-din-base.step`, `gdoor-din-lid.step` | the same parts as STEP solids, for other CAD tools |
 | `gdoor-din-enclosure.step` | base and lid in their assembled position |
 | `step_export.py` | converts the STLs into the STEP files |
+| `gdoor-din-full.step` | the whole device: enclosure, plugs, board with its parts, mock wires |
+| `full_assembly.py` | builds `gdoor-din-full.step` |
 
 ## Build the STLs
 
@@ -38,6 +40,27 @@ features stay faceted (`$fn = 40`). It needs OpenCascade's python bindings
 
 ```
 python step_export.py
+```
+
+`full_assembly.py` then builds `gdoor-din-full.step`, the whole device in
+the assembled position. It contains everything in `gdoor-din-enclosure.step`
+and the board from a kicad-cli export, half-turned into the housing's frame.
+The board export has no copper and no J1/J4, which stay unfitted. The script
+adds four mock wires (1.6 mm insulation, stripped ends through the pads and
+into the plugs' wire entries):
+
+- J4 to the 5 V plug: red (+5 V, pin 2) and black (GND, pin 1), back over
+  the plug and down into its entries from behind, clear of the RJ45.
+- J1 to the bus plug: blue (pin 2) and white (pin 1), diagonally across the
+  component side under the lid, at the height of the plug's wire entries,
+  then down the channel between the cradle's clip fingers.
+
+It checks each wire against the base, the lid, the plugs and every board
+part, and prints the overlap (0 now). The command for the board export is in
+the script's header.
+
+```
+python full_assembly.py board.step
 ```
 
 ## Print
@@ -101,9 +124,20 @@ housing again.
   inside the window face, so the cable overmold stops on the face. There are also two 1.3 mm holes for the LEDs. The LEDs are top-emitting
   on the board, so the holes show their glow, not the LED itself; a short
   piece of clear filament works as a light pipe.
-- BOOT and RESET are pressed with a pin through the lid (labelled). The lid
-  is covered by the neighbouring module on the rail, so take the device off
-  the rail to reach them.
+- BOOT and RESET are print-in-place buttons in the lid (labelled). Each is
+  a tongue cut free from the lid plate by a 0.6 mm U-shaped slot (5.5 mm
+  wide, 8.5 mm from its root, at the front, to the round pad), thinned to
+  1.0 mm from the inside, with its outer face flush with the lid. A 3.6 mm
+  plunger hangs from the pad down to 0.3 mm above the switch's actuator
+  (TL3342, top at 1.54 mm). Press the pad with a finger: about 0.55 mm
+  travel, about 1.1 % strain in the tongue, which bends along the layers.
+  Nothing stands proud of the lid, so the neighbouring module on the rail
+  cannot press them; take the device off the rail to reach them.
+  The tongue tilts as it bends, so the plunger tip swings about 2.5 mm
+  towards the root over the full travel. Pad and plunger therefore sit
+  1.9 mm behind the switch centre (`btn_off`), which puts the tip on the
+  actuator halfway through the travel. If a button does not click, the
+  plunger is too short for your board: reduce `btn_gap`.
 - Rail clip: fixed hook at the top, spring latch at the bottom. Hook the
   top on, press the bottom on. To remove, push the latch hook down with a
   small screwdriver from below. The latch (10 mm wide) sits on a 2 x 4.6 mm
@@ -120,7 +154,7 @@ type, e.g. QUARKZMAN PCB-Klemmleiste) in a cradle on the lid:
 - **BUS**: mating end out of the bottom face, labelled `BUS`. The male
   cable plug goes on from below. Its cradle is the top one mirrored, at
   x = 32, so its wires leave the back of the plug clear of the RST and
-  BOOT button tubes (x = 44).
+  BOOT button plungers (x = 42).
 
 The screws face the board, so they are reached with the lid off.
 

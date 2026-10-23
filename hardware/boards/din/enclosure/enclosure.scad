@@ -18,7 +18,7 @@
 //
 // Parts (set `part` or use -D part="..."):
 //   "base"     tub: side wall, perimeter, DIN clip, board rails
-//   "lid"      flat side wall with rim, hold-down posts, button tubes and
+//   "lid"      flat side wall with rim, hold-down posts, flush buttons and
 //              the clip cradles for the 5 V and bus plugs
 //   "assembly" both, plus the board and the plugs as ghosts
 //   "open"     the base with board and plugs, lid off
@@ -149,10 +149,27 @@ clip_zw       = plug_z0 + 0.5;   // side walls' edge towards the board, away
 frame_hw      = barrel_w / 2 + frame_t + 0.55;
 
 // ---- lid features ------------------------------------------------------------
-// RESET (SW101, ESP_EN) and BOOT (SW102, IO0), top-actuated, poked through
-// the lid.
-buttons   = [[44.0, 23.0, "RST"], [44.0, 14.0, "BOOT"]];
-btn_top_z = pcb_z1 + 1.6;
+// RESET (SW101, ESP_EN) and BOOT (SW102, IO0), TL3342, top-actuated.
+// Print-in-place buttons: a tongue cut free in the lid plate by a U-shaped
+// slot carries a plunger down to the switch. The tongue's outer face is
+// flush with the lid and nothing stands proud of it, so the neighbouring
+// module on the rail cannot press it. The tongue is a cantilever, rooted
+// towards the front (+X), and thinned from the cavity side so it bends
+// along the layers at about 1.1 % strain at full travel.
+// It tilts as it bends, so the plunger tip swings towards the root, about
+// plunger length x 1.5 x deflection / btn_len. The pad and plunger sit
+// btn_off behind the switch centre, so the tip is centred on the actuator
+// halfway through its travel.
+buttons    = [[44.0, 23.0, "RST"], [44.0, 14.0, "BOOT"]];   // switch centres
+btn_top_z  = pcb_z1 + 1.54;   // actuator top (TL3342 3D model)
+btn_gap    = 0.3;             // plunger tip above the actuator at rest
+btn_travel = 0.25;            // switch travel
+btn_len    = 8.5;             // tongue, root to pad centre (root stays inside the rim)
+btn_w      = 5.5;             // tongue width and pad diameter
+btn_t      = 1.0;             // tongue thickness, of the lid plate's wall
+btn_slot   = 0.6;             // slot around the tongue
+btn_d      = 3.6;             // plunger diameter
+btn_off    = (W - btn_t / 2 - btn_top_z - btn_gap) * 1.5 * (btn_gap + btn_travel / 2) / btn_len;
 // Hold-down posts on free board spots (checked against the courtyards).
 posts     = [[3.8, 86.0], [4.0, 45.0], [4.0, 4.0], [50.5, 6.0], [35.5, 86.0]];
 // Each post keeps the thin tip on the board up to post_stem above it (clear
@@ -431,6 +448,36 @@ module plug_cradle(xc) {
     }
 }
 
+module button_tongue(b) {
+    // 2D: the tongue, pad end round, root at +X
+    px = b[0] - btn_off;
+    hull() {
+        translate([px, b[1]]) circle(d = btn_w);
+        translate([px + btn_len, b[1] - btn_w / 2]) square([eps, btn_w]);
+    }
+}
+
+module button_slot(b) {
+    // 2D: U-shaped slot around the tongue, open at the root
+    difference() {
+        offset(r = btn_slot) button_tongue(b);
+        button_tongue(b);
+        translate([b[0] - btn_off + btn_len, b[1] - btn_w]) square([btn_slot + 1, 2 * btn_w]);
+    }
+}
+
+module button_plunger(b) {
+    // from the tongue's inner face down to btn_gap above the actuator; a
+    // cone at the root, a chamfer at the tip
+    z0 = btn_top_z + btn_gap;
+    zt = W - btn_t;
+    translate([b[0] - btn_off, b[1], z0]) {
+        cylinder(d1 = btn_d - 0.8, d2 = btn_d, h = 0.4);
+        translate([0, 0, 0.4 - eps]) cylinder(d = btn_d, h = zt - z0 - 0.4 + 2 * eps);
+        translate([0, 0, zt - z0 - 1.5]) cylinder(d1 = btn_d, d2 = btn_w - 0.4, h = 1.5 + eps);
+    }
+}
+
 module lid() {
     difference() {
         union() {
@@ -447,19 +494,21 @@ module lid() {
                 }
                 linear_extrude(W) offset(delta = -rim_clr) cavity();
             }
-            for (b = buttons) translate([b[0], b[1], btn_top_z + 1.5])
-                cylinder(d = 4.6, h = lid_z - btn_top_z - 1.5 + eps);
         }
         for (b = buttons) {
-            translate([b[0], b[1], 0]) cylinder(d = 2.2, h = W + 1);
-            // behind the hole (towards -X): in front the lid ends at
+            // slot through the plate around the tongue, and the tongue
+            // thinned from the cavity side
+            translate([0, 0, lid_z - 1]) linear_extrude(W - lid_z + 2) button_slot(b);
+            translate([0, 0, lid_z - 1]) linear_extrude(W - btn_t - lid_z + 1) button_tongue(b);
+            // behind the slot (towards -X): in front the lid ends at
             // shoulder_x. Mirrored in X so that it reads correctly from
-            // outside after real(), starting next to the hole.
-            translate([b[0] - 3.5, b[1], W - 0.4]) mirror([1, 0, 0]) linear_extrude(1)
-                text(b[2], size = 2.5, halign = "left", valign = "center",
-                     font = "Liberation Sans:style=Bold");
+            // outside after real(), starting next to the slot.
+            translate([b[0] - btn_off - btn_w / 2 - btn_slot - 1, b[1], W - 0.4]) mirror([1, 0, 0])
+                linear_extrude(1) text(b[2], size = 2.5, halign = "left", valign = "center",
+                                       font = "Liberation Sans:style=Bold");
         }
     }
+    for (b = buttons) button_plunger(b);
 }
 
 // ---- ghosts ------------------------------------------------------------------
