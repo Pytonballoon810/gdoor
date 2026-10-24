@@ -190,7 +190,11 @@ housing again.
   thick with a 1.3 mm hook (about 3.2 % strain) and broke off at the root.
   Now the strain is about 0.9 %, and a 0.8 mm 45° chamfer at the root's
   outer (tension) side, with a matching relief in the base wall's top
-  edge, removes the sharp corner the cracks started from. The tips stop
+  edge, removes the sharp corner the cracks started from. On the cavity
+  side the root has a 1.2 mm round fillet into the lid plate (`snap_gus`),
+  so it has no sharp inner corner either: pulling on the closed lid, with
+  the hooks caught, bends the fingers outwards and puts that side in
+  tension. It prints on the lid plate, with no overhang. The tips stop
   1.8 mm above J1 and J4 (17.4 mm), which sets the length.
   To open, press the four hooks in through the windows with a small
   screwdriver and lift the lid.

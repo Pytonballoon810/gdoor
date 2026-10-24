@@ -207,6 +207,7 @@ snap_hh   = 2.0;        // hook height, lead-in ramp plus land (sets the base wi
 snap_land = 0.6;        // flat at full depth, under the catching face
 snap_slot = 0.5;        // slots in the rim beside each finger
 snap_fil  = 0.8;        // 45 deg chamfer at the root's outer side
+snap_gus  = 1.2;        // round fillet at the root's cavity side, into the lid plate
 
 // ---- colour accents (multi-material print) ------------------------------------
 // The *_body and *_accent parts split base and lid into two colours. Accent:
@@ -395,6 +396,13 @@ module snap_finger(xc) {
         polygon([[yo, lid_z + eps], [yo - snap_t0, lid_z + eps], [yo - snap_t1, zt], [yo, zt]]);
         // root chamfer on the outer side, into the relief in the base wall
         polygon([[yo - eps, lid_z + eps], [yo + snap_fil, lid_z + eps], [yo - eps, lid_z - snap_fil]]);
+        // root fillet on the cavity side: no sharp inner corner where pulling
+        // on the lid (hooks caught) bends the finger outwards
+        yi = yo - snap_t0 + 0.05;
+        difference() {
+            translate([yi - snap_gus - 0.05, lid_z - snap_gus]) square([snap_gus + 0.05, snap_gus + eps]);
+            translate([yi - snap_gus - 0.05, lid_z - snap_gus]) circle(r = snap_gus);
+        }
         polygon([[yo - eps, snap_zc], [yo + rim_clr + snap_hook, snap_zc],
                  [yo + rim_clr + snap_hook, snap_zc - snap_land], [yo - eps, zt]]);
     }
