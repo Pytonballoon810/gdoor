@@ -87,9 +87,10 @@ def wires():
     out = []
     # 5 V: J4 pads (KiCad 105.25 / 108.75, 64.5) to the top plug at x = 46,
     # wire end at Y = 73, entries facing -Y. The wire drops from the pad,
-    # runs back over the plug (its screw face is at Z 16.8, the cradle's clip
-    # fingers end at 16.3), turns down behind the plug clear of the RJ45
-    # (its top ends at Y 65.3) and goes into the entry.
+    # runs back over the plug (its screw face is at Z 16.8, the cradle's side
+    # walls and the keeper end at 16.3), turns down behind the plug clear of
+    # the RJ45 (its top ends at Y 65.3) and goes into the entry through the
+    # opening between the keeper's legs.
     for kxp, xe, name, col in [(108.75, 46 - 1.905, "5V +5V wire (J4 pin 2)", RED),
                                (105.25, 46 + 1.905, "5V GND wire (J4 pin 1)", BLACK)]:
         x, y = kx(kxp), ky(64.5)
@@ -100,8 +101,8 @@ def wires():
     # Bus: J1 pads (KiCad 141.25 / 144.75, 64.5) down to the bottom plug at
     # x = 32 (turned half a turn, so its entries face +Y, wire end at
     # Y = 17). The wires drop to the entries' height and run diagonally
-    # across the component side, under the lid, then straight down the
-    # channel between the cradle's clip fingers.
+    # across the component side, under the lid, then straight down between
+    # the cradle's side walls and through the keeper's legs.
     for kxp, xe, name, col in [(144.75, 32 - 1.905, "BUS wire (J1 pin 2)", BLUE),
                                (141.25, 32 + 1.905, "BUS wire (J1 pin 1)", WHITE)]:
         x, y = kx(kxp), ky(64.5)

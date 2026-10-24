@@ -106,9 +106,10 @@ jobs:
           # 3D: the board STEP is ~60 MB, zipped it is ~10 MB
           (cd $D && zip -9 -q ../../../release/$N-board-step.zip PowerModule.step)
           (cd $E && zip -9 -q ../../../../release/$N-enclosure-step.zip \
-            gdoor-din-enclosure.step gdoor-din-base.step gdoor-din-lid.step)
-          cp $E/gdoor-din-base.stl release/$N-enclosure-base.stl
-          cp $E/gdoor-din-lid.stl  release/$N-enclosure-lid.stl
+            gdoor-din-enclosure.step gdoor-din-base.step gdoor-din-lid.step gdoor-din-keeper.step)
+          cp $E/gdoor-din-base.stl   release/$N-enclosure-base.stl
+          cp $E/gdoor-din-lid.stl    release/$N-enclosure-lid.stl
+          cp $E/gdoor-din-keeper.stl release/$N-enclosure-keeper.stl
           # Bambu Studio project, unsliced: plate 1 single colour, plate 2 body + accent
           cp $E/gdoor-din.3mf      release/$N-enclosure.3mf
           cp $E/preview.png        release/$N-enclosure-preview.png
@@ -141,9 +142,9 @@ jobs:
 
           ## 3D models
 
-          \`$N-board-step.zip\` (whole board with components), \`$N-enclosure-step.zip\`, and the printable \`$N-enclosure-base.stl\` and \`$N-enclosure-lid.stl\`.
+          \`$N-board-step.zip\` (whole board with components), \`$N-enclosure-step.zip\`, and the printable \`$N-enclosure-base.stl\`, \`$N-enclosure-lid.stl\` and \`$N-enclosure-keeper.stl\` (print two: they hold the plugs in the lid).
 
-          To print the enclosure, open \`$N-enclosure.3mf\` in Bambu Studio and slice the plate you want; both hold the base and the lid, already in print orientation. Plate 1 is single colour. Plate 2 is two colours: each part has a \`body\` (filament 1) and an \`accent\` (filament 2). The file comes with Bambu's settings for a P1S with 0.2 mm nozzle and PLA Basic only because Bambu Studio cannot open a two-plate file without them; pick your own printer, process and filaments before slicing.
+          To print the enclosure, open \`$N-enclosure.3mf\` in Bambu Studio and slice the plate you want; both hold the base, the lid and the two keepers, already in print orientation. Plate 1 is single colour. Plate 2 is two colours: each part has a \`body\` (filament 1) and an \`accent\` (filament 2). The file comes with Bambu's settings for a P1S with 0.2 mm nozzle and PLA Basic only because Bambu Studio cannot open a two-plate file without them; pick your own printer, process and filaments before slicing.
 
           ## Firmware (ESPHome)
 

@@ -19,7 +19,8 @@
 // Parts (set `part` or use -D part="..."):
 //   "base"     tub: side wall, perimeter, DIN clip, board rails
 //   "lid"      flat side wall with rim, hold-down posts, flush buttons and
-//              the clip cradles for the 5 V and bus plugs
+//              the cradles for the 5 V and bus plugs
+//   "keeper"   holds a plug in its cradle (print two)
 //   "assembly" both, plus the board and the plugs as ghosts
 //   "open"     the base with board and plugs, lid off
 //   "fit"      everything that collides with the board (must render empty)
@@ -120,41 +121,35 @@ platform_len  = 8.05;   // platform under the flat side, from the outer face
 barrel_w      = 8.35;
 barrel_h      = 7.0;
 frame_t       = 1.2;
-// Retention clip: behind each cradle side wall, a spring finger runs back
-// from the hook to its root, cut free from the lid plate by a 45 deg slot
-// so it prints without support. It bends sideways, in the print plane. The
-// hook at its front end drops in behind the plug's back face once the plug
-// is slid fully home.
-// The root is behind the hook on purpose. Pushing the plug back (the cable
-// plug going on) then compresses the finger, and since the hook sits on
-// its inner side, that bends the hook further in behind the plug instead
-// of spreading it. With the root in front of the hook (up to 2026-10-23)
-// the same push pulled the finger and spread the hooks, so only stiffness
-// held the plug: 1.0 mm gave, 2.0 mm was too stiff to bend without cracking.
-side_t        = 2.0;    // fixed side wall between frame and hook
-clip_t0       = 1.2;    // finger thickness at the root, bends in X
-clip_t1       = 0.8;    // finger thickness at the hook
-// Free length also sets how close the hook comes to the lid plate (45 deg
-// cut): 9.5 brings it 1.5 mm closer than 11 did, which sat too far out.
-clip_free     = 9.5;    // free finger length, root to the hook's catching face
-clip_play     = 0.1;    // catching face to the plug's back face
-// On the first print the hooks sat about 1.8 mm too far back and did not
-// touch the plug until it was pushed back; they move forward by that much
-// (the plug's position is unchanged).
-clip_fwd      = 1.8;
-clip_anchor   = 3.0;    // finger length behind the root, on the lid plate
-clip_gap      = 0.6;    // slot between the hook end and the side wall
-// The 5 V fingers' back part runs over the RJ45 (J102, top at z 20.4): more
-// than clip_step behind the ramp, the finger only reaches down to clip_zr.
-clip_step     = 5.0;
-clip_zr       = lid_z - 12.2;
-clip_lip      = 1.0;    // hook overlap on the back face, beside the wire entries
-clip_ramp     = 2.0;    // lead-in ramp length of the hook
-clip_land     = 0.5;    // flat at full depth between ramp and catching face
-clip_under    = 0.3;    // undercut of the catching face: pushing the plug
-                        // back pulls the hooks in instead of spreading them
-clip_zw       = plug_z0 + 0.5;   // side walls' edge towards the board, away
+// Keeper: a separate printed U-shaped plate behind the plug's back face. Its
+// two legs slide into grooves in the cradle's side walls from the board
+// side, down to the lid plate, and cover the back face beside the wire
+// entries; the wires leave through the opening between the legs. Pushing
+// the plug back (the cable plug going on) presses the keeper against the
+// grooves' back faces, so nothing has to flex. Up to 2026-10-24 spring clip
+// fingers on the side walls did this; they never held the plug reliably.
+// The keeper is held in its grooves by friction (keep_clr) and the wires.
+side_t        = 2.0;    // side walls along the plug
+side_zw       = plug_z0 + 0.5;   // side walls' edge towards the board, away
                                  // from the frame (at the frame: level with it)
+keep_t        = 2.5;    // keeper thickness, along the plug
+keep_g        = 1.0;    // groove depth into the side wall (of side_t)
+keep_clr      = 0.1;    // keeper in its groove, per side; raise if it is tight
+keep_back     = 2.0;    // side wall behind the groove, takes the push
+keep_play     = 0.1;    // keeper's front face to the plug's back face
+// On the first print of the clips, their hooks sat about 1.8 mm too far
+// back and did not touch the plug until it was pushed back; the keeper's
+// front face sits that much further forward (the plug's position is
+// unchanged, so in the model the keeper reaches 1.7 mm into it).
+keep_fwd      = 1.8;
+// Legs end keep_lip in from the plug's sides: the wire entries (3 mm wide
+// at a 3.81 mm pitch) reach to 3.4 mm from its centre line.
+keep_lip      = 0.7;
+// Bridge between the legs, on the lid plate: it fills the gap between the
+// lid plate and the plug's flat side, and reaches keep_bridge past the flat
+// side onto the back face, clear of the wire entries.
+keep_bridge   = 1.2;
+keep_ch       = 0.4;    // lead-in chamfer at the legs' ends
 // frame half-width. The side walls end on the frame, no wider than it, so
 // they stay clear of the base wall beside its slot. Wider than this and the
 // 5 V plug's slot (x = 46) runs into the front wall at x = 52.8.
@@ -416,18 +411,43 @@ module lid_rim() {
     for (s = snaps) plug_at(s) snap_finger(s[0]);
 }
 
+keep_y  = plug_y0 - keep_play + keep_fwd;   // keeper's front face
+keep_xi = plug_w / 2 - keep_lip;            // legs' inner edges, from the centre
+keep_xo = plug_w / 2 + plug_clr + keep_g - keep_clr;   // legs' outer edges
+keep_zb = lid_z - plug_z1 + keep_bridge;    // bridge height, from the lid plate
+keep_h  = lid_z - side_zw;                  // leg length, from the lid plate
+
+module keeper_shape() {
+    // Local frame: x across (centred on the plug), y along the plug, the
+    // front face at y = 0 and the back at -keep_t, z from the lid plate's
+    // inner face (0) towards the board. Symmetric in x.
+    rotate([90, 0, 0]) linear_extrude(keep_t) polygon([
+        [-keep_xo, 0], [keep_xo, 0], [keep_xo, keep_h - keep_ch], [keep_xo - keep_ch, keep_h],
+        [keep_xi, keep_h], [keep_xi, keep_zb], [-keep_xi, keep_zb], [-keep_xi, keep_h],
+        [-keep_xo + keep_ch, keep_h], [-keep_xo, keep_h - keep_ch]]);
+}
+
+module keeper(xc, s = 0) {
+    // In place behind the top plug, design frame (z towards the lid). s
+    // shrinks it, for the fit check against the parts it only touches.
+    translate([xc, keep_y, lid_z]) mirror([0, 0, 1]) intersection() {
+        keeper_shape();
+        translate([-keep_xo + s, -keep_t + s, s]) cube([2 * (keep_xo - s), keep_t - 2 * s, keep_h - 2 * s]);
+    }
+}
+
+module keepers(s = 0) { for (p = plugs) plug_at(p) keeper(p[0], s); }
+
 module plug_cradle(xc) {
     // The plug goes in flat side down behind the cradle and slides out
-    // through the frame, barrel first, until the hooks click in behind it.
+    // through the frame, barrel first; then the keeper drops in behind it.
     c  = plug_clr;
     xi = plug_w / 2 + c;             // side walls' inner faces, from xc
-    yb = plug_y0 - clip_play + clip_fwd;   // hooks' catching face
-    yr = yb - clip_ramp;             // back end of the hooks' ramps
-    y0 = yb - clip_free;             // finger root
-    ys = yb + clip_gap;              // back end of the side walls
+    yg = keep_y - keep_t - keep_clr; // grooves' back face
+    ys = yg - keep_back;             // back end of the side walls
     fw = frame_hw;
     fz = plug_z1 - barrel_h - frame_t;
-    // platform under the flat side, 0.3 mm clear of the fingers
+    // platform under the flat side
     translate([xc - xi + 0.3, H - platform_len, plug_z1])
         cube([2 * xi - 0.6, platform_len, lid_z - plug_z1 + eps]);
     // barrel frame in the top wall's plane: the step bears on its inside
@@ -439,36 +459,20 @@ module plug_cradle(xc) {
     for (s = [-1, 1]) {
         xw = xc + s * xi;                         // inner face
         xa = s < 0 ? xw - side_t : xw;
-        // fixed side wall, from the slot in front of the hook to the frame:
-        // deeper towards the board, but level with the frame where it meets
-        // it, so it stays clear of the base wall
-        translate([xa, ys, clip_zw]) cube([side_t, plug_y_step - 0.2 - ys, lid_z - clip_zw + eps]);
-        translate([xa, ys, fz]) cube([side_t, plug_y_step - 0.2 - ys, lid_z - fz + eps]);
+        // side wall, from behind the keeper's groove to the frame: deeper
+        // towards the board, but level with the frame where it meets it, so
+        // it stays clear of the base wall. The groove is open towards the
+        // board and runs down to the lid plate.
+        difference() {
+            translate([xa, ys, side_zw]) cube([side_t, plug_y_step - 0.2 - ys, lid_z - side_zw + eps]);
+            translate([s < 0 ? xw - keep_g : xw - eps, yg, side_zw - 1])
+                cube([keep_g + eps, keep_t + 2 * keep_clr, lid_z - side_zw + 1]);
+        }
         // last 0.2 mm into the frame: no wider than the frame, which has to
         // fit its slot in the base wall
         ct = min(side_t, frame_hw - xi);
         translate([s < 0 ? xw - ct : xw, plug_y_step - 0.2 - eps, fz])
             cube([ct, 0.2 + 2 * eps, lid_z - fz + eps]);
-        // spring finger, tapered from the root to the hook, inner face flat;
-        // in front of a 45 deg line from the root it is cut free from the
-        // lid plate
-        difference() {
-            translate([0, 0, clip_zw]) linear_extrude(lid_z - clip_zw + eps)
-                polygon([[xw - s * eps, y0 - clip_anchor], [xw + s * clip_t0, y0 - clip_anchor],
-                         [xw + s * clip_t0, y0], [xw + s * clip_t1, yb], [xw - s * eps, yb]]);
-            translate([min(xw, xw + s * clip_t0) - 1, 0, 0]) rotate([90, 0, 90]) linear_extrude(clip_t0 + 2)
-                polygon([[y0, lid_z + 1], [y0, lid_z],
-                         [yb + 1, lid_z - (yb + 1 - y0)], [yb + 1, lid_z + 1]]);
-            translate([min(xw, xw + s * clip_t0) - 1, y0 - clip_anchor - 1, clip_zw - 1])
-                cube([clip_t0 + 2, yr - clip_step - (y0 - clip_anchor - 1), clip_zr - clip_zw + 1]);
-        }
-        // hook at the finger's front end: lead-in ramp on the side the plug
-        // comes from, a flat land at full depth, then the undercut catching face
-        zt = lid_z - clip_free;                   // finger's lower edge at the hook
-        xt = xw - s * (c + clip_lip);             // hook tip
-        translate([0, 0, clip_zw]) linear_extrude(zt - clip_zw)
-            polygon([[xw + s * eps, yr], [xt, yb - clip_land], [xt, yb],
-                     [xw + s * eps, yb - clip_under]]);
     }
 }
 
@@ -651,13 +655,17 @@ else if (part == "base_body") translate([0, H, W]) rotate([180, 0, 0]) real() ba
 else if (part == "base_accent") translate([0, H, W]) rotate([180, 0, 0]) real() base_accent();
 else if (part == "lid_body") real() lid_body();
 else if (part == "lid_accent") real() lid_accent();
+// one keeper, flat on its back face; print two
+else if (part == "keeper") rotate([-90, 0, 0]) keeper_shape();
 else if (part == "colours") real() {   // assembled, body and accent colours
-    color("DimGray") { base_body(); lid_body(); }
+    color("DimGray") { base_body(); lid_body(); keepers(); }
     color(acc_colour) { base_accent(); lid_accent(); }
 }
 else if (part == "fit") real() {
-    intersection() { union() { base(); lid(); } board_ghost(0.05); }
-    for (p = plugs) intersection() { union() { base(); lid(); } plug_at(p) plug_ghost(p[0], 0.05); }
+    intersection() { union() { base(); lid(); keepers(); } board_ghost(0.05); }
+    for (p = plugs) intersection() { union() { base(); lid(); keepers(); } plug_at(p) plug_ghost(p[0], 0.05); }
+    // the keepers against the lid and the base: they must only touch
+    intersection() { union() { base(); lid(); } keepers(0.05); }
 }
 else if (part == "open") real() {   // base with the board in it, lid off
     color("SlateGray") base();
@@ -667,6 +675,7 @@ else if (part == "open") real() {   // base with the board in it, lid off
 else if (part == "assembly") real() {
     color("SlateGray") base();
     color("LightGray", 0.6) lid();
+    color("DarkOrange") keepers();
     color("ForestGreen") board_ghost();
     color("LimeGreen") for (p = plugs) plug_at(p) plug_ghost(p[0]);
     %rail_ghost();

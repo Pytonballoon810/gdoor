@@ -1,8 +1,8 @@
 # Converts the OpenSCAD STLs into STEP solids: gdoor-din-base.step,
-# gdoor-din-lid.step (print orientation, like the STLs) and
-# gdoor-din-enclosure.step (base and lid in their assembled position, with
-# both plugs from plug_model.py in their cradles and the cable plugs on them,
-# named and coloured).
+# gdoor-din-lid.step, gdoor-din-keeper.step (print orientation, like the
+# STLs) and gdoor-din-enclosure.step (base, lid and both keepers in their
+# assembled position, with both plugs from plug_model.py in their cradles and
+# the cable plugs on them, named and coloured).
 #
 # OpenSCAD 2021.01 cannot write STEP, so this sews the STL triangles into a
 # closed solid and merges coplanar triangles into planar faces. Flat faces come
@@ -38,6 +38,10 @@ H = 90.0  # enclosure height; the base STL is turned 180 deg about y = H/2, z = 
 PLUGS = [(46.0, 1), (32.0, 0)]
 PLUG_BACK = 17.0
 PLUG_Z = 5.8
+# Keepers (keep_y in enclosure.scad): front face at H - PLUG_BACK - keep_play
+# + keep_fwd, standing on the lid plate's inner face (Z = wall).
+KEEP_Y = H - PLUG_BACK - 0.1 + 1.8
+KEEP_Z = 1.8
 
 
 def load_solid(path):
@@ -88,7 +92,8 @@ src = sys.argv[1] if len(sys.argv) > 1 else "."
 out = sys.argv[2] if len(sys.argv) > 2 else "."
 base_print, nb = load_solid(os.path.join(src, "gdoor-din-base.stl"))
 lid, nl = load_solid(os.path.join(src, "gdoor-din-lid.stl"))
-print("shells:", nb, nl)
+keeper_print, nk = load_solid(os.path.join(src, "gdoor-din-keeper.stl"))
+print("shells:", nb, nl, nk)
 
 # The lid STL is already in its assembled position (its outer face is the
 # real device's Z = 0 side). The base is printed turned over: undo
@@ -100,9 +105,30 @@ base = BRepBuilderAPI_Transform(base_print, t, True).Shape()
 report("base (print)", base_print)
 report("base (assembled)", base)
 report("lid", lid)
+report("keeper (print)", keeper_print)
 
 write(os.path.join(out, "gdoor-din-base.step"), base_print)
 write(os.path.join(out, "gdoor-din-lid.step"), lid)
+write(os.path.join(out, "gdoor-din-keeper.step"), keeper_print)
+# Keepers: the STL lies on its back face (rotate([-90, 0, 0]) of its local
+# frame); turned back up and put behind each plug, the bottom one turned
+# 180 deg about Z like its plug.
+keepers = []
+for xc, top in PLUGS:
+    up = gp_Trsf()
+    up.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(1, 0, 0)), math.pi / 2)
+    t = gp_Trsf()
+    if top:
+        t.SetTranslation(gp_Vec(xc, KEEP_Y, KEEP_Z))
+    else:
+        r = gp_Trsf()
+        r.SetRotation(gp_Ax1(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1)), math.pi)
+        t.SetTranslation(gp_Vec(xc, H - KEEP_Y, KEEP_Z))
+        t.Multiply(r)
+    t.Multiply(up)
+    keepers.append((BRepBuilderAPI_Transform(keeper_print, t, True).Shape(), f"{'5V' if top else 'BUS'} keeper"))
+for k, name in keepers:
+    report(name, k)
 # Plugs: plug_model's local frame put in place, the female's shroud mouth flush
 # with the outer face. The top one is a translation; the bottom one (the scad
 # mirrors it about y = H/2) is turned 180 deg about Z instead, which is the
@@ -111,6 +137,7 @@ import plug_model
 from OCP.BRepAlgoAPI import BRepAlgoAPI_Common
 assert plug_model.f_len == PLUG_BACK
 parts = [(base, "base", (0.45, 0.48, 0.52)), (lid, "lid", (0.85, 0.80, 0.86))]
+parts += [(k, name, (0.85, 0.45, 0.10)) for k, name in keepers]
 hits = 0.0
 for xc, top in PLUGS:
     t = gp_Trsf()
@@ -129,5 +156,14 @@ for xc, top in PLUGS:
             BRepGProp.VolumeProperties_s(BRepAlgoAPI_Common(placed, part).Shape(), p)
             hits += p.Mass()
 print(f"plugs: overlap with base and lid {hits:.3f} mm3")
+# The keepers sit keep_fwd forward of the modelled back face (see
+# enclosure.scad), so they reach into the plugs by design; this shows how far.
+khits = 0.0
+for k, _ in keepers:
+    for part in [base, lid] + [s for s, n, _ in parts if "female body" in n]:
+        p = GProp_GProps()
+        BRepGProp.VolumeProperties_s(BRepAlgoAPI_Common(k, part).Shape(), p)
+        khits += p.Mass()
+print(f"keepers: overlap with base, lid and the female plugs {khits:.3f} mm3")
 plug_model.write(os.path.join(out, "gdoor-din-enclosure.step"), parts)
 print("written")

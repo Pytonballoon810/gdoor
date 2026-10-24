@@ -1,5 +1,6 @@
-# Packs the base and the lid into one unsliced 3MF, gdoor-din.3mf, in both
-# versions on two Bambu Studio plates; slice the plate you want to print:
+# Packs the base, the lid and the two plug keepers into one unsliced 3MF,
+# gdoor-din.3mf, in both versions on two Bambu Studio plates; slice the plate
+# you want to print:
 #
 #   plate 1  gdoor-din-base, gdoor-din-lid                 single colour, from
 #                                                          gdoor-din-{base,lid}.stl
@@ -8,7 +9,9 @@
 #                                                          two components, "body" and
 #                                                          "accent", each a mesh object
 #
-# Other slicers ignore the plates and show all four objects side by side.
+# Both plates also carry gdoor-din-keeper-1 and -2, from gdoor-din-keeper.stl,
+# in the body colour. Other slicers ignore the plates and show all eight
+# objects side by side.
 #
 # Slicers that follow the 3MF core spec (Bambu Studio, OrcaSlicer,
 # PrusaSlicer) load a component object as one object with one part per
@@ -34,11 +37,17 @@ PLATES = ["single colour", "two colours"]
 PLATE_STRIDE = 256 * 1.2      # P1S bed 256 x 256 mm
 # [object name, part, STL roles (None: the part's single-colour STL), plate,
 # (x, y) offset on its plate]. Base and lid side by side, 10 mm apart,
-# centred on the plate (base x -2.8 .. 60.6, lid x 0 .. 60.6, both y 0 .. 90).
+# centred on the plate (base x -2.8 .. 60.6, lid x 0 .. 60.6, both y 0 .. 90),
+# and the two plug keepers in front of them (each x -5.3 .. 5.3, y 0 .. 14.5),
+# in the body colour on plate 2.
 OBJECTS = [("gdoor-din-base", "base", [None], 1, (63.8, 83.0)),
            ("gdoor-din-lid", "lid", [None], 1, (134.4, 83.0)),
+           ("gdoor-din-keeper-1", "keeper", [None], 1, (118.0, 58.0)),
+           ("gdoor-din-keeper-2", "keeper", [None], 1, (138.0, 58.0)),
            ("gdoor-din-base-colour", "base", ["body", "accent"], 2, (63.8, 83.0)),
-           ("gdoor-din-lid-colour", "lid", ["body", "accent"], 2, (134.4, 83.0))]
+           ("gdoor-din-lid-colour", "lid", ["body", "accent"], 2, (134.4, 83.0)),
+           ("gdoor-din-keeper-1", "keeper", [None], 2, (118.0, 58.0)),
+           ("gdoor-din-keeper-2", "keeper", [None], 2, (138.0, 58.0))]
 
 CONTENT_TYPES = """<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">

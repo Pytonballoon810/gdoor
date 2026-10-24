@@ -14,12 +14,13 @@ the top face, the bus on the bottom face.
 | `board_ghost.scad` | board and parts as boxes, generated, for the fit check |
 | `board_export.py` | regenerates `board_ghost.scad` from `../esp32.kicad_pcb` |
 | `gdoor-din-base.stl`, `gdoor-din-lid.stl` | ready to print |
-| `gdoor-din.3mf` | unsliced Bambu Studio project, two plates: 1 single colour, 2 two colours (`body` and `accent` parts) |
+| `gdoor-din-keeper.stl` | holds a plug in its cradle; print two |
+| `gdoor-din.3mf` | unsliced Bambu Studio project, two plates: 1 single colour, 2 two colours (`body` and `accent` parts); both with the two keepers |
 | `print_3mf.py` | packs the STLs into `gdoor-din.3mf` |
 | `bambu_project_settings.config` | the Bambu settings `gdoor-din.3mf` needs to open; a starting point only |
 | `gdoor-din-{base,lid}-{body,accent}.stl` | the same parts split into two colours, for a multi-material print |
-| `gdoor-din-base.step`, `gdoor-din-lid.step` | the same parts as STEP solids, for other CAD tools |
-| `gdoor-din-enclosure.step` | base and lid in their assembled position |
+| `gdoor-din-base.step`, `gdoor-din-lid.step`, `gdoor-din-keeper.step` | the same parts as STEP solids, for other CAD tools |
+| `gdoor-din-enclosure.step` | base, lid and keepers in their assembled position |
 | `step_export.py` | converts the STLs into the STEP files |
 | `gdoor-din-full.step` | the whole device: enclosure, plugs, board with its parts, mock wires |
 | `full_assembly.py` | builds `gdoor-din-full.step` |
@@ -29,17 +30,27 @@ the top face, the bus on the bottom face.
 ```
 openscad -o gdoor-din-base.stl -D 'part="base"' enclosure.scad
 openscad -o gdoor-din-lid.stl  -D 'part="lid"'  enclosure.scad
-openscad -o fit.stl            -D 'part="fit"'  enclosure.scad   # must be empty
+openscad -o gdoor-din-keeper.stl -D 'part="keeper"' enclosure.scad
+openscad -o fit.stl            -D 'part="fit"'  enclosure.scad   # see below
 python print_3mf.py   # after the colour STLs below too: writes gdoor-din.3mf
 ```
 
+The fit check renders everything that collides: the housing and the
+keepers against the board, against the plugs, and the keepers against the
+housing. It must be empty except for two thin U-shaped slivers, one per
+keeper, where the keepers reach 1.65 mm into the modelled plugs' back ends
+on purpose (`keep_fwd`, see Plugs below).
+
 Rebuild the 3MF whenever any of the STLs change. `gdoor-din.3mf` is an
 unsliced Bambu Studio project with two plates, each with the base and the
-lid side by side, moved on the plate but not turned:
+lid side by side and the two keepers in front of them, moved on the plate
+but not turned:
 
-- **Plate 1, single colour**: `gdoor-din-base`, `gdoor-din-lid`.
+- **Plate 1, single colour**: `gdoor-din-base`, `gdoor-din-lid`,
+  `gdoor-din-keeper-1`, `gdoor-din-keeper-2`.
 - **Plate 2, two colours**: `gdoor-din-base-colour`, `gdoor-din-lid-colour`,
-  each with a `body` part (filament 1) and an `accent` part (filament 2).
+  each with a `body` part (filament 1) and an `accent` part (filament 2),
+  and the two keepers on filament 1.
 
 Open it in Bambu Studio and slice the plate you want. Plates exist only in
 Bambu's own project format, and Bambu Studio cannot open such a project
@@ -75,7 +86,7 @@ into the plugs' wire entries):
   the plug and down into its entries from behind, clear of the RJ45.
 - J1 to the bus plug: blue (pin 2) and white (pin 1), diagonally across the
   component side under the lid, at the height of the plug's wire entries,
-  then down the channel between the cradle's clip fingers.
+  then down between the cradle's side walls and the keeper's legs.
 
 It checks each wire against the base, the lid, the plugs and every board
 part, and prints the overlap (0 now). The command for the board export is in
@@ -88,12 +99,11 @@ python full_assembly.py board.step
 ## Print
 
 PETG preferred: the rail latch is a printed spring. 0.2 mm layers, no
-supports. Both parts print flat on their outer side wall; the base STL is
-already turned over.
+supports. Base and lid print flat on their outer side wall; the base STL is
+already turned over. The keepers print flat on their back face.
 
-PLA works for the springs: the lid snaps (0.9 %, across the layers), the
-rail latch (about 1 %) and the plug clips (1.5 to 1.9 %), both along the
-layers. But PLA softens from about 55 °C and creeps under steady load,
+PLA works for the springs: the lid snaps (0.9 %, across the layers) and the
+rail latch (about 1 %, along the layers). But PLA softens from about 55 °C and creeps under steady load,
 which slowly relaxes the rail latch in a warm cabinet. Fine for a test fit
 and for a cool spot; in a warm cabinet print it in PETG or ASA.
 
@@ -217,7 +227,8 @@ type, e.g. QUARKZMAN PCB-Klemmleiste) in a cradle on the lid:
 
 The screws face the board, so they are reached with the lid off.
 
-Each cradle on the lid has three parts:
+Each cradle on the lid has three parts, and a separate keeper holds the
+plug in it:
 
 - **Barrel frame**: a closed frame at the housing's outer face, in the
   plane of the top wall (bottom wall for the bus plug), which sits in a
@@ -229,51 +240,50 @@ Each cradle on the lid has three parts:
   face (`platform_len`). 9 mm at most: any longer and the L-shaped plug
   cannot be fitted (a full-length platform was tried on 2026-10-23 and
   taken out again).
-- **Side walls**: fixed, 2.0 mm thick (`side_t`), from the frame back to
-  0.6 mm (`clip_gap`) in front of the plug's back face, which is 17 mm in
-  from the outer face (`plug_back`). The barrel frame and its slot in the
-  base wall are 0.55 mm wider each side than the frame alone needs
-  (`frame_hw`); the side walls narrow to that width over their last 0.2 mm,
-  where they join the frame. The frame cannot grow further: the 5 V plug's
-  slot would reach the front wall.
-- **Clip fingers**: behind each side wall, a spring finger runs back from
-  a hook at the plug's back face to its root 9.5 mm further back
-  (`clip_free`), and on 3 mm onto the lid plate (`clip_anchor`). It is cut
-  free from the lid plate by a 45 deg cut, so it prints without support,
-  and bends sideways, in the print plane. Because of that cut, the free
-  length also sets how close the hook comes to the lid plate. It tapers
-  from 1.2 mm at the root (`clip_t0`) to 0.8 mm at the hook (`clip_t1`):
-  about 1.5 % strain while the plug goes in (1.9 % if the plug sits
-  off-centre), fine for PLA along the layers. The 5 V fingers' back part
-  only reaches down to 2 mm above the RJ45 jack (`clip_step`, `clip_zr`).
-  The hook's catching face is 15.3 mm in from the outer face: 0.1 mm
-  behind the plug's modelled back face (`clip_play`), then 1.8 mm forward
-  (`clip_fwd`), because on the first print the hooks sat about 1.8 mm too
-  far back and did not touch the plug until it was pushed back. The plug's
-  position is unchanged, so in the model (fit check, STEP export) the
-  hooks now reach about 1.6 mm into the plug's back end. The hook is 5 mm tall: it covers the back face from 5.5 to
-  10.5 mm above the plug's flat side, beside the wire entries (5.9 to
-  9.4 mm), and overlaps it by 1.0 mm (`clip_lip`). It has a 2 mm lead-in
-  ramp, a 0.5 mm flat at full depth and a catching face undercut by 0.3 mm
-  (`clip_under`).
-  **Why the root is behind the hook:** the hook sits on the finger's inner
-  side, so a push on it also bends the finger. Up to 2026-10-23 the root
-  was in front of the hook: pushing the plug back (the cable plug going on)
-  pulled on the finger and bent the hooks outward, open, so only stiffness
-  held the plug. At 1.0 mm the fingers gave; at 2.0 mm they had to bend by
-  about 4 % to let the plug in, too much for PLA. With the root behind, the
-  same push compresses the finger and bends the hook inward, further
-  behind the plug, so the hold no longer depends on stiffness and the
-  finger can be thin.
-  **First print of that (2026-10-23):** the plug could slip under the
-  hooks. Hence the hook 1.5 mm closer to the lid plate (`clip_free`
-  11 -> 9.5).
+- **Side walls**: fixed, 2.0 mm thick (`side_t`), from the frame back past
+  the plug's back face, which is 17 mm in from the outer face
+  (`plug_back`), to 2 mm behind the keeper (`keep_back`). The barrel frame
+  and its slot in the base wall are 0.55 mm wider each side than the frame
+  alone needs (`frame_hw`); the side walls narrow to that width over their
+  last 0.2 mm, where they join the frame. The frame cannot grow further:
+  the 5 V plug's slot would reach the front wall. Each side wall has a
+  vertical groove for the keeper, 1.0 mm deep (`keep_g`), open towards the
+  board and running down to the lid plate.
+- **Keeper** (separate part, `gdoor-din-keeper.stl`, one per plug): a
+  2.5 mm (`keep_t`) U-shaped plate, 10.6 mm wide and 14.5 mm tall, that
+  drops into the two grooves behind the plug's back face and stands on
+  the lid plate. Its legs cover the back face at both sides, 0.7 mm in
+  from the edges (`keep_lip`), clear of the wire entries (3 mm wide at the
+  3.81 mm pitch, to 3.4 mm from the centre line). The bridge between them
+  fills the gap between the lid plate and the plug's flat side and reaches
+  1.2 mm (`keep_bridge`) onto the back face. The wires leave through the
+  opening between the legs. Pushing the plug back (the cable plug going on)
+  presses the keeper against the grooves' back faces, so nothing bends;
+  pulling on the cable is taken by the barrel frame. The keeper is held in
+  its grooves by friction, 0.1 mm clearance each side (`keep_clr`), and by
+  the wires under its bridge.
+  Its front face is 15.3 mm in from the outer face: 0.1 mm behind the
+  plug's modelled back face (`keep_play`), then 1.8 mm forward
+  (`keep_fwd`), because on the first print of the clips that came before
+  it, their hooks sat about 1.8 mm too far back and did not touch the plug
+  until it was pushed back. The plug's position is unchanged, so in the
+  model (fit check, STEP export) the keepers reach about 1.65 mm into the
+  plug's back end.
+  **Why a keeper:** up to 2026-10-24 a spring clip finger on each side wall
+  hooked in behind the plug. Across its versions the hooks spread open
+  under the push, were too stiff to let the plug in, sat too far back, or
+  let the plug slip under them. The keeper takes the same load with no
+  spring.
 
-To fit a plug: lay it flat side down behind the cradle, between the two
-fingers and behind their hooks, and slide it out through the frame, barrel
-first, until both hooks click in behind it; no glue. To take it out, spread the two fingers and slide it back. If the
-hooks cover your plug's wire entries, reduce `clip_lip`; if the barrel is
-loose or too tight, change `barrel_w` / `barrel_h`.
+To fit a plug: lay it flat side down behind the cradle, between the side
+walls, and slide it out through the frame, barrel first, until its step
+sits against the frame. Clamp the wires, then push the keeper into the two
+grooves from the board side, bridge first, with the wires between its
+legs, until it sits on the lid plate; no glue. To take the plug out, pull
+the keeper and slide the plug back. If the keeper will not go in, the plug
+sits further back than the model says: reduce `keep_fwd`; if it is loose in
+its grooves, reduce `keep_clr`, or raise it if it is too tight. If the
+barrel is loose or too tight, change `barrel_w` / `barrel_h`.
 
 The height (11 mm, `plug_h`) comes from the listing. Width and barrel
 height and the back face position (17 mm from the outer face) are
@@ -291,7 +301,8 @@ component side, under the lid).
 ## Assembly
 
 1. Solder the 5 V wires into J4's holes and the bus wires into J1's holes.
-2. Slide the plugs into the lid cradles until they click, clamp the wires.
+2. Slide the plugs into the lid cradles, clamp the wires, and push a
+   keeper in behind each plug.
 3. Lay the board into the base: back side down onto the rails, front tab
    into the groove in the window wall, so the RJ45 and USB-C come through
    their openings.
