@@ -14,9 +14,9 @@ the top face, the bus on the bottom face.
 | `board_ghost.scad` | board and parts as boxes, generated, for the fit check |
 | `board_export.py` | regenerates `board_ghost.scad` from `../esp32.kicad_pcb` |
 | `gdoor-din-base.stl`, `gdoor-din-lid.stl` | ready to print |
-| `gdoor-din-base.3mf`, `gdoor-din-lid.3mf` | the same parts as unsliced 3MF: geometry only, no print settings |
+| `gdoor-din.3mf` | base and lid in one unsliced 3MF, side by side: geometry only, no print settings |
 | `gdoor-din-colour.3mf` | base and lid in one file, side by side, each one object with two parts, `body` and `accent`: unsliced, no print settings |
-| `colour_3mf.py` | packs the body and accent STLs into the colour 3MF |
+| `print_3mf.py` | packs the STLs into the two 3MFs |
 | `gdoor-din-{base,lid}-{body,accent}.stl` | the same parts split into two colours, for a multi-material print |
 | `gdoor-din-base.step`, `gdoor-din-lid.step` | the same parts as STEP solids, for other CAD tools |
 | `gdoor-din-enclosure.step` | base and lid in their assembled position |
@@ -29,14 +29,14 @@ the top face, the bus on the bottom face.
 ```
 openscad -o gdoor-din-base.stl -D 'part="base"' enclosure.scad
 openscad -o gdoor-din-lid.stl  -D 'part="lid"'  enclosure.scad
-openscad -o gdoor-din-base.3mf -D 'part="base"' enclosure.scad
-openscad -o gdoor-din-lid.3mf  -D 'part="lid"'  enclosure.scad
 openscad -o fit.stl            -D 'part="fit"'  enclosure.scad   # must be empty
+python print_3mf.py   # after the colour STLs below too: writes gdoor-din.3mf and gdoor-din-colour.3mf
 ```
 
-Rebuild the 3MFs whenever the STLs change. They hold only the mesh (in
-mm, in the same print orientation), no printer, filament or process
-settings, so open them in Bambu Studio and slice with your own presets.
+Rebuild the 3MFs whenever the STLs change. `gdoor-din.3mf` holds the base
+and the lid side by side, moved on the plate but not turned: only the
+meshes, in mm, no printer, filament or process settings, so open it in
+Bambu Studio and slice with your own presets.
 
 After a layout change run `board_export.py` (KiCad's python, from
 `hardware/boards/din`) and the fit check again. The front openings, posts
@@ -113,10 +113,10 @@ openscad -o gdoor-din-base-body.stl   -D 'part="base_body"'   enclosure.scad
 openscad -o gdoor-din-base-accent.stl -D 'part="base_accent"' enclosure.scad
 openscad -o gdoor-din-lid-body.stl    -D 'part="lid_body"'    enclosure.scad
 openscad -o gdoor-din-lid-accent.stl  -D 'part="lid_accent"'  enclosure.scad
-python colour_3mf.py
+python print_3mf.py
 ```
 
-`colour_3mf.py` needs only Python's standard library. The colour 3MF holds
+`print_3mf.py` needs only Python's standard library. The colour 3MF holds
 the base and the lid, each with its two meshes as components of one object,
 moved side by side on the plate (not turned), plus Bambu Studio's
 `Metadata/model_settings.config` with nothing in it but the object and part

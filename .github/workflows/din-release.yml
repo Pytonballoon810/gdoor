@@ -109,6 +109,9 @@ jobs:
             gdoor-din-enclosure.step gdoor-din-base.step gdoor-din-lid.step)
           cp $E/gdoor-din-base.stl release/$N-enclosure-base.stl
           cp $E/gdoor-din-lid.stl  release/$N-enclosure-lid.stl
+          # unsliced 3MFs, base and lid side by side: single colour, and body + accent
+          cp $E/gdoor-din.3mf        release/$N-enclosure.3mf
+          cp $E/gdoor-din-colour.3mf release/$N-enclosure-colour.3mf
           cp $E/preview.png        release/$N-enclosure-preview.png
           for f in fw/*.bin; do cp "$f" release/$N-$(basename "$f"); done
           ls -l release
@@ -140,6 +143,8 @@ jobs:
           ## 3D models
 
           \`$N-board-step.zip\` (whole board with components), \`$N-enclosure-step.zip\`, and the printable \`$N-enclosure-base.stl\` and \`$N-enclosure-lid.stl\`.
+
+          To print the enclosure, open \`$N-enclosure.3mf\` in your slicer: base and lid side by side, already in print orientation, with no print settings, so your own presets apply. For two colours, use \`$N-enclosure-colour.3mf\` instead: each part has a \`body\` and an \`accent\` part, give the accents your second filament.
 
           ## Firmware (ESPHome)
 

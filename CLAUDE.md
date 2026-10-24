@@ -21,13 +21,13 @@ in PowerShell, from `hardware/boards/din`:
 
 ## Printable files of the DIN enclosure
 
-In `hardware/boards/din/enclosure`, `gdoor-din-base.3mf` and `gdoor-din-lid.3mf` sit next to the
-STLs, and `gdoor-din-colour.3mf` (base and lid in one file, each one object with body and accent as
-its two parts, built by `colour_3mf.py` from the body and accent STLs). Rebuild them every time the
-STLs they come from are
-rebuilt (commands in that folder's `README.md`). They are unsliced: geometry only, no printer,
-filament or process settings. Philipp slices them himself in Bambu Studio, so never add G-code or
-sliced project files.
+In `hardware/boards/din/enclosure`, two 3MFs sit next to the STLs, each with the base and the lid
+side by side in one file: `gdoor-din.3mf` (single colour) and `gdoor-din-colour.3mf` (each part one
+object with body and accent as its two parts). `print_3mf.py` builds both from the STLs. Rebuild
+them every time the STLs they come from are rebuilt (commands in that folder's `README.md`). They are
+unsliced: geometry only, no printer, filament or process settings. Philipp slices them himself in
+Bambu Studio, so never add G-code or sliced project files. Both go into the DIN release
+(`.github/workflows/din-release.yml`), so keep that list in step if the file names change.
 
 Bambu Studio's CLI (`bambu-studio.exe --info` / `--export-3mf`) writes a `result.json` into the
 current directory. Delete it after a test run; it is not a project file.
