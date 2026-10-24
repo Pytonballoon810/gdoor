@@ -23,6 +23,10 @@
 //   "assembly" both, plus the board and the plugs as ghosts
 //   "open"     the base with board and plugs, lid off
 //   "fit"      everything that collides with the board (must render empty)
+//   "base_body", "base_accent", "lid_body", "lid_accent"
+//              the two parts split into body and accent colour for a
+//              multi-material print (see "colour accents" below)
+//   "colours"  base and lid assembled, in body and accent colours
 //
 // Print both parts flat on their outer side wall: no supports needed.
 
@@ -207,6 +211,19 @@ snap_land = 0.6;        // flat at full depth, under the catching face
 snap_slot = 0.5;        // slots in the rim beside each finger
 snap_fil  = 0.8;        // 45 deg chamfer at the root's outer side
 
+// ---- colour accents (multi-material print) ------------------------------------
+// The *_body and *_accent parts split base and lid into two colours. Accent:
+// the front window face (a fascia, with LAN / USB / GDoor left in the body
+// colour), the plug labels, and on the lid's outer face the window nose, the
+// button pads and the button labels. Faces that print on the bed get acc_d
+// (two 0.2 mm layers); faces that stand upright in the print get acc_wd, two
+// extrusion widths, so the slicer does not drop them.
+accents = part == "base_body" || part == "base_accent" || part == "lid_body" || part == "lid_accent"
+       || part == "colours";
+acc_colour = "DarkOrange";   // preview only; the slicer sets the real colour
+acc_d   = 0.4;
+acc_wd  = 0.8;
+
 // =============================================================================
 
 module outline() {
@@ -298,9 +315,8 @@ module front_openings() {
     for (y = led_y) translate([fx, y, led_z]) rotate([0, 90, 0]) cylinder(d = led_d, h = len);
 }
 
-module front_labels() {
+module front_labels(d = 0.4) {
     // Engraved on the window face, reading across the width.
-    d = 0.4;
     module lbl(t, y, z) {
         translate([front_x - d, y, z]) mirror([0, 0, 1]) rotate([0, 90, 0])   // pre-mirrored for real()
             linear_extrude(d + 1) text(t, size = 3, halign = "center", valign = "center",
@@ -328,13 +344,13 @@ module plug_notch(xc) {
         cube([w, wall + 2, lid_z - notch_z + eps]);
 }
 
-module plug_label(p) {
+module plug_label(p, d = 0.4) {
     // Engraved on the outer face, centred on the plug slot.
     // Pre-mirrored about its own plane for real().
     z = notch_z - 3.5;
-    if (p[1] == 1) translate([p[0], H - 0.4, z]) mirror([0, 0, 1]) rotate([-90, 0, 0]) linear_extrude(1)
+    if (p[1] == 1) translate([p[0], H - d, z]) mirror([0, 0, 1]) rotate([-90, 0, 0]) linear_extrude(d + 0.6)
         text(p[2], size = 3, halign = "center", valign = "center", font = "Liberation Sans:style=Bold");
-    else translate([p[0], 0.4, z]) mirror([0, 0, 1]) rotate([90, 0, 0]) linear_extrude(1)
+    else translate([p[0], d, z]) mirror([0, 0, 1]) rotate([90, 0, 0]) linear_extrude(d + 0.6)
         text(p[2], size = 3, halign = "center", valign = "center", font = "Liberation Sans:style=Bold");
 }
 
@@ -360,8 +376,8 @@ module base() {
         }
         translate([0, 0, wall]) linear_extrude(lid_z) cavity();
         front_openings();
-        front_labels();
-        for (p = plugs) { plug_at(p) plug_notch(p[0]); plug_label(p); }
+        if (!accents) front_labels();   // with accents, the fascia leaves them in the body colour
+        for (p = plugs) { plug_at(p) plug_notch(p[0]); plug_label(p, accents ? acc_wd : 0.4); }
         snap_windows();
         latch_clearance();
     }
@@ -508,16 +524,70 @@ module lid() {
             // thinned from the cavity side
             translate([0, 0, lid_z - 1]) linear_extrude(W - lid_z + 2) button_slot(b);
             translate([0, 0, lid_z - 1]) linear_extrude(W - btn_t - lid_z + 1) button_tongue(b);
-            // behind the slot (towards -X): in front the lid ends at
-            // shoulder_x. Mirrored in X so that it reads correctly from
-            // outside after real(), starting next to the slot.
-            translate([b[0] - btn_off - btn_w / 2 - btn_slot - 1, b[1], W - 0.4]) mirror([1, 0, 0])
-                linear_extrude(1) text(b[2], size = 2.5, halign = "left", valign = "center",
-                                       font = "Liberation Sans:style=Bold");
+            button_label(b);
         }
     }
     for (b = buttons) button_plunger(b);
 }
+
+module button_label(b) {
+    // Engraved behind the slot (towards -X): in front the lid ends at
+    // shoulder_x. Mirrored in X so that it reads correctly from outside
+    // after real(), starting next to the slot.
+    translate([b[0] - btn_off - btn_w / 2 - btn_slot - 1, b[1], W - 0.4]) mirror([1, 0, 0])
+        linear_extrude(1) text(b[2], size = 2.5, halign = "left", valign = "center",
+                               font = "Liberation Sans:style=Bold");
+}
+
+// ---- colour accents ------------------------------------------------------------
+// Each part splits into body = part minus accent region, accent = part inside
+// it, plus the fills of the engraved labels, which the part itself leaves out.
+
+module fascia() {
+    // The window face, acc_wd deep, minus the front labels: they stay in
+    // the body colour, flush.
+    difference() {
+        intersection() {
+            linear_extrude(W) outline();
+            translate([front_x - acc_wd, -1, -1]) cube([acc_wd + 1, H + 2, W + 2]);
+        }
+        front_labels(acc_wd);
+    }
+}
+
+module base_accent_region() { fascia(); }
+
+module base_label_fills() {
+    intersection() {
+        for (p = plugs) plug_label(p, acc_wd);
+        linear_extrude(lid_z) outline();
+    }
+}
+
+module lid_accent_region() {
+    fascia();
+    translate([0, 0, W - acc_d]) linear_extrude(acc_d + 1) {
+        // the window nose on the lid's outer face
+        intersection() {
+            outline();
+            translate([shoulder_x, -1]) square([win_p + 1, H + 2]);
+        }
+        // button pads: the round end of each tongue
+        for (b = buttons) translate([b[0] - btn_off, b[1]]) circle(d = btn_w);
+    }
+}
+
+module lid_label_fills() {
+    intersection() {
+        for (b = buttons) button_label(b);
+        translate([0, 0, lid_z]) linear_extrude(wall) outline();
+    }
+}
+
+module base_body()   { difference() { base(); base_accent_region(); } }
+module base_accent() { intersection() { base(); base_accent_region(); } base_label_fills(); }
+module lid_body()    { difference() { lid(); lid_accent_region(); } }
+module lid_accent()  { intersection() { lid(); lid_accent_region(); } lid_label_fills(); }
 
 // ---- ghosts ------------------------------------------------------------------
 
@@ -577,6 +647,14 @@ module real() { translate([0, 0, W]) mirror([0, 0, 1]) children(); }
 // about the X axis (a rotation, not a mirror).
 if (part == "base") translate([0, H, W]) rotate([180, 0, 0]) real() base();
 else if (part == "lid") real() lid();
+else if (part == "base_body") translate([0, H, W]) rotate([180, 0, 0]) real() base_body();
+else if (part == "base_accent") translate([0, H, W]) rotate([180, 0, 0]) real() base_accent();
+else if (part == "lid_body") real() lid_body();
+else if (part == "lid_accent") real() lid_accent();
+else if (part == "colours") real() {   // assembled, body and accent colours
+    color("DimGray") { base_body(); lid_body(); }
+    color(acc_colour) { base_accent(); lid_accent(); }
+}
 else if (part == "fit") real() {
     intersection() { union() { base(); lid(); } board_ghost(0.05); }
     for (p = plugs) intersection() { union() { base(); lid(); } plug_at(p) plug_ghost(p[0], 0.05); }

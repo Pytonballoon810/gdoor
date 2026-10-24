@@ -14,6 +14,7 @@ the top face, the bus on the bottom face.
 | `board_ghost.scad` | board and parts as boxes, generated, for the fit check |
 | `board_export.py` | regenerates `board_ghost.scad` from `../esp32.kicad_pcb` |
 | `gdoor-din-base.stl`, `gdoor-din-lid.stl` | ready to print |
+| `gdoor-din-{base,lid}-{body,accent}.stl` | the same parts split into two colours, for a multi-material print |
 | `gdoor-din-base.step`, `gdoor-din-lid.step` | the same parts as STEP solids, for other CAD tools |
 | `gdoor-din-enclosure.step` | base and lid in their assembled position |
 | `step_export.py` | converts the STLs into the STEP files |
@@ -74,6 +75,34 @@ rail latch (about 1 %) and the plug clips (1.5 to 1.9 %), both along the
 layers. But PLA softens from about 55 °C and creeps under steady load,
 which slowly relaxes the rail latch in a warm cabinet. Fine for a test fit
 and for a cool spot; in a warm cabinet print it in PETG or ASA.
+
+### Colour accents (multi-material)
+
+Each part also comes as a body and an accent STL, in the same print
+orientation, that together make up the part. In the slicer, load both
+files of a part at once as one object with two parts (Bambu Studio /
+OrcaSlicer ask when you import them together), and give the accent part
+the second filament. Accent:
+
+- **Front window face**: a 0.8 mm fascia over the whole window face, base
+  and lid. LAN, USB and GDoor are left out of it, so they read flush in
+  the body colour.
+- **Lid face**: the window nose (the part of the lid in front of the
+  shoulders), the round pads of the RST and BOOT buttons and their labels,
+  each 0.4 mm deep (the first two layers).
+- **Plug labels**: 5V and BUS, filled 0.8 mm deep.
+
+Faces that stand upright in the print are 0.8 mm deep (`acc_wd`), two
+extrusion widths, so the slicer keeps them; faces on the bed are 0.4 mm
+(`acc_d`). Together, body and accent are the single-colour part with its
+engraved labels filled flush. `-D 'part="colours"'` previews them assembled.
+
+```
+openscad -o gdoor-din-base-body.stl   -D 'part="base_body"'   enclosure.scad
+openscad -o gdoor-din-base-accent.stl -D 'part="base_accent"' enclosure.scad
+openscad -o gdoor-din-lid-body.stl    -D 'part="lid_body"'    enclosure.scad
+openscad -o gdoor-din-lid-accent.stl  -D 'part="lid_accent"'  enclosure.scad
+```
 
 ## Mirrored design frame
 
