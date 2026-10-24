@@ -123,12 +123,14 @@ barrel_h      = 7.0;
 frame_t       = 1.2;
 // Keeper: a separate printed U-shaped plate behind the plug's back face. Its
 // two legs slide into grooves in the cradle's side walls from the board
-// side, down to the lid plate, and cover the back face beside the wire
-// entries; the wires leave through the opening between the legs. Pushing
+// side, open end first, down to the lid plate, and cover the back face
+// beside the wire entries. The wire entries are on the lid side of the back
+// face, so the wires leave through the opening between the legs, next to
+// the lid plate; the bridge closes the U at the board end. Pushing
 // the plug back (the cable plug going on) presses the keeper against the
 // grooves' back faces, so nothing has to flex. Up to 2026-10-24 spring clip
 // fingers on the side walls did this; they never held the plug reliably.
-// The keeper is held in its grooves by friction (keep_clr) and the wires.
+// The keeper is held in its grooves by friction (keep_clr).
 side_t        = 2.0;    // side walls along the plug
 side_zw       = plug_z0 + 0.5;   // side walls' edge towards the board, away
                                  // from the frame (at the frame: level with it)
@@ -145,11 +147,11 @@ keep_fwd      = 1.8;
 // Legs end keep_lip in from the plug's sides: the wire entries (3 mm wide
 // at a 3.81 mm pitch) reach to 3.4 mm from its centre line.
 keep_lip      = 0.7;
-// Bridge between the legs, on the lid plate: it fills the gap between the
-// lid plate and the plug's flat side, and reaches keep_bridge past the flat
-// side onto the back face, clear of the wire entries.
-keep_bridge   = 1.2;
-keep_ch       = 0.4;    // lead-in chamfer at the legs' ends
+// Bridge between the legs, at the board end: it covers the back face from
+// keep_bridge off the plug's lid-side face (plug_z1) to the legs' end. The
+// wire entries (plug_model.py) reach to 5.1 mm off that face.
+keep_bridge   = 5.6;
+keep_ch       = 0.4;    // lead-in chamfer at the legs' ends, on the lid plate
 // frame half-width. The side walls end on the frame, no wider than it, so
 // they stay clear of the base wall beside its slot. Wider than this and the
 // 5 V plug's slot (x = 46) runs into the front wall at x = 52.8.
@@ -414,17 +416,18 @@ module lid_rim() {
 keep_y  = plug_y0 - keep_play + keep_fwd;   // keeper's front face
 keep_xi = plug_w / 2 - keep_lip;            // legs' inner edges, from the centre
 keep_xo = plug_w / 2 + plug_clr + keep_g - keep_clr;   // legs' outer edges
-keep_zb = lid_z - plug_z1 + keep_bridge;    // bridge height, from the lid plate
+keep_zb = lid_z - plug_z1 + keep_bridge;    // bridge's lid-side edge, from the lid plate
 keep_h  = lid_z - side_zw;                  // leg length, from the lid plate
 
 module keeper_shape() {
     // Local frame: x across (centred on the plug), y along the plug, the
     // front face at y = 0 and the back at -keep_t, z from the lid plate's
-    // inner face (0) towards the board. Symmetric in x.
+    // inner face (0) towards the board. Symmetric in x. Open towards the lid
+    // plate, the bridge at the board end.
     rotate([90, 0, 0]) linear_extrude(keep_t) polygon([
-        [-keep_xo, 0], [keep_xo, 0], [keep_xo, keep_h - keep_ch], [keep_xo - keep_ch, keep_h],
-        [keep_xi, keep_h], [keep_xi, keep_zb], [-keep_xi, keep_zb], [-keep_xi, keep_h],
-        [-keep_xo + keep_ch, keep_h], [-keep_xo, keep_h - keep_ch]]);
+        [-keep_xo, keep_h], [keep_xo, keep_h], [keep_xo, keep_ch], [keep_xo - keep_ch, 0],
+        [keep_xi, 0], [keep_xi, keep_zb], [-keep_xi, keep_zb], [-keep_xi, 0],
+        [-keep_xo + keep_ch, 0], [-keep_xo, keep_ch]]);
 }
 
 module keeper(xc, s = 0) {

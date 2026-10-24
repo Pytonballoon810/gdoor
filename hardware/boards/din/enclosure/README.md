@@ -251,17 +251,19 @@ plug in it:
   board and running down to the lid plate.
 - **Keeper** (separate part, `gdoor-din-keeper.stl`, one per plug): a
   2.5 mm (`keep_t`) U-shaped plate, 10.6 mm wide and 14.5 mm tall, that
-  drops into the two grooves behind the plug's back face and stands on
-  the lid plate. Its legs cover the back face at both sides, 0.7 mm in
-  from the edges (`keep_lip`), clear of the wire entries (3 mm wide at the
-  3.81 mm pitch, to 3.4 mm from the centre line). The bridge between them
-  fills the gap between the lid plate and the plug's flat side and reaches
-  1.2 mm (`keep_bridge`) onto the back face. The wires leave through the
-  opening between the legs. Pushing the plug back (the cable plug going on)
+  drops into the two grooves behind the plug's back face, open end first,
+  and stands on the lid plate with its two legs. The legs cover the back
+  face at both sides, 0.7 mm in from the edges (`keep_lip`), clear of the
+  wire entries (3 mm wide at the 3.81 mm pitch, to 3.4 mm from the centre
+  line). The wire entries are on the lid side of the back face (up to
+  5.1 mm off the plug's lid-side face, `plug_model.py`), so the opening
+  between the legs is there, against the lid plate, and the wires leave
+  through it. The bridge closes the U at the board end and covers the back
+  face across its full width from 5.6 mm (`keep_bridge`) off the lid-side
+  face to the legs' end. Pushing the plug back (the cable plug going on)
   presses the keeper against the grooves' back faces, so nothing bends;
   pulling on the cable is taken by the barrel frame. The keeper is held in
-  its grooves by friction, 0.1 mm clearance each side (`keep_clr`), and by
-  the wires under its bridge.
+  its grooves by friction, 0.1 mm clearance each side (`keep_clr`).
   Its front face is 15.3 mm in from the outer face: 0.1 mm behind the
   plug's modelled back face (`keep_play`), then 1.8 mm forward
   (`keep_fwd`), because on the first print of the clips that came before
@@ -277,9 +279,9 @@ plug in it:
 
 To fit a plug: lay it flat side down behind the cradle, between the side
 walls, and slide it out through the frame, barrel first, until its step
-sits against the frame. Clamp the wires, then push the keeper into the two
-grooves from the board side, bridge first, with the wires between its
-legs, until it sits on the lid plate; no glue. To take the plug out, pull
+sits against the frame. Then push the keeper into the two grooves from the
+board side, open end first, so the wires come out between its legs, until
+the legs sit on the lid plate; no glue. To take the plug out, pull
 the keeper and slide the plug back. If the keeper will not go in, the plug
 sits further back than the model says: reduce `keep_fwd`; if it is loose in
 its grooves, reduce `keep_clr`, or raise it if it is too tight. If the
