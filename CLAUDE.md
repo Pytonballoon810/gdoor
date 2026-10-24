@@ -21,13 +21,18 @@ in PowerShell, from `hardware/boards/din`:
 
 ## Printable files of the DIN enclosure
 
-In `hardware/boards/din/enclosure`, two 3MFs sit next to the STLs, each with the base and the lid
-side by side in one file: `gdoor-din.3mf` (single colour) and `gdoor-din-colour.3mf` (each part one
-object with body and accent as its two parts). `print_3mf.py` builds both from the STLs. Rebuild
-them every time the STLs they come from are rebuilt (commands in that folder's `README.md`). They are
-unsliced: geometry only, no printer, filament or process settings. Philipp slices them himself in
-Bambu Studio, so never add G-code or sliced project files. Both go into the DIN release
-(`.github/workflows/din-release.yml`), so keep that list in step if the file names change.
+In `hardware/boards/din/enclosure`, `gdoor-din.3mf` sits next to the STLs: an unsliced Bambu Studio
+project with two plates, plate 1 the single-colour base and lid, plate 2 both with body and accent
+parts (accent on filament 2). `print_3mf.py` builds it from the STLs. Rebuild it every time any of
+those STLs is rebuilt (commands in that folder's `README.md`). Philipp slices it himself in Bambu
+Studio, so never add G-code or sliced files. It goes into the DIN release
+(`.github/workflows/din-release.yml`), so keep that in step if the file name changes.
+
+Plates exist only in Bambu's project format, and Bambu Studio crashes on a project without
+`Metadata/project_settings.config`. So the file carries `bambu_project_settings.config` (P1S 0.2
+nozzle, 0.10mm Standard @BBL X1C 0.2 nozzle, PLA Basic x2), written by Bambu Studio from its system
+profiles with their `inherits` chains resolved first (its CLI does not resolve them and falls back to
+a 200 mm bed). It is a starting point that Philipp overrides; don't tune it.
 
 Bambu Studio's CLI (`bambu-studio.exe --info` / `--export-3mf`) writes a `result.json` into the
 current directory. Delete it after a test run; it is not a project file.

@@ -1,11 +1,14 @@
-# Packs the base and the lid into two unsliced 3MFs, each with both parts
-# side by side on the plate:
+# Packs the base and the lid into one unsliced 3MF, gdoor-din.3mf, in both
+# versions on two Bambu Studio plates; slice the plate you want to print:
 #
-#   gdoor-din.3mf         single colour, from gdoor-din-{base,lid}.stl: one
-#                         object per part
-#   gdoor-din-colour.3mf  two colours, from gdoor-din-{base,lid}-{body,accent}.stl:
-#                         one object per part, made of two components, "body"
-#                         and "accent", each a mesh object
+#   plate 1  gdoor-din-base, gdoor-din-lid                 single colour, from
+#                                                          gdoor-din-{base,lid}.stl
+#   plate 2  gdoor-din-base-colour, gdoor-din-lid-colour   two colours, from
+#                                                          gdoor-din-{base,lid}-{body,accent}.stl:
+#                                                          two components, "body" and
+#                                                          "accent", each a mesh object
+#
+# Other slicers ignore the plates and show all four objects side by side.
 #
 # Slicers that follow the 3MF core spec (Bambu Studio, OrcaSlicer,
 # PrusaSlicer) load a component object as one object with one part per
@@ -17,12 +20,25 @@
 # Usage: python print_3mf.py [stl_dir] [out_dir]   (both default to .)
 import sys, os, re, zipfile
 
-# [part, (x, y) offset on the plate]: the two side by side, 10 mm apart,
-# centred on the P1S's 256 x 256 mm plate (base x -2.8 .. 60.6, lid
-# x 0 .. 60.6, both y 0 .. 90)
-PARTS = [("base", (63.8, 83.0)), ("lid", (134.4, 83.0))]
-# [output, STL roles per part; None is the part's own single-colour STL]
-FILES = [("gdoor-din.3mf", [None]), ("gdoor-din-colour.3mf", ["body", "accent"])]
+OUT = "gdoor-din.3mf"
+HERE = os.path.dirname(os.path.abspath(__file__))
+# Bambu Studio's settings for the file, which it cannot open without: the
+# P1S 0.2 nozzle, 0.10mm Standard @BBL X1C 0.2 nozzle and Bambu PLA Basic
+# @BBL X1C 0.2 nozzle twice (black, white). Written by Bambu Studio 2.6.1
+# from those system profiles. A starting point only: pick your own presets
+# when you slice.
+SETTINGS = "bambu_project_settings.config"
+# Two Bambu Studio plates: 1 single colour, 2 two colours. Bambu lays plates
+# out in a row, each the bed width plus a fifth further along X.
+PLATES = ["single colour", "two colours"]
+PLATE_STRIDE = 256 * 1.2      # P1S bed 256 x 256 mm
+# [object name, part, STL roles (None: the part's single-colour STL), plate,
+# (x, y) offset on its plate]. Base and lid side by side, 10 mm apart,
+# centred on the plate (base x -2.8 .. 60.6, lid x 0 .. 60.6, both y 0 .. 90).
+OBJECTS = [("gdoor-din-base", "base", [None], 1, (63.8, 83.0)),
+           ("gdoor-din-lid", "lid", [None], 1, (134.4, 83.0)),
+           ("gdoor-din-base-colour", "base", ["body", "accent"], 2, (63.8, 83.0)),
+           ("gdoor-din-lid-colour", "lid", ["body", "accent"], 2, (134.4, 83.0))]
 
 CONTENT_TYPES = """<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -38,14 +54,26 @@ RELS = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 # Bambu Studio / OrcaSlicer name the parts after the object ("_2" for the
-# second) and ignore the component objects' names; their own config file
-# carries the part names. Names only: no extruder or other settings. Only
-# written for the two-colour file.
+# second) and ignore the component objects' names, and plates are theirs
+# alone; their own config file carries the part names, which object sits on
+# which plate, and the filament per part (accent: filament 2).
 NAMES = """<?xml version="1.0" encoding="UTF-8"?>
 <config>
 {objects}
+{plates}
 </config>
 """
+
+PLATE = """ <plate>
+  <metadata key="plater_id" value="{n}"/>
+  <metadata key="plater_name" value="{name}"/>
+{instances}
+ </plate>"""
+
+INSTANCE = """  <model_instance>
+   <metadata key="object_id" value="{oid}"/>
+   <metadata key="instance_id" value="0"/>
+  </model_instance>"""
 
 VERTEX = re.compile(r"vertex\s+(\S+)\s+(\S+)\s+(\S+)")
 
@@ -75,13 +103,17 @@ def mesh_object(oid, name, verts, tris):
 
 
 def write_3mf(path, parts):
-    """parts: [(name, (dx, dy), [(role, verts, tris)])]; one mesh is a plain
-    object, more are the components of one object."""
+    """parts: [(name, plate, (dx, dy), [(role, verts, tris)])]; one mesh is a
+    plain object, more are the components of one object."""
     objs, items, names, oid = "", [], [], 0
-    for name, (dx, dy), meshes in parts:
+    on_plate = {n: [] for n in range(1, len(PLATES) + 1)}
+    for name, plate, (dx, dy), meshes in parts:
+        dx += (plate - 1) * PLATE_STRIDE
         if len(meshes) == 1:
             oid += 1
             objs += mesh_object(oid, name, *meshes[0][1:])
+            names.append(f' <object id="{oid}">\n  <metadata key="name" value="{name}"/>\n'
+                         f'  <metadata key="extruder" value="1"/>\n </object>')
         else:
             ids = []
             for role, v, t in meshes:
@@ -93,34 +125,43 @@ def write_3mf(path, parts):
             objs += (f'  <object id="{oid}" name="{name}" type="model">\n'
                      f'   <components>\n{comps}\n   </components>\n  </object>\n')
             pnames = "\n".join(f'  <part id="{i}" subtype="normal_part">\n'
-                               f'   <metadata key="name" value="{role}"/>\n  </part>'
+                               f'   <metadata key="name" value="{role}"/>\n'
+                               f'   <metadata key="extruder" value="{2 if role == "accent" else 1}"/>\n  </part>'
                                for i, (role, _, _) in zip(ids, meshes))
-            names.append(f' <object id="{oid}">\n  <metadata key="name" value="{name}"/>\n{pnames}\n </object>')
-        items.append(f'  <item objectid="{oid}" transform="1 0 0 0 1 0 0 0 1 {dx} {dy} 0"/>')
+            names.append(f' <object id="{oid}">\n  <metadata key="name" value="{name}"/>\n'
+                         f'  <metadata key="extruder" value="1"/>\n{pnames}\n </object>')
+        items.append(f'  <item objectid="{oid}" transform="1 0 0 0 1 0 0 0 1 {dx:g} {dy:g} 0"/>')
+        on_plate[plate].append(INSTANCE.format(oid=oid))
+    plates = "\n".join(PLATE.format(n=n, name=PLATES[n - 1], instances="\n".join(inst))
+                       for n, inst in on_plate.items())
+    # Bambu Studio reads its plates only from files it takes for its own
+    # project, which it tells by these two tags. Such a project must also
+    # carry Metadata/project_settings.config, or Bambu Studio crashes on it.
     model = ('<?xml version="1.0" encoding="UTF-8"?>\n'
              '<model unit="millimeter" xml:lang="en-US" '
              'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">\n'
+             ' <metadata name="Application">BambuStudio-02.06.01.55</metadata>\n'
+             ' <metadata name="BambuStudio:3mfVersion">1</metadata>\n'
              f' <resources>\n{objs} </resources>\n'
              f' <build>\n' + "\n".join(items) + '\n </build>\n</model>\n')
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("[Content_Types].xml", CONTENT_TYPES)
         z.writestr("_rels/.rels", RELS)
         z.writestr("3D/3dmodel.model", model)
-        if names:
-            z.writestr("Metadata/model_settings.config", NAMES.format(objects="\n".join(names)))
+        z.writestr("Metadata/model_settings.config", NAMES.format(objects="\n".join(names), plates=plates))
+        z.write(os.path.join(HERE, SETTINGS), "Metadata/project_settings.config")
 
 
 stl_dir = sys.argv[1] if len(sys.argv) > 1 else "."
 out = sys.argv[2] if len(sys.argv) > 2 else "."
-for fname, roles in FILES:
-    parts = []
-    for part, offset in PARTS:
-        meshes = []
-        for role in roles:
-            stl = f"gdoor-din-{part}" + (f"-{role}" if role else "") + ".stl"
-            v, t = read_stl(os.path.join(stl_dir, stl))
-            meshes.append((role or part, v, t))
-            print(f"{fname}: {stl}: {len(v)} vertices, {len(t)} triangles")
-        parts.append((f"gdoor-din-{part}", offset, meshes))
-    write_3mf(os.path.join(out, fname), parts)
-    print("written", fname)
+parts = []
+for name, part, roles, plate, offset in OBJECTS:
+    meshes = []
+    for role in roles:
+        stl = f"gdoor-din-{part}" + (f"-{role}" if role else "") + ".stl"
+        v, t = read_stl(os.path.join(stl_dir, stl))
+        meshes.append((role or name, v, t))
+        print(f"{name}: {stl}: {len(v)} vertices, {len(t)} triangles")
+    parts.append((name, plate, offset, meshes))
+write_3mf(os.path.join(out, OUT), parts)
+print("written", OUT)

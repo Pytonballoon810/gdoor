@@ -109,9 +109,8 @@ jobs:
             gdoor-din-enclosure.step gdoor-din-base.step gdoor-din-lid.step)
           cp $E/gdoor-din-base.stl release/$N-enclosure-base.stl
           cp $E/gdoor-din-lid.stl  release/$N-enclosure-lid.stl
-          # unsliced 3MFs, base and lid side by side: single colour, and body + accent
-          cp $E/gdoor-din.3mf        release/$N-enclosure.3mf
-          cp $E/gdoor-din-colour.3mf release/$N-enclosure-colour.3mf
+          # Bambu Studio project, unsliced: plate 1 single colour, plate 2 body + accent
+          cp $E/gdoor-din.3mf      release/$N-enclosure.3mf
           cp $E/preview.png        release/$N-enclosure-preview.png
           for f in fw/*.bin; do cp "$f" release/$N-$(basename "$f"); done
           ls -l release
@@ -144,7 +143,7 @@ jobs:
 
           \`$N-board-step.zip\` (whole board with components), \`$N-enclosure-step.zip\`, and the printable \`$N-enclosure-base.stl\` and \`$N-enclosure-lid.stl\`.
 
-          To print the enclosure, open \`$N-enclosure.3mf\` in your slicer: base and lid side by side, already in print orientation, with no print settings, so your own presets apply. For two colours, use \`$N-enclosure-colour.3mf\` instead: each part has a \`body\` and an \`accent\` part, give the accents your second filament.
+          To print the enclosure, open \`$N-enclosure.3mf\` in Bambu Studio and slice the plate you want; both hold the base and the lid, already in print orientation. Plate 1 is single colour. Plate 2 is two colours: each part has a \`body\` (filament 1) and an \`accent\` (filament 2). The file comes with Bambu's settings for a P1S with 0.2 mm nozzle and PLA Basic only because Bambu Studio cannot open a two-plate file without them; pick your own printer, process and filaments before slicing.
 
           ## Firmware (ESPHome)
 

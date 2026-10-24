@@ -14,9 +14,9 @@ the top face, the bus on the bottom face.
 | `board_ghost.scad` | board and parts as boxes, generated, for the fit check |
 | `board_export.py` | regenerates `board_ghost.scad` from `../esp32.kicad_pcb` |
 | `gdoor-din-base.stl`, `gdoor-din-lid.stl` | ready to print |
-| `gdoor-din.3mf` | base and lid in one unsliced 3MF, side by side: geometry only, no print settings |
-| `gdoor-din-colour.3mf` | base and lid in one file, side by side, each one object with two parts, `body` and `accent`: unsliced, no print settings |
-| `print_3mf.py` | packs the STLs into the two 3MFs |
+| `gdoor-din.3mf` | unsliced Bambu Studio project, two plates: 1 single colour, 2 two colours (`body` and `accent` parts) |
+| `print_3mf.py` | packs the STLs into `gdoor-din.3mf` |
+| `bambu_project_settings.config` | the Bambu settings `gdoor-din.3mf` needs to open; a starting point only |
 | `gdoor-din-{base,lid}-{body,accent}.stl` | the same parts split into two colours, for a multi-material print |
 | `gdoor-din-base.step`, `gdoor-din-lid.step` | the same parts as STEP solids, for other CAD tools |
 | `gdoor-din-enclosure.step` | base and lid in their assembled position |
@@ -30,13 +30,25 @@ the top face, the bus on the bottom face.
 openscad -o gdoor-din-base.stl -D 'part="base"' enclosure.scad
 openscad -o gdoor-din-lid.stl  -D 'part="lid"'  enclosure.scad
 openscad -o fit.stl            -D 'part="fit"'  enclosure.scad   # must be empty
-python print_3mf.py   # after the colour STLs below too: writes gdoor-din.3mf and gdoor-din-colour.3mf
+python print_3mf.py   # after the colour STLs below too: writes gdoor-din.3mf
 ```
 
-Rebuild the 3MFs whenever the STLs change. `gdoor-din.3mf` holds the base
-and the lid side by side, moved on the plate but not turned: only the
-meshes, in mm, no printer, filament or process settings, so open it in
-Bambu Studio and slice with your own presets.
+Rebuild the 3MF whenever any of the STLs change. `gdoor-din.3mf` is an
+unsliced Bambu Studio project with two plates, each with the base and the
+lid side by side, moved on the plate but not turned:
+
+- **Plate 1, single colour**: `gdoor-din-base`, `gdoor-din-lid`.
+- **Plate 2, two colours**: `gdoor-din-base-colour`, `gdoor-din-lid-colour`,
+  each with a `body` part (filament 1) and an `accent` part (filament 2).
+
+Open it in Bambu Studio and slice the plate you want. Plates exist only in
+Bambu's own project format, and Bambu Studio cannot open such a project
+without its settings file, so the 3MF carries `bambu_project_settings.config`:
+the P1S 0.2 nozzle, 0.10mm Standard @BBL X1C 0.2 nozzle and Bambu PLA Basic
+twice (black, white), written by Bambu Studio from its system profiles. It
+is only there so the file opens: pick your own printer, process and
+filaments before slicing. Other slicers ignore the plates and show all four
+objects, the two-colour ones a plate width to the right.
 
 After a layout change run `board_export.py` (KiCad's python, from
 `hardware/boards/din`) and the fit check again. The front openings, posts
@@ -88,10 +100,9 @@ and for a cool spot; in a warm cabinet print it in PETG or ASA.
 ### Colour accents (multi-material)
 
 Each part also comes as a body and an accent STL, in the same print
-orientation, that together make up the part. Easiest is the colour 3MF,
-`gdoor-din-colour.3mf`: it holds the base and the lid side by side, each
-as one object with two parts named `body` and `accent`, so you only give
-the two accent parts the second filament. Or load both STLs of a part at once as
+orientation, that together make up the part. Easiest is plate 2 of
+`gdoor-din.3mf`: the base and the lid, each one object with two parts
+named `body` and `accent`, the accents already on filament 2. Or load both STLs of a part at once as
 one object with two parts (Bambu Studio / OrcaSlicer ask when you import
 them together). Accent:
 
@@ -116,13 +127,12 @@ openscad -o gdoor-din-lid-accent.stl  -D 'part="lid_accent"'  enclosure.scad
 python print_3mf.py
 ```
 
-`print_3mf.py` needs only Python's standard library. The colour 3MF holds
-the base and the lid, each with its two meshes as components of one object,
-moved side by side on the plate (not turned), plus Bambu Studio's
-`Metadata/model_settings.config` with nothing in it but the object and part
-names (Bambu Studio and OrcaSlicer ignore the names in the mesh file). No
-extruder, filament, printer or process settings. Rebuild it whenever the
-body or accent STLs change.
+`print_3mf.py` needs only Python's standard library. On plate 2 each part
+is one object with its two meshes as components. Bambu Studio's
+`Metadata/model_settings.config` in the file carries the object and part
+names (Bambu Studio and OrcaSlicer ignore the names in the mesh file), the
+plates, and the filament per part; `bambu_project_settings.config` goes in
+as `Metadata/project_settings.config`.
 
 ## Mirrored design frame
 
