@@ -17,7 +17,7 @@ the top face, the bus on the bottom face.
 | `gdoor-din-keeper.stl` | holds a plug in its cradle; print two |
 | `gdoor-din.3mf` | unsliced Bambu Studio project, two plates: 1 single colour, 2 two colours (`body` and `accent` parts); both with the two keepers |
 | `print_3mf.py` | packs the STLs into `gdoor-din.3mf` |
-| `bambu_project_settings.config` | the Bambu settings `gdoor-din.3mf` needs to open; a starting point only |
+| `bambu_project_settings.config` | the Bambu slicing settings `gdoor-din.3mf` carries, as last saved in it |
 | `gdoor-din-{base,lid}-{body,accent}.stl` | the same parts split into two colours, for a multi-material print |
 | `gdoor-din-base.step`, `gdoor-din-lid.step`, `gdoor-din-keeper.step` | the same parts as STEP solids, for other CAD tools |
 | `gdoor-din-enclosure.step` | base, lid and keepers in their assembled position |
@@ -55,11 +55,19 @@ but not turned:
 Open it in Bambu Studio and slice the plate you want. Plates exist only in
 Bambu's own project format, and Bambu Studio cannot open such a project
 without its settings file, so the 3MF carries `bambu_project_settings.config`:
-the P1S 0.2 nozzle, 0.10mm Standard @BBL X1C 0.2 nozzle and Bambu PLA Basic
-twice (black, white), written by Bambu Studio from its system profiles. It
-is only there so the file opens: pick your own printer, process and
-filaments before slicing. Other slicers ignore the plates and show all four
-objects, the two-colour ones a plate width to the right.
+the settings it was sliced with (P1S 0.4 nozzle, 0.20mm Standard @BBL P1S
+with changes, Bambu PLA Basic twice, black and white). Other slicers ignore
+the plates and show all eight objects, the two-colour ones a plate width to
+the right.
+
+Settings you save in Bambu Studio stay. To change them, open
+`gdoor-din.3mf`, change what you want (printer, process, filaments, or the
+settings of an object, a part or a plate) and save the project over the
+same file. `print_3mf.py` reads them back from that file every time it
+rebuilds it: the project settings (and copies them into
+`bambu_project_settings.config`) and the object, part and plate settings,
+matched by name. Lost on a rebuild: modifier parts, height ranges and
+painted supports, seams or colours, which belong to the old meshes.
 
 After a layout change run `board_export.py` (KiCad's python, from
 `hardware/boards/din`) and the fit check again. The front openings, posts

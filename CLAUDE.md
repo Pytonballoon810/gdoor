@@ -29,10 +29,17 @@ Studio, so never add G-code or sliced files. It goes into the DIN release
 (`.github/workflows/din-release.yml`), so keep that in step if the file name changes.
 
 Plates exist only in Bambu's project format, and Bambu Studio crashes on a project without
-`Metadata/project_settings.config`. So the file carries `bambu_project_settings.config` (P1S 0.2
-nozzle, 0.10mm Standard @BBL X1C 0.2 nozzle, PLA Basic x2), written by Bambu Studio from its system
-profiles with their `inherits` chains resolved first (its CLI does not resolve them and falls back to
-a 200 mm bed). It is a starting point that Philipp overrides; don't tune it.
+`Metadata/project_settings.config`. So the file carries `bambu_project_settings.config`: Philipp's
+own slicing settings (P1S 0.4 nozzle, 0.20mm Standard @BBL P1S with his changes, PLA Basic x2), as he
+saved them from Bambu Studio into `gdoor-din.3mf` on 2026-10-24.
+
+**Keep his settings.** He sets them in Bambu Studio and saves the project, and they must survive
+every rebuild. `print_3mf.py` reads them from the existing `gdoor-din.3mf` before overwriting it:
+the project settings (also copied back into `bambu_project_settings.config`) and every setting on
+an object, part or plate, matched by name. So always rebuild in place, over the committed file,
+never from a fresh copy, and never edit, regenerate or "tune" `bambu_project_settings.config`
+yourself. If you rename an object, part or plate in `print_3mf.py`, its saved settings no longer
+match; carry them over to the new name.
 
 Bambu Studio's CLI (`bambu-studio.exe --info` / `--export-3mf`) writes a `result.json` into the
 current directory. Delete it after a test run; it is not a project file.

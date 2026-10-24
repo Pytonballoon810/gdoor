@@ -144,7 +144,7 @@ jobs:
 
           \`$N-board-step.zip\` (whole board with components), \`$N-enclosure-step.zip\`, and the printable \`$N-enclosure-base.stl\`, \`$N-enclosure-lid.stl\` and \`$N-enclosure-keeper.stl\` (print two: they hold the plugs in the lid).
 
-          To print the enclosure, open \`$N-enclosure.3mf\` in Bambu Studio and slice the plate you want; both hold the base, the lid and the two keepers, already in print orientation. Plate 1 is single colour. Plate 2 is two colours: each part has a \`body\` (filament 1) and an \`accent\` (filament 2). The file comes with Bambu's settings for a P1S with 0.2 mm nozzle and PLA Basic only because Bambu Studio cannot open a two-plate file without them; pick your own printer, process and filaments before slicing.
+          To print the enclosure, open \`$N-enclosure.3mf\` in Bambu Studio and slice the plate you want; both hold the base, the lid and the two keepers, already in print orientation. Plate 1 is single colour. Plate 2 is two colours: each part has a \`body\` (filament 1) and an \`accent\` (filament 2). The file comes with the settings it was sliced with: a P1S with 0.4 mm nozzle, 0.20 mm layers and Bambu PLA Basic. For another printer or filament, pick your own presets before slicing.
 
           ## Firmware (ESPHome)
 

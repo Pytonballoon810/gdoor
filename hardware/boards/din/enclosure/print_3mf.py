@@ -19,18 +19,32 @@
 # in mm, in the STLs' print orientation (moved, not turned): no printer,
 # filament or process settings.
 #
+# Settings saved in Bambu Studio survive a rebuild: if out_dir already holds
+# a gdoor-din.3mf, its project settings (printer, process, filaments) are
+# copied into bambu_project_settings.config and into the new file, and the
+# settings set on an object, a part or a plate there are carried over by
+# object, part and plate name. Not carried over: modifier parts, height
+# ranges and painting (supports, seams, colour), which belong to the old
+# meshes.
+#
 # Needs only the standard library.
 # Usage: python print_3mf.py [stl_dir] [out_dir]   (both default to .)
 import sys, os, re, zipfile
+import xml.etree.ElementTree as ET
+from xml.sax.saxutils import quoteattr
 
 OUT = "gdoor-din.3mf"
 HERE = os.path.dirname(os.path.abspath(__file__))
-# Bambu Studio's settings for the file, which it cannot open without: the
-# P1S 0.2 nozzle, 0.10mm Standard @BBL X1C 0.2 nozzle and Bambu PLA Basic
-# @BBL X1C 0.2 nozzle twice (black, white). Written by Bambu Studio 2.6.1
-# from those system profiles. A starting point only: pick your own presets
-# when you slice.
+# Bambu Studio's settings for the file, which it cannot open without:
+# Philipp's, as saved from Bambu Studio 2.6.1 into gdoor-din.3mf on
+# 2026-10-24 (P1S 0.4 nozzle, 0.20mm Standard @BBL P1S with his changes,
+# Bambu PLA Basic @BBL P1S 0.4 nozzle twice). Refreshed from gdoor-din.3mf on
+# every run, see above.
 SETTINGS = "bambu_project_settings.config"
+# Bambu's own bookkeeping, rebuilt by this script or by Bambu Studio: never
+# carried over from the old file.
+OWN_KEYS = {"name", "matrix", "face_count", "plater_id", "plater_name",
+            "thumbnail_file", "thumbnail_no_light_file", "top_file", "pick_file"}
 # Two Bambu Studio plates: 1 single colour, 2 two colours. Bambu lays plates
 # out in a row, each the bed width plus a fifth further along X.
 PLATES = ["single colour", "two colours"]
@@ -75,7 +89,7 @@ NAMES = """<?xml version="1.0" encoding="UTF-8"?>
 
 PLATE = """ <plate>
   <metadata key="plater_id" value="{n}"/>
-  <metadata key="plater_name" value="{name}"/>
+  <metadata key="plater_name" value="{name}"/>{extra}
 {instances}
  </plate>"""
 
@@ -104,6 +118,44 @@ def read_stl(path):
     return verts, tris
 
 
+def saved_settings(path):
+    """What Bambu Studio saved in an existing gdoor-din.3mf: (project settings
+    as bytes or None, {(plate, object): {key: value}}, {(plate, object, part):
+    {key: value}}, {plate: {key: value}}), Bambu's bookkeeping left out."""
+    objs, parts, plates = {}, {}, {}
+    if not os.path.exists(path):
+        return None, objs, parts, plates
+    with zipfile.ZipFile(path) as z:
+        names = z.namelist()
+        settings = z.read("Metadata/project_settings.config") if "Metadata/project_settings.config" in names else None
+        if "Metadata/model_settings.config" not in names:
+            return settings, objs, parts, plates
+        root = ET.fromstring(z.read("Metadata/model_settings.config"))
+
+    def meta(el):
+        return {m.get("key"): m.get("value") for m in el.findall("metadata")
+                if m.get("key") and m.get("key") not in OWN_KEYS and not m.get("key").startswith("source_")}
+
+    plate_of = {}
+    for p in root.findall("plate"):
+        n = int(next(m.get("value") for m in p.findall("metadata") if m.get("key") == "plater_id"))
+        plates[n] = meta(p)
+        for inst in p.findall("model_instance"):
+            plate_of[next(m.get("value") for m in inst.findall("metadata") if m.get("key") == "object_id")] = n
+    for o in root.findall("object"):
+        name = next((m.get("value") for m in o.findall("metadata") if m.get("key") == "name"), None)
+        plate = plate_of.get(o.get("id"))
+        objs[(plate, name)] = meta(o)
+        for pt in o.findall("part"):
+            pname = next((m.get("value") for m in pt.findall("metadata") if m.get("key") == "name"), None)
+            parts[(plate, name, pname)] = meta(pt)
+    return settings, objs, parts, plates
+
+
+def meta_lines(d, indent):
+    return "".join(f'\n{indent}<metadata key={quoteattr(k)} value={quoteattr(v)}/>' for k, v in d.items())
+
+
 def mesh_object(oid, name, verts, tris):
     v = "\n".join(f'     <vertex x="{x}" y="{y}" z="{z}"/>' for x, y, z in verts)
     t = "\n".join(f'     <triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in tris)
@@ -111,18 +163,23 @@ def mesh_object(oid, name, verts, tris):
             f'    </vertices>\n    <triangles>\n{t}\n    </triangles>\n   </mesh>\n  </object>\n')
 
 
-def write_3mf(path, parts):
+def write_3mf(path, parts, settings, saved):
     """parts: [(name, plate, (dx, dy), [(role, verts, tris)])]; one mesh is a
-    plain object, more are the components of one object."""
+    plain object, more are the components of one object. settings: the
+    project settings file's bytes; saved: the rest of saved_settings()."""
+    s_objs, s_parts, s_plates = saved
     objs, items, names, oid = "", [], [], 0
     on_plate = {n: [] for n in range(1, len(PLATES) + 1)}
     for name, plate, (dx, dy), meshes in parts:
         dx += (plate - 1) * PLATE_STRIDE
+        ometa = meta_lines({"extruder": "1", **s_objs.get((plate, name), {})}, "  ")
         if len(meshes) == 1:
             oid += 1
             objs += mesh_object(oid, name, *meshes[0][1:])
-            names.append(f' <object id="{oid}">\n  <metadata key="name" value="{name}"/>\n'
-                         f'  <metadata key="extruder" value="1"/>\n </object>')
+            pmeta = s_parts.get((plate, name, name), {})
+            part = (f'\n  <part id="{oid}" subtype="normal_part">'
+                    f'{meta_lines({"name": name, **pmeta}, "   ")}\n  </part>') if pmeta else ""
+            names.append(f' <object id="{oid}">{meta_lines({"name": name}, "  ")}{ometa}{part}\n </object>')
         else:
             ids = []
             for role, v, t in meshes:
@@ -133,15 +190,16 @@ def write_3mf(path, parts):
             comps = "\n".join(f'    <component objectid="{i}"/>' for i in ids)
             objs += (f'  <object id="{oid}" name="{name}" type="model">\n'
                      f'   <components>\n{comps}\n   </components>\n  </object>\n')
-            pnames = "\n".join(f'  <part id="{i}" subtype="normal_part">\n'
-                               f'   <metadata key="name" value="{role}"/>\n'
-                               f'   <metadata key="extruder" value="{2 if role == "accent" else 1}"/>\n  </part>'
-                               for i, (role, _, _) in zip(ids, meshes))
-            names.append(f' <object id="{oid}">\n  <metadata key="name" value="{name}"/>\n'
-                         f'  <metadata key="extruder" value="1"/>\n{pnames}\n </object>')
+            pnames = "".join(f'\n  <part id="{i}" subtype="normal_part">'
+                             + meta_lines({"name": role, "extruder": "2" if role == "accent" else "1",
+                                           **s_parts.get((plate, name, role), {})}, "   ")
+                             + '\n  </part>'
+                             for i, (role, _, _) in zip(ids, meshes))
+            names.append(f' <object id="{oid}">{meta_lines({"name": name}, "  ")}{ometa}{pnames}\n </object>')
         items.append(f'  <item objectid="{oid}" transform="1 0 0 0 1 0 0 0 1 {dx:g} {dy:g} 0"/>')
         on_plate[plate].append(INSTANCE.format(oid=oid))
-    plates = "\n".join(PLATE.format(n=n, name=PLATES[n - 1], instances="\n".join(inst))
+    plates = "\n".join(PLATE.format(n=n, name=PLATES[n - 1], extra=meta_lines(s_plates.get(n, {}), "  "),
+                                    instances="\n".join(inst))
                        for n, inst in on_plate.items())
     # Bambu Studio reads its plates only from files it takes for its own
     # project, which it tells by these two tags. Such a project must also
@@ -158,11 +216,22 @@ def write_3mf(path, parts):
         z.writestr("_rels/.rels", RELS)
         z.writestr("3D/3dmodel.model", model)
         z.writestr("Metadata/model_settings.config", NAMES.format(objects="\n".join(names), plates=plates))
-        z.write(os.path.join(HERE, SETTINGS), "Metadata/project_settings.config")
+        z.writestr("Metadata/project_settings.config", settings)
 
 
 stl_dir = sys.argv[1] if len(sys.argv) > 1 else "."
 out = sys.argv[2] if len(sys.argv) > 2 else "."
+# settings saved in the existing file win; they also become the repo's copy
+settings, *saved = saved_settings(os.path.join(out, OUT))
+settings_path = os.path.join(HERE, SETTINGS)
+if settings is None:
+    settings = open(settings_path, "rb").read()
+elif settings != open(settings_path, "rb").read():
+    open(settings_path, "wb").write(settings)
+    print(f"{SETTINGS}: updated from the settings saved in {OUT}")
+kept = sum(len(v) for d in saved for v in d.values())
+if kept:
+    print(f"{OUT}: {kept} object, part and plate settings carried over")
 parts = []
 for name, part, roles, plate, offset in OBJECTS:
     meshes = []
@@ -172,5 +241,5 @@ for name, part, roles, plate, offset in OBJECTS:
         meshes.append((role or name, v, t))
         print(f"{name}: {stl}: {len(v)} vertices, {len(t)} triangles")
     parts.append((name, plate, offset, meshes))
-write_3mf(os.path.join(out, OUT), parts)
+write_3mf(os.path.join(out, OUT), parts, settings, saved)
 print("written", OUT)
