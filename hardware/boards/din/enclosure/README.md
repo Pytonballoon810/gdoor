@@ -15,8 +15,8 @@ the top face, the bus on the bottom face.
 | `board_export.py` | regenerates `board_ghost.scad` from `../esp32.kicad_pcb` |
 | `gdoor-din-base.stl`, `gdoor-din-lid.stl` | ready to print |
 | `gdoor-din-base.3mf`, `gdoor-din-lid.3mf` | the same parts as unsliced 3MF: geometry only, no print settings |
-| `gdoor-din-{base,lid}-colour.3mf` | each part as one object with two parts, `body` and `accent`: unsliced, no print settings |
-| `colour_3mf.py` | packs the body and accent STLs into the colour 3MFs |
+| `gdoor-din-colour.3mf` | base and lid in one file, side by side, each one object with two parts, `body` and `accent`: unsliced, no print settings |
+| `colour_3mf.py` | packs the body and accent STLs into the colour 3MF |
 | `gdoor-din-{base,lid}-{body,accent}.stl` | the same parts split into two colours, for a multi-material print |
 | `gdoor-din-base.step`, `gdoor-din-lid.step` | the same parts as STEP solids, for other CAD tools |
 | `gdoor-din-enclosure.step` | base and lid in their assembled position |
@@ -88,10 +88,10 @@ and for a cool spot; in a warm cabinet print it in PETG or ASA.
 ### Colour accents (multi-material)
 
 Each part also comes as a body and an accent STL, in the same print
-orientation, that together make up the part. Easiest is the colour 3MF
-(`gdoor-din-base-colour.3mf`, `gdoor-din-lid-colour.3mf`): it opens as one
-object with two parts named `body` and `accent`, so you only give the
-accent part the second filament. Or load both STLs of a part at once as
+orientation, that together make up the part. Easiest is the colour 3MF,
+`gdoor-din-colour.3mf`: it holds the base and the lid side by side, each
+as one object with two parts named `body` and `accent`, so you only give
+the two accent parts the second filament. Or load both STLs of a part at once as
 one object with two parts (Bambu Studio / OrcaSlicer ask when you import
 them together). Accent:
 
@@ -116,11 +116,12 @@ openscad -o gdoor-din-lid-accent.stl  -D 'part="lid_accent"'  enclosure.scad
 python colour_3mf.py
 ```
 
-`colour_3mf.py` needs only Python's standard library. Each colour 3MF holds
-the two meshes as components of one object, plus Bambu Studio's
+`colour_3mf.py` needs only Python's standard library. The colour 3MF holds
+the base and the lid, each with its two meshes as components of one object,
+moved side by side on the plate (not turned), plus Bambu Studio's
 `Metadata/model_settings.config` with nothing in it but the object and part
 names (Bambu Studio and OrcaSlicer ignore the names in the mesh file). No
-extruder, filament, printer or process settings. Rebuild them whenever the
+extruder, filament, printer or process settings. Rebuild it whenever the
 body or accent STLs change.
 
 ## Mirrored design frame

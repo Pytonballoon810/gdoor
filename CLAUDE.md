@@ -22,8 +22,9 @@ in PowerShell, from `hardware/boards/din`:
 ## Printable files of the DIN enclosure
 
 In `hardware/boards/din/enclosure`, `gdoor-din-base.3mf` and `gdoor-din-lid.3mf` sit next to the
-STLs, and `gdoor-din-{base,lid}-colour.3mf` (body and accent as two parts of one object, built by
-`colour_3mf.py` from the body and accent STLs). Rebuild them every time the STLs they come from are
+STLs, and `gdoor-din-colour.3mf` (base and lid in one file, each one object with body and accent as
+its two parts, built by `colour_3mf.py` from the body and accent STLs). Rebuild them every time the
+STLs they come from are
 rebuilt (commands in that folder's `README.md`). They are unsliced: geometry only, no printer,
 filament or process settings. Philipp slices them himself in Bambu Studio, so never add G-code or
 sliced project files.

@@ -1,17 +1,24 @@
-# Packs each part's body and accent STLs into one two-colour 3MF:
-# gdoor-din-base-colour.3mf and gdoor-din-lid-colour.3mf.
+# Packs the base's and the lid's body and accent STLs into one two-colour
+# 3MF: gdoor-din-colour.3mf.
 #
-# Each file holds one object, the part, made of two components: "body" and
-# "accent", each a mesh object. Slicers that follow the 3MF core spec
-# (Bambu Studio, OrcaSlicer, PrusaSlicer) load that as one object with two
-# parts, so the accent only needs its filament picked. Geometry only, in mm,
-# in the STLs' print orientation: no printer, filament or process settings.
+# The file holds two objects, the base and the lid, side by side on the
+# plate. Each is made of two components, "body" and "accent", each a mesh
+# object. Slicers that follow the 3MF core spec (Bambu Studio, OrcaSlicer,
+# PrusaSlicer) load that as one object per part with two parts each, so the
+# accents only need their filament picked. Geometry only, in mm, in the STLs'
+# print orientation (moved, not turned): no printer, filament or process
+# settings.
 #
 # Needs only the standard library.
 # Usage: python colour_3mf.py [stl_dir] [out_dir]   (both default to .)
 import sys, os, re, zipfile
 
-PARTS = ["base", "lid"]
+# [part, (x, y) offset on the plate]: the two side by side, 10 mm apart,
+# centred on the P1S's 256 x 256 mm plate (base x -2.8 .. 60.6, lid
+# x 0 .. 60.6, both y 0 .. 90)
+PARTS = [("base", (63.8, 83.0)), ("lid", (134.4, 83.0))]
+ROLES = ["body", "accent"]
+OUT = "gdoor-din-colour.3mf"
 
 CONTENT_TYPES = """<?xml version="1.0" encoding="UTF-8"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -31,10 +38,7 @@ RELS = """<?xml version="1.0" encoding="UTF-8"?>
 # carries the part names. Names only: no extruder or other settings.
 NAMES = """<?xml version="1.0" encoding="UTF-8"?>
 <config>
- <object id="{top}">
-  <metadata key="name" value="{name}"/>
-{parts}
- </object>
+{objects}
 </config>
 """
 
@@ -65,33 +69,45 @@ def mesh_object(oid, name, verts, tris):
             f'    </vertices>\n    <triangles>\n{t}\n    </triangles>\n   </mesh>\n  </object>\n')
 
 
-def write_3mf(path, name, meshes):
-    objs = "".join(mesh_object(i + 1, n, v, t) for i, (n, v, t) in enumerate(meshes))
-    top = len(meshes) + 1
-    comps = "\n".join(f'    <component objectid="{i + 1}"/>' for i in range(len(meshes)))
+def write_3mf(path, parts):
+    """parts: [(name, (dx, dy), [(role, verts, tris)])]"""
+    objs, items, names, oid = "", [], [], 0
+    for name, (dx, dy), meshes in parts:
+        ids = []
+        for role, v, t in meshes:
+            oid += 1
+            ids.append(oid)
+            objs += mesh_object(oid, role, v, t)
+        oid += 1
+        comps = "\n".join(f'    <component objectid="{i}"/>' for i in ids)
+        objs += (f'  <object id="{oid}" name="{name}" type="model">\n'
+                 f'   <components>\n{comps}\n   </components>\n  </object>\n')
+        items.append(f'  <item objectid="{oid}" transform="1 0 0 0 1 0 0 0 1 {dx} {dy} 0"/>')
+        pnames = "\n".join(f'  <part id="{i}" subtype="normal_part">\n'
+                           f'   <metadata key="name" value="{role}"/>\n  </part>'
+                           for i, (role, _, _) in zip(ids, meshes))
+        names.append(f' <object id="{oid}">\n  <metadata key="name" value="{name}"/>\n{pnames}\n </object>')
     model = ('<?xml version="1.0" encoding="UTF-8"?>\n'
              '<model unit="millimeter" xml:lang="en-US" '
              'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">\n'
-             f' <resources>\n{objs}  <object id="{top}" name="{name}" type="model">\n'
-             f'   <components>\n{comps}\n   </components>\n  </object>\n </resources>\n'
-             f' <build>\n  <item objectid="{top}"/>\n </build>\n</model>\n')
-    parts = "\n".join(f'  <part id="{i + 1}" subtype="normal_part">\n'
-                      f'   <metadata key="name" value="{n}"/>\n  </part>'
-                      for i, (n, _, _) in enumerate(meshes))
+             f' <resources>\n{objs} </resources>\n'
+             f' <build>\n' + "\n".join(items) + '\n </build>\n</model>\n')
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("[Content_Types].xml", CONTENT_TYPES)
         z.writestr("_rels/.rels", RELS)
         z.writestr("3D/3dmodel.model", model)
-        z.writestr("Metadata/model_settings.config", NAMES.format(top=top, name=name, parts=parts))
+        z.writestr("Metadata/model_settings.config", NAMES.format(objects="\n".join(names)))
 
 
 stl_dir = sys.argv[1] if len(sys.argv) > 1 else "."
 out = sys.argv[2] if len(sys.argv) > 2 else "."
-for part in PARTS:
+parts = []
+for part, offset in PARTS:
     meshes = []
-    for role in ("body", "accent"):
+    for role in ROLES:
         v, t = read_stl(os.path.join(stl_dir, f"gdoor-din-{part}-{role}.stl"))
         meshes.append((role, v, t))
         print(f"{part} {role}: {len(v)} vertices, {len(t)} triangles")
-    write_3mf(os.path.join(out, f"gdoor-din-{part}-colour.3mf"), f"gdoor-din-{part}", meshes)
-print("written")
+    parts.append((f"gdoor-din-{part}", offset, meshes))
+write_3mf(os.path.join(out, OUT), parts)
+print("written", OUT)
