@@ -14,6 +14,7 @@ the top face, the bus on the bottom face.
 | `board_ghost.scad` | board and parts as boxes, generated, for the fit check |
 | `board_export.py` | regenerates `board_ghost.scad` from `../esp32.kicad_pcb` |
 | `gdoor-din-base.stl`, `gdoor-din-lid.stl` | ready to print |
+| `gdoor-din-base.3mf`, `gdoor-din-lid.3mf` | the same parts as unsliced 3MF: geometry only, no print settings |
 | `gdoor-din-{base,lid}-{body,accent}.stl` | the same parts split into two colours, for a multi-material print |
 | `gdoor-din-base.step`, `gdoor-din-lid.step` | the same parts as STEP solids, for other CAD tools |
 | `gdoor-din-enclosure.step` | base and lid in their assembled position |
@@ -26,8 +27,14 @@ the top face, the bus on the bottom face.
 ```
 openscad -o gdoor-din-base.stl -D 'part="base"' enclosure.scad
 openscad -o gdoor-din-lid.stl  -D 'part="lid"'  enclosure.scad
+openscad -o gdoor-din-base.3mf -D 'part="base"' enclosure.scad
+openscad -o gdoor-din-lid.3mf  -D 'part="lid"'  enclosure.scad
 openscad -o fit.stl            -D 'part="fit"'  enclosure.scad   # must be empty
 ```
+
+Rebuild the 3MFs whenever the STLs change. They hold only the mesh (in
+mm, in the same print orientation), no printer, filament or process
+settings, so open them in Bambu Studio and slice with your own presets.
 
 After a layout change run `board_export.py` (KiCad's python, from
 `hardware/boards/din`) and the fit check again. The front openings, posts

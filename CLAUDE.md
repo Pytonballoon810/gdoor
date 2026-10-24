@@ -18,3 +18,10 @@ in PowerShell, from `hardware/boards/din`:
 - **Models:** `--subst-models` uses a STEP model wherever one sits next to a VRML model of the same
   name.
 - The export takes about 30 s, and the file is about 60 MB.
+
+## Printable files of the DIN enclosure
+
+In `hardware/boards/din/enclosure`, `gdoor-din-base.3mf` and `gdoor-din-lid.3mf` sit next to the
+STLs. Rebuild them every time the STLs are rebuilt, from the same parts (commands in that folder's
+`README.md`). They are unsliced: geometry only, no printer, filament or process settings. Philipp
+slices them himself in Bambu Studio, so never add G-code or sliced project files.
